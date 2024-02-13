@@ -7,6 +7,7 @@ A minimalist Python backend application utilizing a FastAPI framework, with data
 - [venv](https://docs.python.org/library/venv);
 - [pip](https://pip.pypa.io);
 - [FastAPI](https://fastapi.tiangolo.com);
+- [OpenAPI](https://www.openapis.org/);
 - [Uvicorn](https://www.uvicorn.org/);
 - [SQLite](https://www.sqlite.org/);
 - [Insomnia](https://insomnia.rest/products/insomnia).

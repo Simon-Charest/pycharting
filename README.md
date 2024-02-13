@@ -1,11 +1,14 @@
 # APy
+A minimalist Python backend application utilizing a FastAPI framework, with data storage managed by a SQLite database.
 
 ## Built With
 - [Python](https://www.python.org);
 - [Visual Studio Code](https://code.visualstudio.com);
 - [venv](https://docs.python.org/library/venv);
 - [pip](https://pip.pypa.io);
-- [FastAPI](https://fastapi.tiangolo.com).
+- [FastAPI](https://fastapi.tiangolo.com);
+- [Uvicorn](https://www.uvicorn.org/);
+- [SQLite](https://www.sqlite.org/).
 
 ## Getting Started
 

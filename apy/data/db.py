@@ -22,7 +22,6 @@ def init_users(connection: Connection = None) -> str:
         message = {"error": exception}
 
     finally:
-        connection.close()
         return message
 
 

@@ -53,7 +53,7 @@ uvicorn apy.main:app --reload
 ```
 pytest
 ```
-12. Download and install [Insomnia](https://insomnia.rest/products/insomnia) (or any other API client).
+12. Install [Insomnia](https://insomnia.rest/products/insomnia) (or any other API client).
 
 ## License
 - Distributed under the [MIT License](https://opensource.org/license/mit/). See [LICENSE.txt](./LICENSE.txt) for more information.

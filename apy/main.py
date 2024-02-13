@@ -32,6 +32,27 @@ async def init() -> dict:
     return {"message": "Database initialized."}
 
 
+@app.post("/calc/{operator}")
+async def calc(operator: str, terms: list[float]) -> dict:
+    result: float   
+
+    if operator in ["*", "/", "÷"]:
+        result = 1
+
+        if operator == "÷":
+            operator = "/"
+
+    else:
+        result = 0
+
+    term: float
+
+    for term in terms:
+        result = eval(f"result {operator} term")
+
+    return {"result": result}
+
+
 @app.post("/users/drop")
 async def drop() -> dict:
     sql: str = Path(__file__).parent.joinpath("data/users/drop.sql").read_text()

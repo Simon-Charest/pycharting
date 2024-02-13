@@ -1,30 +1,8 @@
-from apy.main import hello, root, select
+from apy.main import select
 from pytest import mark
 
 
-class TestMain:
-    @mark.asyncio
-    async def test_root(self) -> None:
-        # Arrange
-        expected: dict = {"message": "The state of the service is healthy."}
-
-        # Act
-        actual: dict = await root()
-
-        # Assert
-        assert expected == actual
-
-    @mark.asyncio
-    async def test_hello(self) -> None:
-        # Arrange
-        expected: dict = {"message": "Hello World !"}
-
-        # Act
-        actual: dict = await hello()
-
-        # Assert
-        assert expected == actual
-
+class TestDb:
     @mark.asyncio
     async def test_select_all(self):
         # Arrange
@@ -56,4 +34,4 @@ class TestMain:
 
         # Assert
         assert isinstance(actual, list)
-        assert len(actual) == 0
+        assert 0 == len(actual)

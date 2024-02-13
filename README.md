@@ -42,20 +42,16 @@ python -m pip install -U pip
 ```
 pip install -r requirements.txt
 ```
-9. Initialize database
+9. Run solution:
 ```
-python -m apy.data.db
+python .
 ```
-10. Run solution:
-```
-uvicorn apy.main:app --reload
-```
-11. Run tests:
+10. Run tests:
 ```
 pytest
 ```
-12. Install [Insomnia](https://insomnia.rest/products/insomnia) (or any other API client);
-13. Consult the [OpenAPI Specification](http://localhost:8000/docs).
+11. Install [Insomnia](https://insomnia.rest/products/insomnia) (or any other API client);
+12. Consult the [OpenAPI Specification](http://localhost:8000/docs).
 
 ## License
 - Distributed under the [MIT License](https://opensource.org/license/mit/). See [LICENSE.txt](./LICENSE.txt) for more information.

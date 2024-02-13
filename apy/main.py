@@ -1,10 +1,15 @@
-from apy.data.db import *
 from fastapi import FastAPI
+from json import loads
 from pathlib import Path
 from sqlite3 import connect, Connection
+from uvicorn import run
 
-app = FastAPI()
+app: FastAPI = FastAPI()
 connection: Connection = connect(Path(__file__).parent.joinpath("data/apy.db"))
+
+
+def main() -> None:
+    run(f"{__name__}:app", reload=True)
 
 
 @app.get("/")
@@ -17,38 +22,74 @@ async def hello() -> dict:
     return {"message": "Hello World !"}
 
 
-@app.get("/init")
+@app.post("/init")
 async def init() -> dict:
-    response: str = init_users(connection)
+    await drop()
+    await create()
+    users: list = loads(Path(__file__).parent.joinpath("data/users/data.json").read_text())
+    await insert(users)
 
-    return response
+    return {"message": "Database initialized."}
+
+
+@app.post("/users/drop")
+async def drop() -> dict:
+    sql: str = Path(__file__).parent.joinpath("data/users/drop.sql").read_text()
+    connection.cursor().execute(sql)
+
+    return {"message": "User table dropped."}
+
+
+@app.post("/users/create")
+async def create() -> dict:
+    sql: str = Path(__file__).parent.joinpath("data/users/create.sql").read_text()
+    connection.cursor().execute(sql)
+
+    return {"message": "User table created."}
 
 
 @app.get("/users/select")
-async def select() -> list: 
-    rows: list = select_users(connection)
+@app.get("/users/select/{id}")
+async def select(id: str = None) -> list:
+    sql: str
+    rows: list
+    
+    if id:
+        sql = Path(__file__).parent.joinpath("data/users/select.sql").read_text()
+        rows = connection.cursor().execute(sql, (id,)).fetchall()
+
+    else:
+        sql = Path(__file__).parent.joinpath("data/users/select_all.sql").read_text()
+        rows = connection.cursor().execute(sql).fetchall()
     
     return rows
 
 
 @app.post("/users/insert")
-async def insert(entities: list) -> dict:
-    users: list[tuple] = [(user["first_name"], user["last_name"], user["email"]) for user in entities]
-    insert_users(connection, users)
+async def insert(users: list[dict]) -> dict:
+    sql: str = Path(__file__).parent.joinpath("data/users/insert.sql").read_text()
+    user_tuples: list[tuple] = [tuple(user.values()) for user in users]
+    connection.cursor().executemany(sql, user_tuples)
+    connection.commit()
 
-    return {"message": "User inserted."}
+    return {"message": "User created."}
 
 
-@app.post("/users/update")
-async def update(entities: list) -> dict:
-    users: list[tuple] = [(user["first_name"], user["last_name"], user["email"], user["id"]) for user in entities]
-    update_users(connection, users)
+@app.put("/users/update/{id}")
+async def update(id: str, user: dict) -> dict:
+    sql: str = Path(__file__).parent.joinpath("data/users/update.sql").read_text()
+    user["id"] = id
+    user_tuple = tuple(user.values())
+    connection.cursor().execute(sql, user_tuple)
+    connection.commit()
 
     return {"message": "User updated."}
 
 
-@app.get("/users/delete/{id}")
+@app.delete("/users/delete/{id}")
 async def delete(id: str) -> dict:
-    delete_users(connection, id)
+    sql: str = Path(__file__).parent.joinpath("data/users/delete.sql").read_text()
+    connection.cursor().execute(sql, id)
+    connection.commit()
 
     return {"message": "User deleted."}

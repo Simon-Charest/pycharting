@@ -8,7 +8,8 @@ A minimalist Python backend application utilizing a FastAPI framework, with data
 - [pip](https://pip.pypa.io);
 - [FastAPI](https://fastapi.tiangolo.com);
 - [Uvicorn](https://www.uvicorn.org/);
-- [SQLite](https://www.sqlite.org/).
+- [SQLite](https://www.sqlite.org/);
+- [Insomnia](https://insomnia.rest/products/insomnia).
 
 ## Getting Started
 
@@ -42,7 +43,7 @@ pip install -r requirements.txt
 ```
 9. Initialize database
 ```
-python -m apy.data.init
+python -m apy.data.db
 ```
 10. Run solution:
 ```
@@ -52,6 +53,7 @@ uvicorn apy.main:app --reload
 ```
 pytest
 ```
+12. Download and install Insomnia (or any other API client).
 
 ## License
 - Distributed under the [MIT License](https://opensource.org/license/mit/). See [LICENSE.txt](./LICENSE.txt) for more information.

@@ -2,11 +2,13 @@ from pathlib import Path
 from sqlite3 import connect, Connection
 
 
-def init_users(connection: Connection) -> str:
+def init_users(connection: Connection = None) -> str:
     message: str
 
     try:
-        connection: Connection = connect(Path(__file__).parent.joinpath("apy.db"))
+        if not connection:
+            connection = connect(Path(__file__).parent.joinpath("apy.db"))
+            
         drop_users(connection)
         create_users(connection)
         users: list = [

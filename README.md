@@ -1,5 +1,5 @@
 # APy
-A minimalist Python backend application utilizing a FastAPI framework, with data storage managed by a SQLite database.
+A minimalist Python application utilizing a FastAPI framework, with data storage managed by a SQLite database.
 
 ## Built With
 - [Python](https://www.python.org);

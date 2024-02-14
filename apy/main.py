@@ -61,6 +61,7 @@ async def hello() -> dict:
     return {"message": "Hello World !"}
 
 
+@app.get("/init")
 @app.post("/init")
 async def init() -> dict:
     await drop()

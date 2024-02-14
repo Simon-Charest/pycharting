@@ -46,12 +46,14 @@ pip install -r requirements.txt
 ```
 python .
 ```
-10. Run tests:
+10. Initialize the database: [init](http://localhost:8000/init);
+11. Run tests:
 ```
 pytest
 ```
-11. Install [Insomnia](https://insomnia.rest/products/insomnia) (or any other API client);
-12. Consult the [OpenAPI Specification](http://localhost:8000/docs).
+12. Access the UI: [APy](http://localhost:8000);
+13. Consult the [OpenAPI Specification](http://localhost:8000/docs);
+14. Install [Insomnia](https://insomnia.rest/products/insomnia) (or any other API client).
 
 ## License
 - Distributed under the [MIT License](https://opensource.org/license/mit/). See [LICENSE.txt](./LICENSE.txt) for more information.

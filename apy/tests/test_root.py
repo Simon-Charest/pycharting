@@ -1,15 +1,15 @@
-from apy.main import hello, root
+from apy.main import hello, health
 from pytest import mark
 
 
 class TestRoot:
     @mark.asyncio
-    async def test_root(self) -> None:
+    async def test_health(self) -> None:
         # Arrange
         expected: dict = {"message": "The state of the service is healthy."}
 
         # Act
-        actual: dict = await root()
+        actual: dict = await health()
 
         # Assert
         assert expected == actual

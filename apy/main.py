@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from json import loads
 from pathlib import Path
 from sqlite3 import connect, Connection
@@ -13,7 +13,30 @@ def main() -> None:
 
 
 @app.get("/")
-async def root() -> dict:
+async def root() -> str:
+    document: str = Path(__file__).parent.joinpath("ui/index.html").read_text()
+    rows: list = await select()
+    row: dict
+    content: str = ""
+
+    for row in rows:
+        content += f"""
+                <tr>
+                    <td>{row[0]}</td>
+                    <form action='http://127.0.0.1:8000/users/update/{row[0]}' method='POST'>
+                        <td><input name='first_name' value='{row[1]}'></td>
+                        <td><input name='last_name' value='{row[2]}'></td>
+                        <td><input name='email' value='{row[3]}'></td>
+                        <td class='text-align-center'><input name='update' type='submit' value='☑' onclick='updateUser({row[0]});'></td>
+                    </form>
+                    <td class='text-align-center'><input name='delete' type='button' value='☒' onclick='deleteUser({row[0]})'></td>
+                </tr>"""
+
+    return Response(document.replace("%CONTENT%", content), media_type="text/html")
+
+
+@app.get("/health")
+async def health() -> dict:
     return {"message": "The state of the service is healthy."}
 
 
@@ -96,6 +119,7 @@ async def insert(users: list[dict]) -> dict:
     return {"message": "User created."}
 
 
+@app.post("/users/update/{id}")
 @app.put("/users/update/{id}")
 async def update(id: str, user: dict) -> dict:
     sql: str = Path(__file__).parent.joinpath("data/users/update.sql").read_text()
@@ -110,7 +134,7 @@ async def update(id: str, user: dict) -> dict:
 @app.delete("/users/delete/{id}")
 async def delete(id: str) -> dict:
     sql: str = Path(__file__).parent.joinpath("data/users/delete.sql").read_text()
-    connection.cursor().execute(sql, id)
+    connection.cursor().execute(sql, (id,))
     connection.commit()
 
     return {"message": "User deleted."}

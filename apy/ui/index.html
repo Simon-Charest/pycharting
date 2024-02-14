@@ -1,0 +1,82 @@
+<html>
+    <head>
+        <title>APy</title>
+        <style>
+            table, th, td {
+                border: 1px solid black;
+                padding: 5  px;
+                border-spacing: 2px;
+            }
+
+            thead th {
+                background-color: #000000; /* Black */
+                color: #FFFFFF; /* White */
+            }
+
+            tbody tr:nth-child(odd) {
+                background-color: #FFFFFF; /* White */
+            }
+
+            tbody tr:nth-child(even) {
+                background-color: #D3D3D3; /* Light Gray */
+            }
+
+            .text-align-center {
+                text-align: center;
+            }
+        </style>
+        <script>
+            function deleteUser(id) {
+                if (confirm("Are you sure you want to delete user " + id + "?")) {
+                    fetch("http://127.0.0.1:8000/users/delete/" + id, {
+                        method: "DELETE",
+                        headers: { "Content-Type": "application/json" }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        }
+                    });
+                }
+            }
+
+            function updateUser(id) {
+                if (confirm("Are you sure you want to update user " + id + "?")) {
+                    var firstName = document.getElementById("first_name").value;
+                    var lastName = document.getElementById("last_name").value;
+                    var email = document.getElementById("email").value;
+                    
+                    fetch("http://127.0.0.1:8000/users/update/" + id, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: {"first_name": firstName, "last_name": lastName, "email": email}
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        }
+                    });
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <h1 class="text-align-center">APy</h1>
+        <h3>Users</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Email</th>
+                    <th>Update</th>
+                    <th>Delete</th> 
+                </tr>
+            </thead>
+            <tbody>
+                %CONTENT%
+            </tbody>
+        </table>
+    </body>
+</html>

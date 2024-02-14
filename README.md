@@ -2,15 +2,42 @@
 A minimalist Python application utilizing a FastAPI framework, with data storage managed by a SQLite database.
 
 ## Built With
+
+### Backend
 - [Python](https://www.python.org);
-- [Visual Studio Code](https://code.visualstudio.com);
-- [venv](https://docs.python.org/library/venv);
-- [pip](https://pip.pypa.io);
-- [FastAPI](https://fastapi.tiangolo.com);
-- [OpenAPI](https://www.openapis.org/);
-- [Uvicorn](https://www.uvicorn.org/);
+- [SQL](https://en.wikipedia.org/wiki/SQL);
+
+### Database Engine
 - [SQLite](https://www.sqlite.org/);
-- [Insomnia](https://insomnia.rest/products/insomnia).
+
+### Frontend
+- [HTML](https://html.spec.whatwg.org/);
+- [JavaScript](https://www.javascript.com/);
+- [JSON](https://www.json.org/);
+
+### Web Framework
+- [FastAPI](https://fastapi.tiangolo.com);
+
+### Web Server
+- [Uvicorn](https://www.uvicorn.org/);
+
+### Virtual Environment
+- [venv](https://docs.python.org/library/venv);
+
+### Package Management System
+- [pip](https://pip.pypa.io);
+
+### API Specification
+- [OpenAPI](https://www.openapis.org/);
+
+### Integrated Development Environment (IDE)
+- [Visual Studio Code](https://code.visualstudio.com);
+
+### API client
+- [Insomnia](https://insomnia.rest/products/insomnia);
+
+### AI System
+- [ChatGPT](https://chat.openai.com/).
 
 ## Getting Started
 
@@ -46,13 +73,13 @@ pip install -r requirements.txt
 ```
 python .
 ```
-10. Initialize the database: [init](http://localhost:8000/init);
+10. Initialize database: [init](http://localhost:8000/init);
 11. Run tests:
 ```
 pytest
 ```
-12. Access the UI: [APy](http://localhost:8000);
-13. Consult the [OpenAPI Specification](http://localhost:8000/docs);
+12. Access user interface: [APy](http://localhost:8000);
+13. Consult [OpenAPI Specification](http://localhost:8000/docs);
 14. Install [Insomnia](https://insomnia.rest/products/insomnia) (or any other API client).
 
 ## License
@@ -61,6 +88,3 @@ pytest
 ## Contact
 - GitHub: [APy](https://github.com/Simon-Charest/apy);
 - Email: [Simon Charest](mailto:simoncharest@gmail.com).
-
-## Acknowledgments
-- [ChatGPT](https://chat.openai.com/).

@@ -1,5 +1,8 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>APy</title>
         <style>
             table, th, td {
@@ -26,6 +29,25 @@
             }
         </style>
         <script>
+            function updateUser(id) {
+                if (confirm("Are you sure you want to update user " + id + "?")) {  
+                    fetch("http://127.0.0.1:8000/users/update/" + id, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            "first_name": document.getElementById("firstName[" + id + "]").value,
+                            "last_name": document.getElementById("lastName[" + id + "]").value,
+                            "email": document.getElementById("email[" + id + "]").value
+                        })
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        }
+                    });
+                }
+            }
+
             function deleteUser(id) {
                 if (confirm("Are you sure you want to delete user " + id + "?")) {
                     fetch("http://127.0.0.1:8000/users/delete/" + id, {
@@ -40,23 +62,21 @@
                 }
             }
 
-            function updateUser(id) {
-                if (confirm("Are you sure you want to update user " + id + "?")) {
-                    var firstName = document.getElementById("first_name").value;
-                    var lastName = document.getElementById("last_name").value;
-                    var email = document.getElementById("email").value;
-                    
-                    fetch("http://127.0.0.1:8000/users/update/" + id, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: {"first_name": firstName, "last_name": lastName, "email": email}
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            window.location.reload();
-                        }
-                    });
-                }
+            function insertUser() {
+                fetch("http://127.0.0.1:8000/users/insert", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify([{
+                        "first_name": document.getElementById("firstName").value,
+                        "last_name": document.getElementById("lastName").value,
+                        "email": document.getElementById("email").value
+                    }])
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    }
+                });
             }
         </script>
     </head>
@@ -74,8 +94,7 @@
                     <th>Delete</th> 
                 </tr>
             </thead>
-            <tbody>
-                %CONTENT%
+            <tbody>%CONTENT%
             </tbody>
         </table>
     </body>

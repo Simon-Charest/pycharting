@@ -1,4 +1,5 @@
 import os
+from typing import Any
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from json import loads
@@ -94,7 +95,7 @@ async def calc(operator: str, terms: list[float]) -> dict:
 
 
 @app.post("/mortgage")
-async def mortgage(mortgage: dict) -> dict[str, float]:
+async def mortgage(request: dict) -> dict[str, Any]:
     """
     Mortgage calculation formula.
 
@@ -102,21 +103,19 @@ async def mortgage(mortgage: dict) -> dict[str, float]:
         loan (float): Amount of the loan.
         rate (float): Annual interest rate.
         duration (int): Duration in years.
-
-    Returns:
-        monthly_payment (float): Monthly payment.
     """
 
-    loan: float = mortgage["loan"]
-    rate: float = mortgage["rate"]
-    duration: int = mortgage["duration"]
+    result: dict[str, Any] = {"request": {}, "response": {"monthly": {}, "total": {}, "rate": {}}}
+    result["request"] = request
+    result["response"]["monthly"]["payment"] = round((result["request"]["loan"] * result["request"]["rate"] / 12) / (1 - (1 + result["request"]["rate"] / 12) ** (-12 * request["duration"])), 2)  # Mortgage calculation formula.
+    result["response"]["total"]["payment"] = round(12 * result["request"]["duration"] * result["response"]["monthly"]["payment"], 2)
+    result["response"]["total"]["interest"] = round(12 * result["request"]["duration"] * result["response"]["monthly"]["payment"] - result["request"]["loan"], 2)
+    result["response"]["rate"]["payment"] = round(result["response"]["total"]["payment"] / result["request"]["loan"], 2)
+    result["response"]["rate"]["interest"]  = round(result["response"]["total"]["interest"] / result["response"]["total"]["payment"], 4)
+    result["response"]["monthly"]["interest"] = round(result["response"]["rate"]["interest"] * result["response"]["monthly"]["payment"], 2)
+    result["response"]["monthly"]["capital"] = round(result["response"]["monthly"]["payment"] - result["response"]["monthly"]["interest"], 2)
     
-    rate /= 12  # Monthly interest rate.
-    duration *= 12  # Duration in months.
-    monthly_payment: float = (loan * rate) / (1 - (1 + rate) ** -duration)  # Mortgage calculation formula.
-    monthly_payment = round(monthly_payment, 2)  # Round the result to two digits.
-
-    return {"monthly_payment": monthly_payment}
+    return result
 
 
 @app.post("/users/drop")

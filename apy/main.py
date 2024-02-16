@@ -1,9 +1,10 @@
 from typing import Any
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
-from json import loads
+from json import load, loads
 from pathlib import Path
 from sqlite3 import connect, Connection
+from fastapi.staticfiles import StaticFiles
 from uvicorn import run
 
 app: FastAPI = FastAPI()
@@ -14,11 +15,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+app.mount("/static", StaticFiles(directory=Path(__file__).parent.joinpath("ui/static")), name="static")
+config: dict = load(open(Path(__file__).parent.joinpath("config.json")))
 connection: Connection = connect(Path(__file__).parent.joinpath("data/apy.db"))
 
 
 def main() -> None:
-    run(f"{__name__}:app", reload=True)
+    run(f"{__name__}:app", host=config["host"], port=config["port"], reload=True)
 
 
 @app.get("/")
@@ -35,8 +38,8 @@ async def root() -> str:
                     <td><input id='firstName[{row[0]}]' value='{row[1]}'></td>
                     <td><input id='lastName[{row[0]}]' value='{row[2]}'></td>
                     <td><input id='email[{row[0]}]' value='{row[3]}'></td>
-                    <td class='text-align-center'><input name='update' type='button' value='☑' onclick='updateUser({row[0]});'></td>
-                    <td class='text-align-center'><input name='delete' type='button' value='☒' onclick='deleteUser({row[0]});'></td>
+                    <td class='text-align-center'><input name='update' type='button' value='☑' onclick='updateUser({row[0]}, "{config["host"]}", {config["port"]});'></td>
+                    <td class='text-align-center'><input name='delete' type='button' value='☒' onclick='deleteUser({row[0]}, "{config["host"]}", {config["port"]});'></td>
                 </tr>"""
         
     content += f"""
@@ -45,7 +48,7 @@ async def root() -> str:
                     <td><input id='firstName' value=''></td>
                     <td><input id='lastName' value=''></td>
                     <td><input id='email' value=''></td>
-                    <td class='text-align-center' colspan="2"><input name='insert' type='button' value='⨁' onclick='insertUser();'></td>
+                    <td class='text-align-center' colspan="2"><input name='insert' type='button' value='⨁' onclick='insertUser("{config["host"]}", {config["port"]});'></td>
                 </tr>"""
 
     return Response(document.replace("%CONTENT%", content), media_type="text/html")

@@ -4,6 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>APy</title>
+        <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
         <style>
             table, th, td {
                 border: 1px solid black;
@@ -29,9 +30,26 @@
             }
         </style>
         <script>
-            function updateUser(id) {
+            function insertUser(host, port) {
+                fetch("http://" + host + ":" + port + "/users/insert", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify([{
+                        "first_name": document.getElementById("firstName").value,
+                        "last_name": document.getElementById("lastName").value,
+                        "email": document.getElementById("email").value
+                    }])
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    }
+                });
+            }
+
+            function updateUser(id, host, port) {
                 if (confirm("Are you sure you want to update user " + id + "?")) {  
-                    fetch("http://127.0.0.1:8000/users/update/" + id, {
+                    fetch("http://" + host + ":" + port + "/users/update/" + id, {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
@@ -48,9 +66,9 @@
                 }
             }
 
-            function deleteUser(id) {
+            function deleteUser(id, host, port) {
                 if (confirm("Are you sure you want to delete user " + id + "?")) {
-                    fetch("http://127.0.0.1:8000/users/delete/" + id, {
+                    fetch("http://" + host + ":" + port + "/users/delete/" + id, {
                         method: "DELETE",
                         headers: { "Content-Type": "application/json" }
                     })
@@ -60,23 +78,6 @@
                         }
                     });
                 }
-            }
-
-            function insertUser() {
-                fetch("http://127.0.0.1:8000/users/insert", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify([{
-                        "first_name": document.getElementById("firstName").value,
-                        "last_name": document.getElementById("lastName").value,
-                        "email": document.getElementById("email").value
-                    }])
-                })
-                .then(response => {
-                    if (response.ok) {
-                        window.location.reload();
-                    }
-                });
             }
         </script>
     </head>

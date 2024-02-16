@@ -105,7 +105,24 @@ async def mortgage(request: dict) -> dict[str, Any]:
         duration (int): Duration in years.
     """
 
-    result: dict[str, Any] = {"request": {}, "response": {"monthly": {}, "total": {}, "rate": {}}}
+    # Declaration with order of keys
+    result: dict[str, Any] = {
+        "request": {},
+        "response": {
+            "monthly": {
+                "capital": None,
+                "interest": None,
+                "payment": None
+            },
+            "total": {
+                "interest": None,
+                "payment": None
+            }, "rate": {
+                "interest": None,
+                "payment": None
+            }
+        }
+    }
     result["request"] = request
     result["response"]["monthly"]["payment"] = round((result["request"]["loan"] * result["request"]["rate"] / 12) / (1 - (1 + result["request"]["rate"] / 12) ** (-12 * request["duration"])), 2)  # Mortgage calculation formula.
     result["response"]["total"]["payment"] = round(12 * result["request"]["duration"] * result["response"]["monthly"]["payment"], 2)

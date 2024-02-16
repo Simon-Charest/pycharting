@@ -93,6 +93,32 @@ async def calc(operator: str, terms: list[float]) -> dict:
     return {"result": result}
 
 
+@app.post("/mortgage")
+async def mortgage(mortgage: dict) -> dict[str, float]:
+    """
+    Mortgage calculation formula.
+
+    Parameters:
+        loan (float): Amount of the loan.
+        rate (float): Annual interest rate.
+        duration (int): Duration in years.
+
+    Returns:
+        monthly_payment (float): Monthly payment.
+    """
+
+    loan: float = mortgage["loan"]
+    rate: float = mortgage["rate"]
+    duration: int = mortgage["duration"]
+    
+    rate /= 12  # Monthly interest rate.
+    duration *= 12  # Duration in months.
+    monthly_payment: float = (loan * rate) / (1 - (1 + rate) ** -duration)  # Mortgage calculation formula.
+    monthly_payment = round(monthly_payment, 2)  # Round the result to two digits.
+
+    return {"monthly_payment": monthly_payment}
+
+
 @app.post("/users/drop")
 async def drop() -> dict:
     sql: str = Path(__file__).parent.joinpath("data/users/drop.sql").read_text()

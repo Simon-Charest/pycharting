@@ -1,4 +1,3 @@
-import os
 from typing import Any
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware

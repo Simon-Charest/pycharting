@@ -1,14 +1,103 @@
 {
-    "NES": [
-        { "name": "Kid Icarus", "owned": true },
-        { "name": "Legend of Zelda", "owned": true },
-        { "name": "Super Mario Bros", "owned": false },
-        { "name": "Super Mario Bros 2", "owned": false },
-        { "name": "Super Mario Bros 3", "owned": false },
-        { "name": "Wrecking Crew", "owned": false },
-        { "name": "Zelda II The Adventure of Link", "owned": false }
+    "PAL Wii": [
+        { "name": "Wii Console White Wii Sports Edition"}
+    ],
+    "Wii": [
+        { "name": "A Boy and His Blob" },
+        { "name": "Band Hero" },
+        { "name": "Big Brain Academy: Wii Degree" },
+        { "name": "Castlevania Judgment" },
+        { "name": "Dragon Quest Swords: The Masked Queen and the Tower of Mirrors" },
+        { "name": "Epic Mickey" },
+        { "name": "Jenga" },
+        { "name": "Link's Crossbow Training" },
+        { "name": "Okami" },
+        { "name": "Punch-Out!!" },
+        { "name": "Rock Band 3" },
+        { "name": "Super Smash Bros Brawl" },
+        { "name": "Trauma Team" },
+        { "name": "Wii Fit Plus" },
+        { "name": "Wii Music" },
+        { "name": "Wii Party" },
+        { "name": "Wii Play" },
+        { "name": "Wii Sports" },
+        { "name": "Wii Sports Resort" }
+    ],
+    "Nintendo DS": [
+        { "name": "River City Super Sports Challenge" }
+    ],
+    "Sega Genesis": [
+        { "name": "Air Diver" },
+        { "name": "Ecco the Dolphin" },
+        { "name": "Lethal Enforcers II" },
+        { "name": "NBA Jam Tournament Edition" },
+        { "name": "Quackshot Starring Donald Duck" },
+        { "name": "Eternal Champions" },
+        { "name": "Earthworm Jim" },
+        { "name": "Flashback: The Quest for Identity" },
+        { "name": "Samurai Shodown" },
+        { "name": "Shinobi III Return of the Ninja Master" },
+        { "name": "Sonic the Hedgehog" },
+        { "name": "Sonic the Hedgehog 2" },
+        { "name": "Sub Terrania" },
+        { "name": "Tommy Lasorda Baseball" },
+        { "name": "Robocop vs The Terminator" },
+        { "name": "Street Fighter II Special Champion Edition" },
+        { "name": "Target Earth" },
+        { "name": "Urban Strike" },
+        { "name": "X-Men" },
+        { "name": "X-Men 2 The Clone Wars" }
+    ],
+    "PAL Super Nintendo" : [
+        { "name": "Super Nintendo Console" }
     ],
     "Super Nintendo": [
-        { "name": "Zelda Link to the Past", "owned": true }
+        { "name": "Zelda Link to the Past", "owned": false }
+    ],
+    "NES": [
+        { "name": "Nintendo NES Console" },
+        { "name": "Adventure Island" },
+        { "name": "Adventure Island II" },
+        { "name": "Adventures of Bayou Billy" },
+        { "name": "Airwolf" },
+        { "name": "Amagon" },
+        { "name": "Double Dragon" },
+        { "name": "Dragon Warrior" },
+        { "name": "Golf" },
+        { "name": "Gyromite" },
+        { "name": "Ice Hockey" },
+        { "name": "Jurassic Park" },
+        { "name": "Kid Icarus" },
+        { "name": "Legend of Zelda" },
+        { "name": "Life Force" },
+        { "name": "Little Samson", "reproduction": true },
+        { "name": "Mystery Quest" },
+        { "name": "Nintendo World Cup" },
+        { "name": "Pinball" },
+        { "name": "Rad Racer" },
+        { "name": "Rampage" },
+        { "name": "Renegade" },
+        { "name": "Rygar" },
+        { "name": "Solomon's Key" },
+        { "name": "Spy Hunter" },
+        { "name": "Super Mario Bros" },
+        { "name": "Super Mario Bros and Duck Hunt" },
+        { "name": "Super Mario Bros / Duck Hunt / World Class Track Meet" },
+        { "name": "Super Mario Bros 2" },
+        { "name": "Super Mario Bros 3" },
+        { "name": "Teenage Mutant Ninja Turtles" },
+        { "name": "The Magic of Scheherazade" },
+        { "name": "Wrecking Crew", "owned": false },
+        { "name": "WWF WrestleMania" },
+        { "name": "Zelda II The Adventure of Link" }
+    ],
+    "GameBoy": [
+        { "name": "Balloon Kid" },
+        { "name": "Final Fantasy Legend II" },
+        { "name": "Super Mario Land" },
+        { "name": "Super Mario Land 2" }
+    ],
+    "Colecovision": [
+        { "name": "Donkey Kong" }
     ]
 }

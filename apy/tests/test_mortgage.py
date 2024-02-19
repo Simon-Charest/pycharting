@@ -1,4 +1,4 @@
-from apy.main import mortgage
+from apy.api import mortgage
 from pytest import mark
 
 

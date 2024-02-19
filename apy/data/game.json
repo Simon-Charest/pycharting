@@ -1,0 +1,14 @@
+{
+    "NES": [
+        { "name": "Kid Icarus", "owned": true },
+        { "name": "Legend of Zelda", "owned": true },
+        { "name": "Super Mario Bros", "owned": false },
+        { "name": "Super Mario Bros 2", "owned": false },
+        { "name": "Super Mario Bros 3", "owned": false },
+        { "name": "Wrecking Crew", "owned": false },
+        { "name": "Zelda II The Adventure of Link", "owned": false }
+    ],
+    "Super Nintendo": [
+        { "name": "Zelda Link to the Past", "owned": true }
+    ]
+}

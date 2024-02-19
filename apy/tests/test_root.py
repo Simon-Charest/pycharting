@@ -1,4 +1,4 @@
-from apy.main import hello, health
+from apy.api import hello, health
 from pytest import mark
 
 

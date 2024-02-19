@@ -1,4 +1,4 @@
-from apy.main import calc
+from apy.api import calc
 from pytest import mark
 
 

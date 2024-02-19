@@ -1,4 +1,4 @@
-from apy.main import select
+from apy.api import select
 from pytest import mark
 
 

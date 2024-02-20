@@ -19,6 +19,7 @@ def main() -> None:
     create_sql: str = Path(__file__).parent.joinpath("data/games/create.sql").read_text()
     select_all_sql: str = Path(__file__).parent.joinpath("data/games/select_all.sql").read_text()
     select_stats_sql: str = Path(__file__).parent.joinpath("data/games/select_stats.sql").read_text()
+    select_top_sql: str = Path(__file__).parent.joinpath("data/games/select_top.sql").read_text()
     insert_sql: str = Path(__file__).parent.joinpath("data/games/insert.sql").read_text()
     connection: Connection = connect(Path(__file__).parent.joinpath("data/apy.db"))
     connection.cursor().execute(create_sql)
@@ -51,10 +52,15 @@ def main() -> None:
         connection.commit()
         sleep(seconds)
 
-    rows: list = execute(connection, select_stats_sql)
+    stats_rows: list = execute(connection, select_stats_sql)
+    top_rows: list = execute(connection, select_top_sql)
     connection.close()
+    row: dict
 
-    for row in rows:
+    for row in stats_rows:
+        print(row)
+
+    for row in top_rows:
         print(row)
 
 

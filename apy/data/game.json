@@ -1,8 +1,17 @@
 {
-    "PAL Wii": [
-        { "name": "Wii Console White Wii Sports Edition"}
+    "PlayStation 5": [
+        { "name": "PlayStation 5 Call of Duty Modern Warfare III Bundle" }
+    ],
+    "Nintendo Switch": [
+        { "name": "Nintendo Switch With Blue And Red Joy Con" }
+    ],
+    "PlayStation 4": [
+        { "name": "Dissidia Final Fantasy NT" },
+        { "name": "Dragon Quest Builders 2" },
+        { "name": "The Last of Us Remastered" }
     ],
     "Wii": [
+        { "name": "White Nintendo Wii System"},
         { "name": "A Boy and His Blob" },
         { "name": "Band Hero" },
         { "name": "Big Brain Academy: Wii Degree" },
@@ -23,39 +32,133 @@
         { "name": "Wii Sports" },
         { "name": "Wii Sports Resort" }
     ],
+    "PlayStation 3": [
+        { "name": "Final Fantasy X / X-2 HD Remaster" }
+    ],
+    "Xbox 360": [
+        { "name": "Super Street Fighter IV" }
+    ],
     "Nintendo DS": [
         { "name": "River City Super Sports Challenge" }
     ],
+    "GameCube": [
+        { "name": "Chibi-Robo!" },
+        { "name": "Final Fantasy Crystal Chronicles" },
+        { "name": "Luigi's Mansion" },
+        { "name": "Mario Kart Double Dash" },
+        { "name": "Pikmin 2" },
+        { "name": "Super Mario Sunshine" },
+        { "name": "Zelda Wind Waker" }
+    ],
+    "PlayStation 2": [
+        { "name": "Slim PlayStation 2 System" },
+        { "name": "24 The Game" },
+        { "name": "Dawn of Mana" },
+        { "name": "Dynasty Warriors 4" },
+        { "name": "Enter the Matrix" },
+        { "name": "Final Fantasy VII Dirge of Cerberus" },
+        { "name": "Final Fantasy X" },
+        { "name": "Final Fantasy X-2" },
+        { "name": "Final Fantasy XII" },
+        { "name": "Grand Theft Auto III" },
+        { "name": "Guitar Hero II" },
+        { "name": "Guitar Hero III: Legends of Rock" },
+        { "name": "Guitar Hero World Tour" },
+        { "name": "Kessen 2" },
+        { "name": "Madden 2003" },
+        { "name": "Mega Man Anniversary Collection" },
+        { "name": "Need for Speed Underground 2" },
+        { "name": "NHL 07" },
+        { "name": "Onimusha 2" },
+        { "name": "Onimusha 3 Demon Siege" },
+        { "name": "PaRappa The Rapper 2" },
+        { "name": "The Matrix Path of Neo" },
+        { "name": "The Sims 2" },
+        { "name": "Street Fighter Alpha Anthology" },
+        { "name": "Street Fighter EX3" },
+        { "name": "The Simpsons Road Rage" },
+        { "name": "We Love Katamari" },
+        { "name": "Xenosaga" },
+        { "name": "Xenosaga 2" }
+    ],
+    "Nintendo 64": [
+        { "name": "Star Wars Episode I Racer" },
+        { "name": "Super Mario 64" },
+        { "name": "Zelda Ocarina of Time" }
+    ],
+    "PlayStation": [
+        { "name": "Bushido Blade" },
+        { "name": "Bushido Blade 2" },
+        { "name": "Chrono Cross" },
+        { "name": "Dragon Warrior 7" },
+        { "name": "Final Fantasy Origins" },
+        { "name": "Final Fantasy Chronicles" },
+        { "name": "Final Fantasy Anthology" },
+        { "name": "Final Fantasy VII" },
+        { "name": "Final Fantasy VIII" },
+        { "name": "Final Fantasy IX" },
+        { "name": "Final Fantasy Tactics" },
+        { "name": "Lunar: Silver Star Story Complete" },
+        { "name": "Mega Man 8" },
+        { "name": "Mega Man X5" },
+        { "name": "Mega Man X6" },
+        { "name": "Spiderman" },
+        { "name": "Threads of Fate" },
+        { "name": "Tony Hawk 2" }
+    ],
+    "PAL Super Nintendo" : [
+        { "name": "Super Nintendo Classic Mini" }
+    ],
+    "Super Nintendo": [
+        { "name": "Super Nintendo System" },
+        { "name": "Battle Clash" },
+        { "name": "Final Fantasy Mystic Quest" },
+        { "name": "King Arthur's World", "owned": false },
+        { "name": "Lamborghini American Challenge" },
+        { "name": "SimCity" },
+        { "name": "Super Mario Kart" },
+        { "name": "Super Mario World" },
+        { "name": "Super Scope 6" },
+        { "name": "UN Squadron" },
+        { "name": "Zelda Link to the Past" }
+    ],
     "Sega Genesis": [
+        { "name": "Sega Genesis Model 1 Console" },
+        { "name": "Sega Genesis Mini" },
         { "name": "Air Diver" },
+        { "name": "Earthworm Jim" },
         { "name": "Ecco the Dolphin" },
+        { "name": "Eternal Champions" },
+        { "name": "Flashback: The Quest for Identity" },
         { "name": "Lethal Enforcers II" },
         { "name": "NBA Jam Tournament Edition" },
         { "name": "Quackshot Starring Donald Duck" },
-        { "name": "Eternal Champions" },
-        { "name": "Earthworm Jim" },
-        { "name": "Flashback: The Quest for Identity" },
+        { "name": "Robocop vs The Terminator" },
         { "name": "Samurai Shodown" },
         { "name": "Shinobi III Return of the Ninja Master" },
         { "name": "Sonic the Hedgehog" },
         { "name": "Sonic the Hedgehog 2" },
-        { "name": "Sub Terrania" },
-        { "name": "Tommy Lasorda Baseball" },
-        { "name": "Robocop vs The Terminator" },
         { "name": "Street Fighter II Special Champion Edition" },
+        { "name": "Sub Terrania" },
         { "name": "Target Earth" },
+        { "name": "Tommy Lasorda Baseball" },
         { "name": "Urban Strike" },
         { "name": "X-Men" },
         { "name": "X-Men 2 The Clone Wars" }
     ],
-    "PAL Super Nintendo" : [
-        { "name": "Super Nintendo Console" }
+    "GameBoy": [
+        { "name": "Original Gameboy System" },
+        { "name": "Balloon Kid" },
+        { "name": "Final Fantasy Legend II" },
+        { "name": "Super Mario Land" },
+        { "name": "Super Mario Land 2" }
     ],
-    "Super Nintendo": [
-        { "name": "Zelda Link to the Past", "owned": false }
+    "Atari 7800": [
+        { "name": "Hat Trick" }
     ],
     "NES": [
         { "name": "Nintendo NES Console" },
+        { "name": "Nintendo NES Classic Edition" },
         { "name": "Adventure Island" },
         { "name": "Adventure Island II" },
         { "name": "Adventures of Bayou Billy" },
@@ -91,13 +194,39 @@
         { "name": "WWF WrestleMania" },
         { "name": "Zelda II The Adventure of Link" }
     ],
-    "GameBoy": [
-        { "name": "Balloon Kid" },
-        { "name": "Final Fantasy Legend II" },
-        { "name": "Super Mario Land" },
-        { "name": "Super Mario Land 2" }
-    ],
     "Colecovision": [
-        { "name": "Donkey Kong" }
+        { "name": "Colecovision Flashback 60 Games" },
+        { "name": "Donkey Kong" },
+        { "name": "Venture" }
+    ],
+    "Commodore 64": [
+        { "name": "C64 Mini" }
+    ],
+    "Atari 2600": [
+        { "name": "Atari 2600 System" },
+        { "name": "Atari Flashback" },
+        { "name": "Air Sea Battle" },
+        { "name": "Asteroids" },
+        { "name": "Bowling" },
+        { "name": "Canyon Bomber" },
+        { "name": "Combat" },
+        { "name": "Defender" },
+        { "name": "Donkey Kong" },
+        { "name": "Dragster" },
+        { "name": "Freeway" },
+        { "name": "Football" },
+        { "name": "Frogger" },
+        { "name": "Laser Blast" },
+        { "name": "Missile Command" },
+        { "name": "Ms Pac-Man" },
+        { "name": "Night Driver" },
+        { "name": "Pac-Man" },
+        { "name": "Pitfall!" },
+        { "name": "Slot Racers" },
+        { "name": "Space Invaders" },
+        { "name": "Space War" },
+        { "name": "Video Pinball" },
+        { "name": "Warlords" },
+        { "name": "Yars' Revenge" }
     ]
 }

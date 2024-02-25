@@ -10,5 +10,5 @@ GROUP BY g.console_name
     , g.loose_price
 HAVING g.moment = MAX(g.moment)
 ORDER BY g.loose_price DESC
-LIMIT 25
+LIMIT ?
 ;

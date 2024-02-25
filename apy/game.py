@@ -14,14 +14,11 @@ verbose: bool = True  # View data during processing.
 seconds: float = 0.4  # Delay execution for a given number of seconds.
 
 
-def main() -> None:
+def main(connection: Connection) -> None:
     now: str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     create_sql: str = Path(__file__).parent.joinpath("data/games/create.sql").read_text()
     select_all_sql: str = Path(__file__).parent.joinpath("data/games/select_all.sql").read_text()
-    select_stats_sql: str = Path(__file__).parent.joinpath("data/games/select_stats.sql").read_text()
-    select_top_sql: str = Path(__file__).parent.joinpath("data/games/select_top.sql").read_text()
     insert_sql: str = Path(__file__).parent.joinpath("data/games/insert.sql").read_text()
-    connection: Connection = connect(Path(__file__).parent.joinpath("data/apy.db"))
     connection.cursor().execute(create_sql)
     rows: list = execute(connection, select_all_sql)
     games: dict = load_games(exclude_unowned, exclude_reproduction, sanitize)
@@ -32,7 +29,6 @@ def main() -> None:
         url: str = f"https://www.pricecharting.com/game{endpoint}"
         response: Response = get(url)
         soup: BeautifulSoup = BeautifulSoup(response.text, "html.parser")
-
         product_name: Tag = soup.find("h1", id="product_name")
 
         if not product_name:
@@ -52,9 +48,16 @@ def main() -> None:
         connection.commit()
         sleep(seconds)
 
+
+def get_connection() -> Connection:
+    return connect(Path(__file__).parent.joinpath("data/apy.db"))
+
+
+def print_report(connection: Connection) -> None:
+    select_stats_sql: str = Path(__file__).parent.joinpath("data/games/select_stats.sql").read_text()
+    select_top_sql: str = Path(__file__).parent.joinpath("data/games/select_top.sql").read_text()
     stats_rows: list = execute(connection, select_stats_sql)
-    top_rows: list = execute(connection, select_top_sql)
-    connection.close()
+    top_rows: list = execute(connection, select_top_sql.replace("?", "25"))
     row: dict
 
     for row in stats_rows:
@@ -117,7 +120,12 @@ def _filter(games: dict, exclude_unowned: bool = False, exclude_reproduction: bo
     filtered: dict = {}
 
     for console, game_list in games.items():
-        filtered[console] = [game for game in game_list if exclude_unowned and (not "owned" in game or game["owned"]) and exclude_reproduction and (not "reproduction" in game or not game["reproduction"])]
+        filtered[console] = [
+            game for game in game_list if
+            exclude_unowned and (not "owned" in game or game["owned"])
+            and exclude_reproduction and (not "reproduction" in game or not game["reproduction"])
+            and exclude_reproduction and (not "virtual" in game or not game["virtual"])
+        ]
 
     return filtered
 
@@ -137,7 +145,12 @@ def _sanitize(games: dict) -> dict:
     return data
 
 
-def _sanitize_string(string: str) -> str:
+def _sanitize_string(string: str, olds: list[tuple] = [("/ ", ""), (" ", "-"), (".", ""), (":", "")]) -> str:
     """Sanitize a string for PriceCharting."""
 
-    return string.lower().replace("/ ", "").replace(" ", "-").replace(":", "")
+    old: tuple
+
+    for old in olds:
+        string = string.replace(old[0], old[1])
+
+    return string.lower()

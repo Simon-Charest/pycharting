@@ -1,8 +1,8 @@
 from bs4 import BeautifulSoup, Tag
 from datetime import datetime
 from json import load
-from pathlib import Path
 from fastapi import Response
+from pathlib import Path
 from requests import get
 from sqlite3 import Cursor, connect, Connection
 from time import sleep
@@ -14,14 +14,14 @@ verbose: bool = True  # View data during processing.
 seconds: float = 0.4  # Delay execution for a given number of seconds.
 
 
-def main(connection: Connection) -> None:
+def main(connection: Connection, console_name: str = None) -> None:
     now: str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     create_sql: str = Path(__file__).parent.joinpath("data/games/create.sql").read_text()
     select_all_sql: str = Path(__file__).parent.joinpath("data/games/select_all.sql").read_text()
     insert_sql: str = Path(__file__).parent.joinpath("data/games/insert.sql").read_text()
     connection.cursor().execute(create_sql)
     rows: list = execute(connection, select_all_sql)
-    games: dict = load_games(exclude_unowned, exclude_reproduction, sanitize)
+    games: dict = load_games(console_name, exclude_unowned, exclude_reproduction, sanitize)
     filtered: list = filter_processed(games, rows)
 
     for game in filtered:
@@ -53,17 +53,70 @@ def get_connection() -> Connection:
     return connect(Path(__file__).parent.joinpath("data/apy.db"))
 
 
-def print_report(connection: Connection) -> None:
-    select_stats_sql: str = Path(__file__).parent.joinpath("data/games/select_stats.sql").read_text()
-    select_top_sql: str = Path(__file__).parent.joinpath("data/games/select_top.sql").read_text()
-    stats_rows: list = execute(connection, select_stats_sql)
-    top_rows: list = execute(connection, select_top_sql.replace("?", "25"))
-    row: dict
+def print_statistical_report(connection: Connection) -> None:
+    # Get data
+    sql: str = Path(__file__).parent.joinpath("data/games/select_stats.sql").read_text()
+    rows: list = execute(connection, sql)
 
-    for row in stats_rows:
+    # Calculate totals
+    row: dict
+    count: int = 0
+    min: float = 0
+    max: float = 0
+    sum: float = 0
+    
+    for row in rows:
+        count += row["count"]
+
+        if min == 0 or row["min"] < min:
+            min = row["min"]
+
+        if row["max"] > max:
+            max = row["max"]
+
+        sum += row["sum"]
+
+    avg: float = round(sum / count, 2)
+
+    # Append totals
+    rows.append({"console_name": "total", "count": count, "min": min, "avg": avg, "max": max, "sum": sum})
+
+    # Print data
+    for row in rows:
         print(row)
 
-    for row in top_rows:
+
+def print_top_report(connection: Connection, top: str) -> None:
+    # Get data
+    sql: str = Path(__file__).parent.joinpath("data/games/select_top.sql").read_text()
+    rows: list = execute(connection, sql.replace("?", top))
+
+    # Calculate totals
+    row: dict
+    count: int = 0
+    min: float = 0
+    max: float = 0
+    sum: float = 0
+    
+    for row in rows:
+        count += 1
+
+        if min == 0 or row["loose_price"] < min:
+            min = row["loose_price"]
+
+        if row["loose_price"] > max:
+            max = row["loose_price"]
+
+        sum += row["loose_price"]
+
+    avg: float = round(sum / count, 2)
+    sum = round(sum, 2)
+
+    # Append totals
+    rows.append({"console_name": "total", "count": count, "min": min, "avg": avg, "max": max, "sum": sum})
+
+    # Print data
+    for row in rows:
         print(row)
 
 
@@ -100,10 +153,13 @@ def execute(connection: Connection, sql: str) -> list:
     return results
 
 
-def load_games(exclude_unowned: bool = False, exclude_reproduction: bool = True, sanitize: bool = False) -> dict:
+def load_games(console_name: str = None, exclude_unowned: bool = False, exclude_reproduction: bool = True, sanitize: bool = False) -> dict:
     """Load games from a JSON file."""
 
     games: dict = load(open(Path(__file__).parent.joinpath("data/game.json")))
+
+    if console_name and console_name != "*":
+        games = {console_name: games.get(console_name, [])}
 
     if exclude_unowned or exclude_reproduction:
         games = _filter(games, exclude_unowned, exclude_reproduction)
@@ -145,7 +201,7 @@ def _sanitize(games: dict) -> dict:
     return data
 
 
-def _sanitize_string(string: str, olds: list[tuple] = [("/ ", ""), (" ", "-"), (".", ""), (":", "")]) -> str:
+def _sanitize_string(string: str, olds: list[tuple] = [("*", "-"), ("/ ", ""), (" ", "-"), (".", ""), (":", "")]) -> str:
     """Sanitize a string for PriceCharting."""
 
     old: tuple

@@ -1,12 +1,12 @@
 {
     "PlayStation 5": [
-        { "name": "PlayStation 5 Call of Duty Modern Warfare III Bundle", "paid": 747.28 },
+        { "name": "PlayStation 5 Call of Duty Modern Warfare III Bundle", "paid": 747.28, "console": true },
         { "name": "Call of Duty Modern Warfare III", "paid": 0, "virtual": true },
         { "name": "Final Fantasy XVI", "paid": 64.48, "virtual": true },
         { "name": "PlayStation 5 DualSense Wireless Controller - White", "paid": 103.70, "virtual": true }
     ],
     "Nintendo Switch": [
-        { "name": "Nintendo Switch With Blue And Red Joy Con", "paid": 402.61, "virtual": true },
+        { "name": "Nintendo Switch With Blue And Red Joy Con", "paid": 402.61, "console": true },
         { "name": "Super Bomberman R", "paid": 10.34, "virtual": true },
         { "name": "New Super Mario Bros U Deluxe", "paid": 64.37, "virtual": true },
         { "name": "Nintendo Joycon", "paid": 92.17, "virtual": true },
@@ -82,7 +82,7 @@
         { "name": "FINAL FANTASY I-VI Bundle", "paid": 91.35, "virtual": true }
     ],
     "PlayStation 4": [
-        { "name": "Playstation 4 1TB Slim Console", "paid": 402.60 },
+        { "name": "Playstation 4 1TB Slim Console", "paid": 402.60, "console": true },
         { "name": "Castlevania Requiem: Symphony of the Night & Rondo of Blood", "paid": 14.84, "virtual": true },
         { "name": "Crisis Core: Final Fantasy VII", "paid": 61.62, "virtual": true },
         { "name": "Diablo III : Le retour du nécromancien", "paid": 29.02, "virtual": true },
@@ -99,7 +99,7 @@
         
     ],
     "Wii": [
-        { "name": "White Nintendo Wii System"},
+        { "name": "White Nintendo Wii System", "paid": 85, "console": true },
         { "name": "A Boy and His Blob" },
         { "name": "Band Hero" },
         { "name": "Big Brain Academy: Wii Degree" },
@@ -121,7 +121,17 @@
         { "name": "Wii Sports Resort" }
     ],
     "PlayStation 3": [
-        { "name": "Final Fantasy X / X-2 HD Remaster", "paid": 16.67 }
+        { "name": "PlayStation 3 System 80GB Backward Compatible", "paid": 80, "console": true },
+        { "name": "Assassin's Creed", "paid": 0 },
+        { "name": "Call of Duty Black Ops", "paid": 0 },
+        { "name": "Call of Duty Ghosts", "paid": 0 },
+        { "name": "Call of Duty Modern Warfare 3", "paid": 0 },
+        { "name": "Dragon Ball Xenoverse", "paid": 0 },
+        { "name": "Final Fantasy X / X-2 HD Remaster", "paid": 16.67 },
+        { "name": "Grand Theft Auto V", "paid": 0 },
+        { "name": "Grand Theft Auto IV", "paid": 0 },
+        { "name": "NHL 13", "paid": 0 },
+        { "name": "Shaun White Snowboarding", "paid": 0 }
     ],
     "Xbox 360": [
         { "name": "Super Street Fighter IV" }
@@ -130,6 +140,7 @@
         { "name": "River City Super Sports Challenge" }
     ],
     "GameCube": [
+        { "name": "Platinum GameCube System", "paid": 5, "console": true },
         { "name": "Chibi-Robo!" },
         { "name": "Final Fantasy Crystal Chronicles", "paid": 25.94 },
         { "name": "Luigi's Mansion" },
@@ -139,7 +150,7 @@
         { "name": "Zelda Wind Waker" }
     ],
     "PlayStation 2": [
-        { "name": "Slim PlayStation 2 System" },
+        { "name": "Slim PlayStation 2 System", "console": true },
         { "name": "24 The Game" },
         { "name": "Dawn of Mana" },
         { "name": "Dynasty Warriors 4" },
@@ -170,11 +181,13 @@
         { "name": "Xenosaga 2" }
     ],
     "Nintendo 64": [
+        { "name": "Nintendo 64 System", "console": true },
         { "name": "Star Wars Episode I Racer" },
         { "name": "Super Mario 64", "paid": 30 },
         { "name": "Zelda Ocarina of Time" }
     ],
     "PlayStation": [
+        { "name": "PlayStation System", "paid": 0, "console": true },
         { "name": "Bushido Blade", "paid": 30 },
         { "name": "Bushido Blade 2", "paid": 30 },
         { "name": "Chrono Cross" },
@@ -195,10 +208,10 @@
         { "name": "Tony Hawk 2" }
     ],
     "PAL Super Nintendo" : [
-        { "name": "Super Nintendo Classic Mini", "paid": 119.09 }
+        { "name": "Super Nintendo Classic Mini", "paid": 119.09, "console": true }
     ],
     "Super Nintendo": [
-        { "name": "Super Nintendo System", "paid": 80 },
+        { "name": "Super Nintendo System", "paid": 80, "console": true },
         { "name": "Battle Clash", "paid": 13.73 },
         { "name": "Earth Defense Force", "paid": 20 },
         { "name": "Final Fantasy Mystic Quest", "paid": 16.67 },
@@ -214,9 +227,16 @@
         { "name": "UN Squadron", "paid": 16.67 },
         { "name": "Zelda Link to the Past" }
     ],
+    "GameBoy": [
+        { "name": "Original Gameboy System", "paid": 50, "console": true },
+        { "name": "Balloon Kid", "paid": 10 },
+        { "name": "Final Fantasy Legend II", "paid": 25 },
+        { "name": "Super Mario Land", "paid": 10 },
+        { "name": "Super Mario Land 2", "paid": 15 }
+    ],
     "Sega Genesis": [
-        { "name": "Sega Genesis Model 1 Console" },
-        { "name": "Sega Genesis Mini", "paid": 75.61 },
+        { "name": "Sega Genesis Model 1 Console", "paid": 0, "console": true },
+        { "name": "Sega Genesis Mini", "paid": 75.61, "console": true },
         { "name": "Air Diver" },
         { "name": "Earthworm Jim" },
         { "name": "Ecco the Dolphin" },
@@ -238,19 +258,12 @@
         { "name": "X-Men" },
         { "name": "X-Men 2 The Clone Wars" }
     ],
-    "GameBoy": [
-        { "name": "Original Gameboy System", "paid": 50 },
-        { "name": "Balloon Kid", "paid": 10 },
-        { "name": "Final Fantasy Legend II", "paid": 25 },
-        { "name": "Super Mario Land", "paid": 10 },
-        { "name": "Super Mario Land 2", "paid": 15 }
-    ],
     "Atari 7800": [
         { "name": "Hat Trick" }
     ],
     "NES": [
-        { "name": "Nintendo NES Console" },
-        { "name": "Nintendo NES Classic Edition", "paid": 92.89 },
+        { "name": "Nintendo NES Console", "paid": 0, "console": true },
+        { "name": "Nintendo NES Classic Edition", "paid": 92.89, "console": true },
         { "name": "Adventure Island" },
         { "name": "Adventure Island II", "paid": 16.66 },
         { "name": "Adventures of Bayou Billy" },
@@ -290,15 +303,32 @@
         { "name": "Zelda II The Adventure of Link" }
     ],
     "Colecovision": [
-        { "name": "Colecovision Flashback 60 Games" },
+        { "name": "Colecovision Flashback 60 Games", "console": true },
         { "name": "Donkey Kong" },
         { "name": "Venture" }
     ],
     "Commodore 64": [
-        { "name": "C64 Mini", "paid": 114.96 }
+        { "name": "C64 Mini", "paid": 114.96, "console": true }
+    ],
+    "TI-99": [
+        { "name": "Adventure" },
+        { "name": "Disk Manager" },
+        { "name": "Disk Manager 2" },
+        { "name": "Editor Assembler" },
+        { "name": "Hunt The Wumpus" },
+        { "name": "Microsoft Multiplan" },
+        { "name": "Munch Man" },
+        { "name": "Parsec" },
+        { "name": "Q*Bert" },
+        { "name": "Terminal Emulator II" },
+        { "name": "TI Extended Basic" },
+        { "name": "TI Invaders" },
+        { "name": "Tunnels of Doom" },
+        { "name": "Tombstone City" },
+        { "name": "Oldies But Goodies - Games II" }
     ],
     "Atari 2600": [
-        { "name": "Atari 2600 System" },
+        { "name": "Atari 2600 System", "console": true },
         { "name": "Atari Flashback" },
         { "name": "Air Sea Battle" },
         { "name": "Asteroids" },

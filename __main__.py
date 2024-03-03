@@ -9,7 +9,7 @@ if __name__ == "__main__":
     argument_parser.add_argument("--api", "-a", action="store_true", help="Run Web API service.")
     argument_parser.add_argument("--console_name", "-c", help="Process all games on a console.")
     argument_parser.add_argument("--report_statistical", "-s", action="store_true", help="Print statistical game report.")
-    argument_parser.add_argument("--report_top", "-t", help="Print top game report.")
+    argument_parser.add_argument("--report_top", "-t", help="Print top X games report.")
     arguments: Namespace = argument_parser.parse_args()
 
     if arguments.api:

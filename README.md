@@ -71,7 +71,7 @@ pip install -r requirements.txt
 ```
 9. Run solution:
 ```
-python .
+python apy
 ```
 10. Initialize database: [init](http://localhost:8000/init);
 11. Run tests:

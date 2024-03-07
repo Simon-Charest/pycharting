@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup, Tag
 from datetime import datetime
+from glob import glob
 from json import load
 from fastapi import Response
 from pathlib import Path
@@ -153,21 +154,29 @@ def execute(connection: Connection, sql: str) -> list:
     return results
 
 
-def load_games(console_name: str = None, exclude_unowned: bool = False, exclude_reproduction: bool = True, sanitize: bool = False) -> dict:
+def load_games(key: str = None, exclude_unowned: bool = False, exclude_reproduction: bool = True, sanitize: bool = False) -> dict:
     """Load games from a JSON file."""
 
-    games: dict = load(open(Path(__file__).parent.joinpath("data/game.json")))
+    data: dict = {}
 
-    if console_name and console_name != "*":
-        games = {console_name: games.get(console_name, [])}
+    # Get all JSON files in the directory
+    paths: list = glob(str(Path(__file__).parent.joinpath("data/*.json")))
+
+    # Loop through each JSON file
+    for path in paths:
+        # Read and load the JSON data from the file
+        data.update(load(open(path)))
+
+    if key and key != "*":
+        data = {key: data.get(key, [])}
 
     if exclude_unowned or exclude_reproduction:
-        games = _filter(games, exclude_unowned, exclude_reproduction)
+        data = _filter(data, exclude_unowned, exclude_reproduction)
 
     if sanitize:
-        games = _sanitize(games)
+        data = _sanitize(data)
 
-    return games
+    return data
 
 
 def _filter(games: dict, exclude_unowned: bool = False, exclude_reproduction: bool = False) -> dict:

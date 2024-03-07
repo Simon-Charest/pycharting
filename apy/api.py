@@ -1,10 +1,10 @@
-from typing import Any
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from json import load, loads
 from pathlib import Path
 from sqlite3 import connect, Connection
-from fastapi.staticfiles import StaticFiles
+from typing import Any
 from uvicorn import run
 
 app: FastAPI = FastAPI()

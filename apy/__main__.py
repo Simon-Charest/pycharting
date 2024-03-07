@@ -1,7 +1,9 @@
-from sqlite3 import Connection
-from apy.api import main as run_api
-from apy.game import get_connection, main as run_game, print_statistical_report, print_top_report
 from argparse import ArgumentParser, Namespace
+from sqlite3 import Connection
+
+# APy
+from api import main as run_api
+from game import get_connection, main as run_game, print_statistical_report, print_top_report
 
 
 if __name__ == "__main__":

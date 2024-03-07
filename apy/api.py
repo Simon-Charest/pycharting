@@ -20,7 +20,7 @@ config: dict = load(open(Path(__file__).parent.joinpath("config.json")))
 connection: Connection = connect(Path(__file__).parent.joinpath("data/apy.db"))
 
 
-def main() -> None:
+def run_api() -> None:
     run(f"{__name__}:app", host=config["host"], port=config["port"], reload=True)
 
 

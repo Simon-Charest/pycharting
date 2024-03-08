@@ -24,7 +24,7 @@ def execute(connection: Connection, sql: str) -> list:
     return results
 
 
-def print_statistical_report(connection: Connection) -> None:
+def get_statistical_report(connection: Connection) -> list:
     # Get data
     sql: str = Path(__file__).parent.joinpath("data/games/select_stats.sql").read_text()
     rows: list = execute(connection, sql)
@@ -48,16 +48,15 @@ def print_statistical_report(connection: Connection) -> None:
         sum += row["sum"]
 
     avg: float = round(sum / count, 2)
+    sum = round(sum, 2)
 
     # Append totals
     rows.append({"console_name": "total", "count": count, "min": min, "avg": avg, "max": max, "sum": sum})
 
-    # Print data
-    for row in rows:
-        print(row)
+    return rows
 
 
-def print_top_report(connection: Connection, top: str) -> None:
+def get_top_report(connection: Connection, top: str) -> list:
     # Get data
     sql: str = Path(__file__).parent.joinpath("data/games/select_top.sql").read_text()
     rows: list = execute(connection, sql.replace("?", top))
@@ -86,6 +85,4 @@ def print_top_report(connection: Connection, top: str) -> None:
     # Append totals
     rows.append({"console_name": "total", "count": count, "min": min, "avg": avg, "max": max, "sum": sum})
 
-    # Print data
-    for row in rows:
-        print(row)
+    return rows

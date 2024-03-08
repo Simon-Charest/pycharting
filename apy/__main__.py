@@ -3,10 +3,11 @@ from pathlib import Path
 from sqlite3 import Connection, connect
 
 # APy
+from constant import *
+from utils import *
 from api import run_api
 from crawler import crawl_price_charting
-from database import execute, print_statistical_report, print_top_report
-from utils import *
+from database import execute, get_statistical_report, get_top_report
 
 
 if __name__ == "__main__":
@@ -19,6 +20,8 @@ if __name__ == "__main__":
     argument_parser.add_argument("--select_not_today", "--snt", action="store_true", help="select not today")
     arguments: Namespace = argument_parser.parse_args()
     connection: Connection = connect(Path(__file__).parent.joinpath("data/apy.db"))
+    rows: list
+    usd_cad_rate: float = get_usd_cad_rate()
 
     if arguments.api:
         run_api()
@@ -33,14 +36,19 @@ if __name__ == "__main__":
             .replace("{PRODUCT_NAME}", arguments.delete[1]))
 
     if arguments.report_statistical:
-        print_statistical_report(connection)
+        rows = get_statistical_report(connection)
+        rows = convert_usd_cad(rows, usd_cad_rate, INCLUDED_KEYS, EXCLUDED_KEYS)
+        print_list(rows)
 
     if arguments.report_top:
-        print_top_report(connection, arguments.report_top)
+        rows = get_top_report(connection, arguments.report_top)
+        rows = convert_usd_cad(rows, usd_cad_rate, INCLUDED_KEYS, EXCLUDED_KEYS)
+        print_list(rows)
 
     if arguments.select_not_today:
         sql: str = Path(__file__).parent.joinpath("data/games/select_not_today.sql").read_text()
-        rows: list = execute(connection, sql)
+        rows = execute(connection, sql)
+        rows = convert_usd_cad(rows, usd_cad_rate, INCLUDED_KEYS, EXCLUDED_KEYS)
         print_list(rows)
 
     connection.close()

@@ -51,10 +51,11 @@ def crawl_price_charting(connection: Connection, console_name: str = None) -> No
 def _load_data(title: str = None, EXCLUDE_UNOWNED: bool = False, EXCLUDE_REPRODUCTION: bool = True, SANITIZE: bool = False) -> dict:
     """Load data from a JSON file."""
 
-    data: dict = {}
-
     # Get all JSON files in the directory
     paths: list = glob(str(Path(__file__).parent.joinpath("data/*.json")))
+    
+    path: str
+    data: dict = {}
 
     # Loop through each JSON file
     for path in paths:

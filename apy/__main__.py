@@ -15,7 +15,6 @@ if __name__ == "__main__":
     argument_parser.add_argument("--delete", "-d", nargs=2, help="delete")
     argument_parser.add_argument("--report_statistical", "-s", action="store_true", help="print statistical report")
     argument_parser.add_argument("--report_top", "-t", help="print top X report")
-    argument_parser.add_argument("--select_grouped", "--sg", help="select grouped")
     argument_parser.add_argument("--select_not_today", "--snt", action="store_true", help="select not today")
     arguments: Namespace = argument_parser.parse_args()
 
@@ -38,11 +37,6 @@ if __name__ == "__main__":
 
     if arguments.report_top:
         print_top_report(connection, arguments.report_top)
-
-    if arguments.select_grouped:
-        sql: str = Path(__file__).parent.joinpath("data/games/select_grouped.sql").read_text()
-        rows: list = execute(connection, sql.replace("?", arguments.select_grouped))
-        print_list(rows)
 
     if arguments.select_not_today:
         sql: str = Path(__file__).parent.joinpath("data/games/select_not_today.sql").read_text()

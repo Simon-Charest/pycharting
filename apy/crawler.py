@@ -18,7 +18,7 @@ def crawl_price_charting(connection: Connection, console_name: str = None) -> No
     select_all_sql: str = Path(__file__).parent.joinpath("data/games/select_all.sql").read_text()
     insert_sql: str = Path(__file__).parent.joinpath("data/games/insert.sql").read_text()
     connection.cursor().execute(create_sql)
-    rows: list = _execute(connection, select_all_sql)
+    rows: list = execute(connection, select_all_sql)
     data: dict = _load_data(console_name, EXCLUDE_UNOWNED, EXCLUDE_REPRODUCTION, SANITIZE)
     filtered: list = _filter_processed(data, rows)
 
@@ -50,7 +50,7 @@ def crawl_price_charting(connection: Connection, console_name: str = None) -> No
 def print_statistical_report(connection: Connection) -> None:
     # Get data
     sql: str = Path(__file__).parent.joinpath("data/games/select_stats.sql").read_text()
-    rows: list = _execute(connection, sql)
+    rows: list = execute(connection, sql)
 
     # Calculate totals
     row: dict
@@ -83,7 +83,7 @@ def print_statistical_report(connection: Connection) -> None:
 def print_top_report(connection: Connection, top: str) -> None:
     # Get data
     sql: str = Path(__file__).parent.joinpath("data/games/select_top.sql").read_text()
-    rows: list = _execute(connection, sql.replace("?", top))
+    rows: list = execute(connection, sql.replace("?", top))
 
     # Calculate totals
     row: dict
@@ -128,7 +128,7 @@ def _filter_processed(data: dict, rows: list) -> list:
     return filtered
 
 
-def _execute(connection: Connection, sql: str) -> list:
+def execute(connection: Connection, sql: str) -> list:
     """Run a SQL query and return its results as JSON data."""
 
     cursor: Cursor = connection.cursor()
@@ -143,6 +143,9 @@ def _execute(connection: Connection, sql: str) -> list:
 
         for row in rows:
             results.append(dict(zip(columns, row)))
+
+    else:
+        connection.commit()
 
     return results
 

@@ -51,3 +51,9 @@ if __name__ == "__main__":
         print_list(rows)
 
     connection.close()
+
+    # Check if any argument has a value
+    if not any(vars(arguments).values()):
+        argument_parser.print_help()
+
+

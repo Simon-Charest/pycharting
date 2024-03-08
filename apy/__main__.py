@@ -4,7 +4,8 @@ from sqlite3 import Connection, connect
 
 # APy
 from api import run_api
-from crawler import crawl_price_charting, execute, print_statistical_report, print_top_report
+from crawler import crawl_price_charting
+from database import execute, print_statistical_report, print_top_report
 from utils import *
 
 
@@ -17,7 +18,6 @@ if __name__ == "__main__":
     argument_parser.add_argument("--report_top", "-t", help="print top X report")
     argument_parser.add_argument("--select_not_today", "--snt", action="store_true", help="select not today")
     arguments: Namespace = argument_parser.parse_args()
-
     connection: Connection = connect(Path(__file__).parent.joinpath("data/apy.db"))
 
     if arguments.api:

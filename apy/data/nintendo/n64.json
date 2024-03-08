@@ -1,0 +1,10 @@
+{
+    "Nintendo 64": [
+        { "name": "Nintendo 64 System", "console": true },
+        { "name": "Donkey Kong 64", "paid": 30 },
+        { "name": "Star Wars Episode I Racer" },
+        { "name": "Super Mario 64", "paid": 30 },
+        { "name": "Super Smash Bros.", "paid": 50 },
+        { "name": "Zelda Ocarina of Time" }
+    ]
+}

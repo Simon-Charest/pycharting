@@ -1,0 +1,9 @@
+{
+    "GameBoy": [
+        { "name": "Original Gameboy System", "paid": 50, "console": true },
+        { "name": "Balloon Kid", "paid": 10 },
+        { "name": "Final Fantasy Legend II", "paid": 25 },
+        { "name": "Super Mario Land", "paid": 10 },
+        { "name": "Super Mario Land 2", "paid": 15 }
+    ]
+}

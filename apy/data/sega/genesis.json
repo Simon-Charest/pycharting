@@ -1,0 +1,26 @@
+{
+    "Sega Genesis": [
+        { "name": "Sega Genesis Model 1 Console", "paid": 0, "console": true },
+        { "name": "Sega Genesis Mini", "paid": 75.61, "console": true },
+        { "name": "Air Diver" },
+        { "name": "Earthworm Jim" },
+        { "name": "Ecco the Dolphin" },
+        { "name": "Eternal Champions" },
+        { "name": "Flashback: The Quest for Identity" },
+        { "name": "Lethal Enforcers II" },
+        { "name": "NBA Jam Tournament Edition" },
+        { "name": "Quackshot Starring Donald Duck" },
+        { "name": "Robocop vs The Terminator" },
+        { "name": "Samurai Shodown" },
+        { "name": "Shinobi III Return of the Ninja Master" },
+        { "name": "Sonic the Hedgehog", "paid": 16.66 },
+        { "name": "Sonic the Hedgehog 2" },
+        { "name": "Street Fighter II Special Champion Edition" },
+        { "name": "Sub Terrania" },
+        { "name": "Target Earth" },
+        { "name": "Tommy Lasorda Baseball" },
+        { "name": "Urban Strike" },
+        { "name": "X-Men" },
+        { "name": "X-Men 2 The Clone Wars" }
+    ]
+}

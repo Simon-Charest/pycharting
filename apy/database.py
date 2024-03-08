@@ -1,5 +1,7 @@
-from pathlib import Path
 from sqlite3 import Connection, Cursor
+
+# APy
+from constant import *
 
 
 def execute(connection: Connection, sql: str) -> list:
@@ -26,7 +28,7 @@ def execute(connection: Connection, sql: str) -> list:
 
 def get_statistical_report(connection: Connection) -> list:
     # Get data
-    sql: str = Path(__file__).parent.joinpath("data/games/select_stats.sql").read_text()
+    sql: str = DATABASE_PATH.joinpath("games/select_stats.sql").read_text()
     rows: list = execute(connection, sql)
 
     # Calculate totals
@@ -58,7 +60,7 @@ def get_statistical_report(connection: Connection) -> list:
 
 def get_top_report(connection: Connection, top: str) -> list:
     # Get data
-    sql: str = Path(__file__).parent.joinpath("data/games/select_top.sql").read_text()
+    sql: str = DATABASE_PATH.joinpath("games/select_top.sql").read_text()
     rows: list = execute(connection, sql.replace("?", top))
 
     # Calculate totals

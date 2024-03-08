@@ -1,0 +1,23 @@
+{
+    "PlayStation": [
+        { "name": "PlayStation System", "paid": 0, "console": true },
+        { "name": "Bushido Blade", "paid": 30 },
+        { "name": "Bushido Blade 2", "paid": 30 },
+        { "name": "Chrono Cross" },
+        { "name": "Dragon Warrior 7" },
+        { "name": "Final Fantasy Anthology", "paid": 20 },
+        { "name": "Final Fantasy Chronicles", "paid": 20 },
+        { "name": "Final Fantasy Origins" },
+        { "name": "Final Fantasy Tactics" },
+        { "name": "Final Fantasy VII" },
+        { "name": "Final Fantasy VIII" },
+        { "name": "Final Fantasy IX" },
+        { "name": "Lunar: Silver Star Story Complete" },
+        { "name": "Mega Man 8" },
+        { "name": "Mega Man X5" },
+        { "name": "Mega Man X6" },
+        { "name": "Spiderman" },
+        { "name": "Threads of Fate" },
+        { "name": "Tony Hawk 2" }
+    ]
+}

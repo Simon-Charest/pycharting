@@ -1,5 +1,7 @@
-from apy.api import calc
 from pytest import mark
+
+# APy
+from api import calc
 
 
 class TestCalc:

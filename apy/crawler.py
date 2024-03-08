@@ -3,7 +3,6 @@ from datetime import datetime
 from glob import glob
 from json import load
 from fastapi import Response
-from pathlib import Path
 from requests import get
 from sqlite3 import Connection
 from time import sleep
@@ -15,9 +14,9 @@ from database import execute
 
 def crawl_price_charting(connection: Connection, console_name: str = None) -> None:
     now: str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    create_sql: str = Path(__file__).parent.joinpath("data/games/create.sql").read_text()
-    select_all_sql: str = Path(__file__).parent.joinpath("data/games/select_all.sql").read_text()
-    insert_sql: str = Path(__file__).parent.joinpath("data/games/insert.sql").read_text()
+    create_sql: str = DATABASE_PATH.joinpath("games/create.sql").read_text()
+    select_all_sql: str = DATABASE_PATH.joinpath("games/select_all.sql").read_text()
+    insert_sql: str = DATABASE_PATH.joinpath("games/insert.sql").read_text()
     connection.cursor().execute(create_sql)
     rows: list = execute(connection, select_all_sql)
     data: dict = _load_data(console_name, EXCLUDE_UNOWNED, EXCLUDE_REPRODUCTION, SANITIZE)
@@ -52,7 +51,7 @@ def _load_data(title: str = None, EXCLUDE_UNOWNED: bool = False, EXCLUDE_REPRODU
     """Load data from a JSON file."""
 
     # Get all JSON files in the directory
-    paths: list = glob(str(Path(__file__).parent.joinpath("data/*.json")))
+    paths: list = glob(str(DATA_PATH))
     
     path: str
     data: dict = {}

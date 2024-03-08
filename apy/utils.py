@@ -16,10 +16,10 @@ def convert_usd_cad(rows: list[dict], usd_cad_rate: float, included_keys: list[s
     return rows
 
 
-def get_usd_cad_rate(url: str = "https://www.google.com/finance/quote/USD-CAD") -> float:
+def get_usd_cad_rate(url: str = "https://www.google.com/finance/quote/USD-CAD", class_: str = "YMlKec fxKbKc") -> float:
     response: Response = get(url)
     soup: BeautifulSoup = BeautifulSoup(response.text, "html.parser")
-    rate_element: Tag = soup.find("div", class_="YMlKec fxKbKc")
+    rate_element: Tag = soup.find("div", class_=class_)
 
     return float(rate_element.text.strip())
 

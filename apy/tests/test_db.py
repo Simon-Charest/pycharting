@@ -1,5 +1,7 @@
-from apy.api import select
 from pytest import mark
+
+# APy
+from api import select
 
 
 class TestDb:

@@ -1,0 +1,8 @@
+{
+    "PlayStation 5": [
+        { "name": "PlayStation 5 Call of Duty Modern Warfare III Bundle", "paid": 747.28, "console": true },
+        { "name": "PlayStation 5 DualSense Wireless Controller - White", "paid": 103.70, "virtual": true, "gamepad": true },
+        { "name": "Call of Duty Modern Warfare III", "paid": 0, "virtual": true },
+        { "name": "Final Fantasy XVI", "paid": 64.48, "virtual": true }
+    ]
+}

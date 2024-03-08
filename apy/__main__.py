@@ -1,5 +1,4 @@
 from argparse import ArgumentParser, Namespace
-from pathlib import Path
 from sqlite3 import Connection, connect
 
 # APy
@@ -19,7 +18,7 @@ if __name__ == "__main__":
     argument_parser.add_argument("--report_top", "-t", help="print top X report")
     argument_parser.add_argument("--select_not_today", "--snt", action="store_true", help="select not today")
     arguments: Namespace = argument_parser.parse_args()
-    connection: Connection = connect(Path(__file__).parent.joinpath("data/apy.db"))
+    connection: Connection = connect(DATABASE_PATH.joinpath("apy.db"))
     rows: list
     usd_cad_rate: float = get_usd_cad_rate()
 
@@ -30,7 +29,7 @@ if __name__ == "__main__":
         crawl_price_charting(connection, arguments.crawl)
 
     if arguments.delete:
-        sql: str = Path(__file__).parent.joinpath("data/games/delete.sql").read_text()
+        sql: str = DATABASE_PATH.joinpath("games/delete.sql").read_text()
         execute(connection, sql
             .replace("{CONSOLE_NAME}", arguments.delete[0])
             .replace("{PRODUCT_NAME}", arguments.delete[1]))
@@ -46,7 +45,7 @@ if __name__ == "__main__":
         print_list(rows)
 
     if arguments.select_not_today:
-        sql: str = Path(__file__).parent.joinpath("data/games/select_not_today.sql").read_text()
+        sql: str = DATABASE_PATH.joinpath("games/select_not_today.sql").read_text()
         rows = execute(connection, sql)
         rows = convert_usd_cad(rows, usd_cad_rate, INCLUDED_KEYS, EXCLUDED_KEYS)
         print_list(rows)

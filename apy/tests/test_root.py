@@ -1,5 +1,7 @@
-from apy.api import hello, health
 from pytest import mark
+
+# APy
+from api import hello, health
 
 
 class TestRoot:

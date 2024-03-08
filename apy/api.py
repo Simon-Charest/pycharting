@@ -7,6 +7,9 @@ from sqlite3 import connect, Connection
 from typing import Any
 from uvicorn import run
 
+# APy
+from constant import DATABASE_PATH
+
 app: FastAPI = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -17,7 +20,7 @@ app.add_middleware(
 )
 app.mount("/static", StaticFiles(directory=Path(__file__).parent.joinpath("ui/static")), name="static")
 config: dict = load(open(Path(__file__).parent.joinpath("config.json")))
-connection: Connection = connect(Path(__file__).parent.joinpath("data/apy.db"))
+connection: Connection = connect(DATABASE_PATH.joinpath("apy.db"))
 
 
 def run_api() -> None:
@@ -69,7 +72,7 @@ async def hello() -> dict:
 async def init() -> dict:
     await drop()
     await create()
-    users: list = loads(Path(__file__).parent.joinpath("data/users/data.json").read_text())
+    users: list = loads(DATABASE_PATH.joinpath("users/data.json").read_text())
     await insert(users)
 
     return {"message": "Database initialized."}
@@ -139,7 +142,7 @@ async def mortgage(request: dict) -> dict[str, Any]:
 
 @app.post("/users/drop")
 async def drop() -> dict:
-    sql: str = Path(__file__).parent.joinpath("data/users/drop.sql").read_text()
+    sql: str = DATABASE_PATH.joinpath("users/drop.sql").read_text()
     connection.cursor().execute(sql)
 
     return {"message": "User table dropped."}
@@ -147,7 +150,7 @@ async def drop() -> dict:
 
 @app.post("/users/create")
 async def create() -> dict:
-    sql: str = Path(__file__).parent.joinpath("data/users/create.sql").read_text()
+    sql: str = DATABASE_PATH.joinpath("users/create.sql").read_text()
     connection.cursor().execute(sql)
 
     return {"message": "User table created."}
@@ -160,11 +163,11 @@ async def select(id: str = None) -> list:
     rows: list
     
     if id:
-        sql = Path(__file__).parent.joinpath("data/users/select.sql").read_text()
+        sql = DATABASE_PATH.joinpath("users/select.sql").read_text()
         rows = connection.cursor().execute(sql, (id,)).fetchall()
 
     else:
-        sql = Path(__file__).parent.joinpath("data/users/select_all.sql").read_text()
+        sql = DATABASE_PATH.joinpath("users/select_all.sql").read_text()
         rows = connection.cursor().execute(sql).fetchall()
     
     return rows
@@ -172,7 +175,7 @@ async def select(id: str = None) -> list:
 
 @app.post("/users/insert")
 async def insert(users: list[dict]) -> dict:
-    sql: str = Path(__file__).parent.joinpath("data/users/insert.sql").read_text()
+    sql: str = DATABASE_PATH.joinpath("users/insert.sql").read_text()
     user_tuples: list[tuple] = [tuple(user.values()) for user in users]
     connection.cursor().executemany(sql, user_tuples)
     connection.commit()
@@ -182,7 +185,7 @@ async def insert(users: list[dict]) -> dict:
 
 @app.put("/users/update/{id}")
 async def update(id: str, user: dict) -> dict:
-    sql: str = Path(__file__).parent.joinpath("data/users/update.sql").read_text()
+    sql: str = DATABASE_PATH.joinpath("users/update.sql").read_text()
     user["id"] = id
     user_tuple = tuple(user.values())
     connection.cursor().execute(sql, user_tuple)
@@ -202,7 +205,7 @@ async def test(id: str, user: dict) -> dict:
 
 @app.delete("/users/delete/{id}")
 async def delete(id: str) -> dict:
-    sql: str = Path(__file__).parent.joinpath("data/users/delete.sql").read_text()
+    sql: str = DATABASE_PATH.joinpath("users/delete.sql").read_text()
     connection.cursor().execute(sql, (id,))
     connection.commit()
 

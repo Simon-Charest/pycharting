@@ -1,0 +1,33 @@
+{
+    "PlayStation 2": [
+        { "name": "Slim PlayStation 2 System", "console": true },
+        { "name": "24 The Game" },
+        { "name": "Dawn of Mana" },
+        { "name": "Dynasty Warriors 4" },
+        { "name": "Enter the Matrix" },
+        { "name": "Final Fantasy VII Dirge of Cerberus" },
+        { "name": "Final Fantasy X" },
+        { "name": "Final Fantasy X-2" },
+        { "name": "Final Fantasy XII" },
+        { "name": "Grand Theft Auto III" },
+        { "name": "Guitar Hero II" },
+        { "name": "Guitar Hero III: Legends of Rock" },
+        { "name": "Guitar Hero World Tour" },
+        { "name": "Kessen 2" },
+        { "name": "Madden 2003" },
+        { "name": "Mega Man Anniversary Collection" },
+        { "name": "Need for Speed Underground 2" },
+        { "name": "NHL 07" },
+        { "name": "Onimusha 2" },
+        { "name": "Onimusha 3 Demon Siege" },
+        { "name": "PaRappa The Rapper 2" },
+        { "name": "The Matrix Path of Neo" },
+        { "name": "The Sims 2" },
+        { "name": "Street Fighter Alpha Anthology" },
+        { "name": "Street Fighter EX3" },
+        { "name": "The Simpsons Road Rage" },
+        { "name": "We Love Katamari" },
+        { "name": "Xenosaga" },
+        { "name": "Xenosaga 2" }
+    ]
+}

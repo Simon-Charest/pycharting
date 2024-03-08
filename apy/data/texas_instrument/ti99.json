@@ -1,0 +1,19 @@
+{
+    "TI-99": [
+        { "name": "Adventure" },
+        { "name": "Disk Manager" },
+        { "name": "Disk Manager 2" },
+        { "name": "Editor Assembler" },
+        { "name": "Hunt The Wumpus" },
+        { "name": "Microsoft Multiplan" },
+        { "name": "Munch Man" },
+        { "name": "Oldies But Goodies - Games II" },
+        { "name": "Parsec" },
+        { "name": "Q*bert" },
+        { "name": "Terminal Emulator II" },
+        { "name": "TI Extended Basic" },
+        { "name": "TI Invaders" },
+        { "name": "Tombstone City" },
+        { "name": "Tunnels of Doom" }
+    ]
+}

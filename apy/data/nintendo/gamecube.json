@@ -1,0 +1,12 @@
+{
+    "GameCube": [
+        { "name": "Platinum GameCube System", "paid": 5, "console": true },
+        { "name": "Chibi-Robo!" },
+        { "name": "Final Fantasy Crystal Chronicles", "paid": 25.94 },
+        { "name": "Luigi's Mansion" },
+        { "name": "Mario Kart Double Dash" },
+        { "name": "Pikmin 2" },
+        { "name": "Super Mario Sunshine" },
+        { "name": "Zelda Wind Waker" }
+    ]
+}

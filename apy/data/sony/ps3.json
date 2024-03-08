@@ -1,0 +1,15 @@
+{
+    "PlayStation 3": [
+        { "name": "PlayStation 3 System 80GB Backward Compatible", "paid": 80, "console": true },
+        { "name": "Assassin's Creed", "paid": 0 },
+        { "name": "Call of Duty Black Ops", "paid": 0 },
+        { "name": "Call of Duty Ghosts", "paid": 0 },
+        { "name": "Call of Duty Modern Warfare 3", "paid": 0 },
+        { "name": "Dragon Ball Xenoverse", "paid": 0 },
+        { "name": "Final Fantasy X / X-2 HD Remaster", "paid": 16.67 },
+        { "name": "Grand Theft Auto IV", "paid": 0 },
+        { "name": "Grand Theft Auto V", "paid": 0 },
+        { "name": "NHL 13", "paid": 0 },
+        { "name": "Shaun White Snowboarding", "paid": 0 }
+    ]
+}

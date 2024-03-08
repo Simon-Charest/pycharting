@@ -1,0 +1,18 @@
+{
+    "PlayStation 4": [
+        { "name": "Playstation 4 1TB Slim Console", "paid": 402.60, "console": true },
+        { "name": "Castlevania Requiem: Symphony of the Night & Rondo of Blood", "paid": 14.84, "virtual": true },
+        { "name": "Crisis Core: Final Fantasy VII", "paid": 61.62, "virtual": true },
+        { "name": "Diablo III : Le retour du nécromancien", "paid": 29.02, "virtual": true },
+        { "name": "Dissidia Final Fantasy NT", "paid": 11.46 },
+        { "name": "Dragon Quest Builders 2" },
+        { "name": "FFXV Episode Ardyn", "paid": 7.69, "virtual": true },
+        { "name": "Final Fantasy XV Royal Edition", "paid": 25.83, "virtual": true },
+        { "name": "God of War III Remastered", "paid": 0, "virtual": true },
+        { "name": "Grand Theft Auto V: Premium Online Edition", "paid": 25.83, "virtual": true },
+        { "name": "Horizon Zero Dawn", "paid": 0, "virtual": true },
+        { "name": "Rocksmith 2014 Edition Remastered", "paid": 21.43, "virtual": true },
+        { "name": "Stranger of Paradise: Final Fantasy Origin", "paid": 64.47, "virtual": true },
+        { "name": "The Last of Us Remastered", "paid": 0 }
+    ]
+}

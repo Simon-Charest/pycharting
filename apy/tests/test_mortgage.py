@@ -1,5 +1,7 @@
-from apy.api import mortgage
 from pytest import mark
+
+# APy
+from api import mortgage
 
 
 class TestMortgage:

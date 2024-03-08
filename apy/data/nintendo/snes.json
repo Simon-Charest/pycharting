@@ -1,0 +1,22 @@
+{
+    "PAL Super Nintendo" : [
+        { "name": "Super Nintendo Classic Mini", "paid": 119.09, "console": true }
+    ],
+    "Super Nintendo": [
+        { "name": "Super Nintendo System", "paid": 80, "console": true },
+        { "name": "Battle Clash", "paid": 13.73 },
+        { "name": "Earth Defense Force", "paid": 20 },
+        { "name": "Final Fantasy Mystic Quest", "paid": 16.67 },
+        { "name": "King Arthur's World", "owned": false },
+        { "name": "Lamborghini American Challenge", "paid": 13.73 },
+        { "name": "Metal Combat: Falcon’s Revenge", "owned": false, "paid": 13.73 },
+        { "name": "NHLPA Hockey '93", "owned": false, "paid": 3.5 },
+        { "name": "P.T.O.", "paid": 10 },
+        { "name": "SimCity" },
+        { "name": "Super Mario Kart" },
+        { "name": "Super Mario World", "paid": 16.67 },
+        { "name": "Super Scope 6" },
+        { "name": "UN Squadron", "paid": 16.67 },
+        { "name": "Zelda Link to the Past" }
+    ]
+}

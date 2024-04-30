@@ -1,7 +1,7 @@
 {
     "PlayStation 2": [
         { "name": "Slim PlayStation 2 System", "console": true },
-        { "name": "24 The Game" },
+        { "name": "24 The Game", "paid": 0 },
         { "name": "Dawn of Mana" },
         { "name": "Dragon Quest VIII: Journey of the Cursed King", "paid": 10 },
         { "name": "Dynasty Warriors 4" },

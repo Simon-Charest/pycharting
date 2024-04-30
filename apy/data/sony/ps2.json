@@ -3,7 +3,7 @@
         { "name": "Slim PlayStation 2 System", "console": true },
         { "name": "24 The Game" },
         { "name": "Dawn of Mana" },
-        { "name": "Dragon Quest VIII: Journey of the Cursed King" },
+        { "name": "Dragon Quest VIII: Journey of the Cursed King", "paid": 10 },
         { "name": "Dynasty Warriors 4" },
         { "name": "Enter the Matrix" },
         { "name": "Final Fantasy VII Dirge of Cerberus" },

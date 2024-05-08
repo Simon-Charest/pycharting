@@ -13,9 +13,11 @@
         { "name": "NHLPA Hockey '93", "owned": false, "paid": 3.5 },
         { "name": "P.T.O.", "paid": 10 },
         { "name": "SimCity" },
+        { "name": "Stunt Race FX", "paid": 10 },
         { "name": "Super Mario Kart" },
         { "name": "Super Mario World", "paid": 16.67 },
         { "name": "Super Scope 6" },
+        { "name": "Tetris 2", "paid": 15 },
         { "name": "UN Squadron", "paid": 16.67 },
         { "name": "Zelda Link to the Past" }
     ]

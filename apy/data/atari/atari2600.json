@@ -20,6 +20,7 @@
         { "name": "Crossbow", "owned": false },
         { "name": "Crypts of Chaos", "owned": false },
         { "name": "Combat" },
+        { "name": "Combat", "paid": 2 },
         { "name": "Defender", "previously_owned": true },
         { "name": "Defender II", "owned": false },
         { "name": "Dig Dug", "paid": 6 },

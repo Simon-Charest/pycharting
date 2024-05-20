@@ -20,7 +20,7 @@
         { "name": "Jurassic Park" },
         { "name": "Karate Champ", "paid": 5 },
         { "name": "Kid Icarus" },
-        { "name": "Kung Fun", "paid": 10 },
+        { "name": "Kung Fu", "paid": 10 },
         { "name": "Legend of Zelda" },
         { "name": "Life Force" },
         { "name": "Little Samson", "reproduction": true },

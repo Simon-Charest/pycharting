@@ -46,7 +46,7 @@
         { "name": "Kangaroo", "paid": 5 },
         { "name": "Klax", "owned": false },
         { "name": "Laser Blast" },
-        { "name": "Mario Bros.", "owned": false, "previously_owned": true },
+        { "name": "Mario Bros.", "previously_owned": true, "paid": 20 },
         { "name": "Maze Craze: A Game of Cops and Robbers", "owned": false },
         { "name": "Millipede", "owned": false },
         { "name": "Missile Command", "paid": 1, "previously_owned": true },

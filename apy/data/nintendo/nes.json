@@ -10,6 +10,7 @@
         { "name": "Castlevania", "owned": false, "paid": 31.22 },
         { "name": "Castlevania II", "owned": false, "paid": 31.22 },
         { "name": "Castlevania III", "owned": false, "paid": 31.22  },
+        { "name": "Donkey Kong Classics", "paid": 30 },
         { "name": "Double Dragon", "paid": 15, "quantity": 2 },
         { "name": "Dragon Warrior" },
         { "name": "Final Fantasy", "paid": 24 },

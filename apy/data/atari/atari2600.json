@@ -67,6 +67,7 @@
         { "name": "Raiders of the Lost Ark", "owned": false },
         { "name": "Slot Racers" },
         { "name": "Smurf: Rescue in Gargamel's Castle", "owned": false, "previously_owned": true },
+        { "name": "Sorcerer's Apprentice", "owned": false, "previously_owned": true },
         { "name": "Space Attack", "previously_owned": true, "paid": 3 },
         { "name": "Space Invaders" },
         { "name": "Space War" },

@@ -65,6 +65,7 @@
         { "name": "Q*bert", "previously_owned": true, "paid": 5 },
         { "name": "Q*bert Cubes", "owned": false },
         { "name": "Raiders of the Lost Ark", "owned": false },
+        { "name": "RealSports Football", "owned": false, "previously_owned": true },
         { "name": "Slot Racers" },
         { "name": "Smurf: Rescue in Gargamel's Castle", "owned": false, "previously_owned": true },
         { "name": "Sorcerer's Apprentice", "previously_owned": true, "paid": 25.29 },
@@ -73,13 +74,18 @@
         { "name": "Space War" },
         { "name": "Spider-Man", "owned": false },
         { "name": "Spy-Hunter", "owned": false },
+        { "name": "Star Raiders", "owned": false },
         { "name": "Sword of Saros", "owned": false },
+        { "name": "Super Challenge Football", "owned": false },
         { "name": "Tapper", "owned": false },
         { "name": "Taz", "owned": false, "previously_owned": true },
         { "name": "Tutankham", "paid": 10 },
         { "name": "Video Pinball" },
         { "name": "Venture", "previously_owned": true, "paid": 8 },
+        { "name": "Venture II", "owned": false },
         { "name": "Warlords" },
-        { "name": "Yars' Revenge" }
+        { "name": "Wizard of Wor", "owned": false },
+        { "name": "Yars' Revenge" },
+        { "name": "Zaxxon", "owned": false }
     ]
 }

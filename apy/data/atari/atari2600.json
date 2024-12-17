@@ -42,7 +42,7 @@
         { "name": "Seaquest", "paid": 5 },
         { "name": "Skiing", "paid": 9.04 },
         { "name": "Slot Racers" },
-        { "name": "Smurf: Rescue in Gargamel's Castle", "owned": true, "previously_owned": true, "paid": 28.74 },
+        { "name": "Smurf: Rescue in Gargamel's Castle", "previously_owned": true, "paid": 28.74 },
         { "name": "Sorcerer's Apprentice", "previously_owned": true, "paid": 25.29 },
         { "name": "Space Attack", "previously_owned": true, "paid": 3 },
         { "name": "Space Invaders" },

@@ -98,12 +98,15 @@
         { "name": "Untold Legends: Dark Kingdom" },
         { "name": "Warhawk" }
     ],
+    "PlayStation Vita": [
+        { "name": "Playstation Vita Slim Console", "console": true },
+        { "name": "Little Deviants" },
+        { "name": "Lumines Electronic Symphony" },
+        { "name": "Uncharted: Golden Abyss" },
+        { "name": "Ragnarok Odyssey" }
+    ],
     "PlayStation 4": [
         { "name": "PlayStation 4 1TB Slim Console", "console": true },
-        { "name": "Little Deviants" },
-        { "name": "Lumies" },
-        { "name": "Ragnarok Odyssey" },
-        { "name": "Uncharted: Golden Abyss" },
         { "name": "Assassin's Creed IV" },
         { "name": "Destiny" },
         { "name": "Deus Ex: Mankind Divided" },

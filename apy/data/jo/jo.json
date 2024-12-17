@@ -1,5 +1,6 @@
 {
     "Sega Genesis": [
+        { "name": "Sega Genesis Model 1 Console", "console": true },
         { "name": "Desert Strike" },
         { "name": "Dungeon & Dragons: Warriors of the Eternal Sun" },
         { "name": "Lightening Force" },
@@ -11,6 +12,7 @@
         { "name": "X-Men" }
     ],
     "Gameboy Advance": [
+        { "name" : "Pearl Blue Gameboy Advance SP AGS-101", "console": true },
         { "name": "Dynasty Warriors Advance" },
         { "name": "Super Mario Advance 4: Super Mario Bros. 3" },
         { "name": "Tony Hawk Downhill Jam" }
@@ -29,7 +31,7 @@
         { "name": "Patapon" },
         { "name": "Shin Megami Tensei Persona" },
         { "name": "Puzzle Quest Challenge of the Warlords" },
-        { "name": "Star Wars Battlefront Renegade Squadron " }
+        { "name": "Star Wars Battlefront Renegade Squadron" }
     ],
     "Wii": [
         { "name": "Big Brain Academy: Wii Degree" },
@@ -39,27 +41,27 @@
         { "name": "Guitar Hero III: Legends of Rock" },
         { "name": "Guitar Hero: World Tour" },
         { "name": "Guitar Hero 5" },
-        { "name": "Mad World" },
-        { "name": "Mario & Sonic at the Olympic Winter Games" },
+        { "name": "MadWorld" },
+        { "name": "Mario and Sonic at the Olympic Winter Games" },
         { "name": "Mario Kart Wii" },
         { "name": "Mario Party 8" },
         { "name": "Metroid Prime 3: Corruption" },
         { "name": "Okami" },
-        { "name": "Puzzle Quest" },
+        { "name": "Puzzle Quest Challenge of the Warlords" },
         { "name": "SSX Blur" },
         { "name": "Super smash Bros. Brawl" },
         { "name": "Super Mario Galaxy" },
         { "name": "Resident Evil: The Umbrella Chronicles" },
-        { "name": "Rockband 3" },
+        { "name": "Rock Band 3" },
         { "name": "The Bigs" },
         { "name": "The House of the Dead 2 & 3 Return" },
         { "name": "The House of the Dead Overkill" },
-        { "name": "The Legend of Zelda: Twilight Princess" },
+        { "name": "Zelda: Twilight Princess" },
         { "name": "Tiger Woods PGA Tour 08" },
         { "name": "Wii Play" },
         { "name": "Wii Sports Resort" }
     ],
-    "PS3": [
+    "PlayStation 3": [
         { "name": "Apache Air Assault" },
         { "name": "Battlefield 4" },
         { "name": "Borderlands 2" },
@@ -93,7 +95,7 @@
         { "name": "Untold Legends: Dark Kingdom" },
         { "name": "Warhawk" }
     ],
-    "PS4": [
+    "PlayStation 4": [
         { "name": "Little Deviants" },
         { "name": "Lumies" },
         { "name": "Ragnarok Odyssey" },

@@ -21,6 +21,7 @@
         { "name": "Tiger Woods PGA Tour 2004" }
     ],
     "PSP": [
+        { "name": "PSP 1000 Console Black", "console": true },
         { "name": "Ace Combat X: Skies of Deception" },
         { "name": "Dungeon Siege: Throne of Agony" },
         { "name": "Jeanne D'Arc" },
@@ -34,6 +35,7 @@
         { "name": "Star Wars Battlefront Renegade Squadron" }
     ],
     "Wii": [
+        { "name": "Nintendo Wii Sport Resort Pack Console White", "console": true },
         { "name": "Big Brain Academy: Wii Degree" },
         { "name": "Blazing Angels: Squadrons of WWII" },
         { "name": "Brothers in Arms: Double Time" },
@@ -49,7 +51,7 @@
         { "name": "Okami" },
         { "name": "Puzzle Quest Challenge of the Warlords" },
         { "name": "SSX Blur" },
-        { "name": "Super smash Bros. Brawl" },
+        { "name": "Super Smash Bros. Brawl" },
         { "name": "Super Mario Galaxy" },
         { "name": "Resident Evil: The Umbrella Chronicles" },
         { "name": "Rock Band 3" },
@@ -62,6 +64,7 @@
         { "name": "Wii Sports Resort" }
     ],
     "PlayStation 3": [
+        { "name": "PlayStation 3 60gb Console", "console": true },
         { "name": "Apache Air Assault" },
         { "name": "Battlefield 4" },
         { "name": "Borderlands 2" },
@@ -96,6 +99,7 @@
         { "name": "Warhawk" }
     ],
     "PlayStation 4": [
+        { "name": "PlayStation 4 1TB Slim Console", "console": true },
         { "name": "Little Deviants" },
         { "name": "Lumies" },
         { "name": "Ragnarok Odyssey" },

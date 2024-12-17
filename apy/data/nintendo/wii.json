@@ -1,0 +1,27 @@
+{
+    "Wii": [
+        { "name": "Nintendo Wii Sport Resort Pack Console White", "console": true },
+        { "name": "A Boy and His Blob" },
+        { "name": "Band Hero" },
+        { "name": "Big Brain Academy: Wii Degree" },
+        { "name": "Castlevania Judgment" },
+        { "name": "Dragon Quest Swords: The Masked Queen and the Tower of Mirrors" },
+        { "name": "Epic Mickey" },
+        { "name": "Link's Crossbow Training" },
+        { "name": "New Play Control! Pikmin" },
+        { "name": "Okami" },
+        { "name": "Punch-Out!!" },
+        { "name": "Rock Band 3" },
+        { "name": "Super Smash Bros. Brawl" },
+        { "name": "Trauma Team" },
+        { "name": "Wii Fit Plus" },
+        { "name": "Wii Music" },
+        { "name": "Wii Party" },
+        { "name": "Wii Play" },
+        { "name": "Wii Sports" },
+        { "name": "Wii Sports Resort" }
+    ],
+    "PAL Wii": [
+        { "name": "Jenga World Tour" }
+    ]
+}

@@ -106,7 +106,7 @@ def _sanitize(data: dict) -> dict:
     return sanitized
 
 
-def _sanitize_string(string: str, olds: list[tuple] = [("*", "-"), ("/ ", ""), (" ", "-"), (".", ""), (":", "")]) -> str:
+def _sanitize_string(string: str, olds: list[tuple] = [("/ ", ""), (" ", "-"), (".", ""), (":", "")]) -> str:
     """Sanitize a string for PriceCharting."""
 
     old: tuple

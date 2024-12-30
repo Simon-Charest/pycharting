@@ -17,6 +17,7 @@
         { "name": "Mario Paint", "paid": 5 },
         { "name": "Super Mario World", "paid": 16.67 },
         { "name": "Super Scope 6" },
+        { "name": "Super Smash TV", "paid": "43.98" },
         { "name": "Super Street Fighter II", "paid": 15 },
         { "name": "Tetris 2", "paid": 15 },
         { "name": "UN Squadron", "paid": 16.67 },

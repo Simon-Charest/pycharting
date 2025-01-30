@@ -1,7 +1,6 @@
 from pytest import mark
 
-# APy
-from api import calc
+from pycharting.api import calc
 
 
 class TestCalc:

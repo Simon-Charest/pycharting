@@ -1,7 +1,6 @@
 from pytest import mark
 
-# APy
-from api import select
+from pycharting.api import select
 
 
 class TestDb:

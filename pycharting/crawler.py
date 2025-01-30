@@ -7,7 +7,6 @@ from requests import get
 from sqlite3 import Connection
 from time import sleep
 
-# APy
 from constant import *
 from database import execute
 

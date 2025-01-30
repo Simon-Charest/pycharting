@@ -1,6 +1,5 @@
 from sqlite3 import Connection, Cursor
 
-# APy
 from constant import *
 
 
@@ -73,16 +72,17 @@ def get_top_report(connection: Connection, top: str) -> list:
     for row in rows:
         count += 1
 
-        if min == 0 or row["loose_price"] < min:
-            min = row["loose_price"]
+        if isinstance(row["loose_price"], (float, int)):
+            if min == 0 or row["loose_price"] < min:
+                min = row["loose_price"]
 
-        if row["loose_price"] > max:
-            max = row["loose_price"]
+            if row["loose_price"] > max:
+                max = row["loose_price"]
 
-        sum += row["loose_price"]
+            sum += row["loose_price"]
 
-    avg: float = round(sum / count, 2)
-    sum = round(sum, 2)
+        avg: float = round(sum / count, 2)
+        sum = round(sum, 2)
 
     # Append totals
     rows.append({"console_name": "total", "count": count, "min": min, "avg": avg, "max": max, "sum": sum})

@@ -1,7 +1,6 @@
 from argparse import ArgumentParser, Namespace
 from sqlite3 import Connection, connect
 
-# APy
 from constant import *
 from utils import *
 from api import run_api
@@ -10,7 +9,7 @@ from database import execute, get_statistical_report, get_top_report
 
 
 if __name__ == "__main__":
-    argument_parser = ArgumentParser("APy: A minimalist Python application utilizing a FastAPI framework, with data storage managed by a SQLite database.")
+    argument_parser = ArgumentParser("PyCharting: A crawler for PriceCharting.com")
     argument_parser.add_argument("--api", "-a", action="store_true", help="run Web API service")
     argument_parser.add_argument("--crawl", "-c", help="crawl PriceCharting, processing titles in a group (*: all)")
     argument_parser.add_argument("--delete", "-d", nargs=2, help="delete")
@@ -18,7 +17,7 @@ if __name__ == "__main__":
     argument_parser.add_argument("--report_top", "-t", help="print top X report")
     argument_parser.add_argument("--select_not_today", "--snt", action="store_true", help="select not today")
     arguments: Namespace = argument_parser.parse_args()
-    connection: Connection = connect(DATABASE_PATH.joinpath("apy.db"))
+    connection: Connection = connect(DATABASE_PATH.joinpath("database.sqlite"))
     rows: list
     usd_cad_rate: float = get_usd_cad_rate()
 

@@ -1,5 +1,5 @@
-# APy
-A minimalist Python application utilizing a FastAPI framework, with data storage managed by a SQLite database.
+# PyCharting
+PyCharting: A crawler for PriceCharting.com
 
 ## Built With
 
@@ -49,8 +49,8 @@ A minimalist Python application utilizing a FastAPI framework, with data storage
 C:
 mkdir C:\source
 cd C:\source
-git clone https://github.com/Simon-Charest/apy.git
-cd C:\source\apy
+git clone https://github.com/Simon-Charest/pycharting.git
+cd C:\source\pycharting
 ```
 4. Open solution with Visual Studio Code;
 5. Create virtual environment:
@@ -71,14 +71,14 @@ pip install -r requirements.txt
 ```
 9. Run solution:
 ```
-python apy
+python pycharting
 ```
 10. Initialize database: [init](http://localhost:8000/init);
 11. Run tests:
 ```
 pytest
 ```
-12. Access user interface: [APy](http://localhost:8000);
+12. Access user interface: [PyCharting](http://localhost:8000);
 13. Consult [OpenAPI Specification](http://localhost:8000/docs);
 14. Install [Insomnia](https://insomnia.rest/products/insomnia) (or any other API client).
 
@@ -86,5 +86,5 @@ pytest
 - Distributed under the [MIT License](https://opensource.org/license/mit/). See [LICENSE.txt](./LICENSE.txt) for more information.
 
 ## Contact
-- GitHub: [APy](https://github.com/Simon-Charest/apy);
+- GitHub: [PyCharting](https://github.com/Simon-Charest/pycharting);
 - Email: [Simon Charest](mailto:simoncharest@gmail.com).

@@ -7,8 +7,8 @@ from sqlite3 import connect, Connection
 from typing import Any
 from uvicorn import run
 
-# APy
-from constant import DATABASE_PATH
+try: from constant import DATABASE_PATH
+except: from pycharting.constant import DATABASE_PATH
 
 app: FastAPI = FastAPI()
 app.add_middleware(
@@ -20,7 +20,7 @@ app.add_middleware(
 )
 app.mount("/static", StaticFiles(directory=Path(__file__).parent.joinpath("ui/static")), name="static")
 config: dict = load(open(Path(__file__).parent.joinpath("config.json")))
-connection: Connection = connect(DATABASE_PATH.joinpath("apy.db"))
+connection: Connection = connect(DATABASE_PATH.joinpath("database.sqlite"))
 
 
 def run_api() -> None:

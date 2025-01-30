@@ -1,7 +1,6 @@
 from pytest import mark
 
-# APy
-from api import mortgage
+from pycharting.api import mortgage
 
 
 class TestMortgage:

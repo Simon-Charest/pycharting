@@ -1,1 +1,15 @@
 
+{
+    "Super Famicom": [
+        { "name": "Super Famicom Console", "paid": 123.79, "console": true },
+        { "name": "Super Famicom Controller", "paid": 16.17, "quantity": 2, "console": true },
+        { "name": "Kiwame II", "paid": 5.53 },
+        { "name": "Super Mario Collection", "paid": 39.53 },
+        { "name": "Super Puyo Puyo", "paid": 8.21 },
+        { "name": "The Simpsons: Bart's Nightmare", "paid": 47.14 },
+        { "name": "Yoshi no Cookie", "paid": 20.22 }
+    ],
+    "Super Nintendo": [
+        { "name": "AC Adapter", "paid": 42, "console": true }
+    ]
+}

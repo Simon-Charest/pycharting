@@ -8,10 +8,11 @@ PyCharting: A crawler for PriceCharting.com
 - [SQL](https://en.wikipedia.org/wiki/SQL);
 
 ### Database Engine
-- [SQLite](https://www.sqlite.org/);
+- [SQLite](https://www.sqlite.org/), encrypted with [SQLCipher](https://www.zetetic.net/sqlcipher/);
 
 ### Frontend
 - [HTML](https://html.spec.whatwg.org/);
+- [CSS](https://www.w3.org/Style/CSS/);
 - [JavaScript](https://www.javascript.com/);
 - [JSON](https://www.json.org/);
 
@@ -32,9 +33,6 @@ PyCharting: A crawler for PriceCharting.com
 
 ### Integrated Development Environment (IDE)
 - [Visual Studio Code](https://code.visualstudio.com);
-
-### API client
-- [Insomnia](https://insomnia.rest/products/insomnia);
 
 ### AI System
 - [ChatGPT](https://chat.openai.com/).
@@ -69,18 +67,17 @@ python -m pip install -U pip
 ```
 pip install -r requirements.txt
 ```
-9. Run solution:
+9. Configure the solution: copy `.env.example` to `.env`, which holds every setting, and set at least `DATABASE_FILE` and `DATABASE_PASSWORD`. To use the existing collection, restore your backup of the encrypted database file and its password (neither is stored in Git);
+10. Run solution:
 ```
-python pycharting
+python pycharting --api
 ```
-10. Initialize database: [init](http://localhost:8000/init);
-11. Run tests:
+11. Run tests (they use a temporary database, never the one in `.env`):
 ```
 pytest
 ```
-12. Access user interface: [PyCharting](http://localhost:8000);
-13. Consult [OpenAPI Specification](http://localhost:8000/docs);
-14. Install [Insomnia](https://insomnia.rest/products/insomnia) (or any other API client).
+12. Browse, add, edit and delete collection entries: [PyCharting](http://localhost);
+13. Consult [OpenAPI Specification](http://localhost/docs).
 
 ## License
 - Distributed under the [MIT License](https://opensource.org/license/mit/). See [LICENSE.txt](./LICENSE.txt) for more information.

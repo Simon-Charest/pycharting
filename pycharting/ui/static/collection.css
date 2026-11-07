@@ -1,0 +1,371 @@
+:root {
+    color-scheme: light dark;
+    --background: #f6f7f9;
+    --surface: #ffffff;
+    --surface-alt: #eef0f4;
+    --text: #1c2028;
+    --muted: #5d6573;
+    --border: #d5d9e0;
+    --accent: #2456c7;
+    --accent-text: #ffffff;
+    --danger: #b3261e;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: #14171c;
+        --surface: #1d2127;
+        --surface-alt: #282d35;
+        --text: #e8eaee;
+        --muted: #a2a9b5;
+        --border: #3a404a;
+        --accent: #8ab0ff;
+        --accent-text: #10151f;
+        --danger: #ff9d94;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0 auto;
+    max-width: 1800px;
+    padding: 24px 16px;
+    background: var(--background);
+    color: var(--text);
+    font: 15px/1.45 system-ui, "Segoe UI", sans-serif;
+}
+
+header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 16px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 26px;
+}
+
+h2 {
+    margin: 0;
+    font-size: 19px;
+}
+
+a {
+    color: var(--accent);
+}
+
+input,
+select,
+button {
+    color: inherit;
+    font: inherit;
+}
+
+input:not([type="checkbox"]),
+select {
+    width: 100%;
+    min-height: 36px;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+}
+
+button {
+    min-height: 36px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    cursor: pointer;
+}
+
+button:hover {
+    background: var(--surface-alt);
+}
+
+button.primary {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-text);
+}
+
+button.danger {
+    color: var(--danger);
+}
+
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.language {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.language select {
+    width: auto;
+    color: var(--text);
+    font-size: 15px;
+}
+
+.filters td {
+    padding: 6px;
+    background: var(--surface-alt);
+    vertical-align: middle;
+}
+
+.filters input,
+.filters select {
+    min-width: 66px;
+    padding-left: 4px;
+    padding-right: 2px;
+    font-size: 14px;
+}
+
+.fields label {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    align-items: center;
+    gap: 4px 12px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.fields label > input,
+.fields label > select {
+    grid-column: 2;
+}
+
+.fields input,
+.fields select {
+    color: var(--text);
+    font-size: 15px;
+}
+
+tfoot {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+}
+
+tfoot td {
+    border-top: 1px solid var(--border);
+    border-bottom: 0;
+    background: var(--surface-alt);
+}
+
+tfoot td.number {
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+tfoot .count-cell,
+tfoot .add-cell {
+    position: sticky;
+    z-index: 1;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+/* Both stay visible when the table scrolls sideways */
+tfoot .count-cell {
+    left: 0;
+}
+
+tfoot .add-cell {
+    right: 0;
+    text-align: right;
+}
+
+tfoot .icon-button {
+    margin-right: 0;
+}
+
+.message {
+    margin: 12px 0;
+    color: var(--danger);
+}
+
+.table-wrapper {
+    overflow: auto;
+    max-height: calc(100vh - 110px);
+    min-height: 320px;
+    margin-top: 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+th,
+td {
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+}
+
+thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+th {
+    padding: 0;
+    background: var(--surface-alt);
+    white-space: nowrap;
+}
+
+th span,
+th button {
+    display: block;
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 6px;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    font-weight: 600;
+    text-align: center;
+}
+
+th button:hover {
+    background: var(--border);
+}
+
+td.number {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+}
+
+td.title {
+    min-width: 170px;
+    font-weight: 500;
+}
+
+td.source {
+    color: var(--muted);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+td.actions {
+    white-space: nowrap;
+}
+
+.icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    min-height: 32px;
+    margin-right: 4px;
+    padding: 0;
+}
+
+a.icon-button {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+}
+
+a.icon-button:hover {
+    background: var(--surface-alt);
+}
+
+.icon-button svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+td.empty {
+    padding: 32px;
+    color: var(--muted);
+    text-align: center;
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-width: 70px;
+}
+
+.chip {
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: var(--surface-alt);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+dialog {
+    width: min(560px, calc(100vw - 32px));
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text);
+}
+
+dialog::backdrop {
+    background: rgb(0 0 0 / 50%);
+}
+
+.fields {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.tags {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    gap: 12px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.tags > div {
+    display: grid;
+    gap: 8px;
+}
+
+.fields label.check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+    font-size: 15px;
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 18px;
+}

@@ -1,5 +1,5 @@
 DELETE
 FROM games
-WHERE console_name = '{CONSOLE_NAME}'
-AND product_name = '{PRODUCT_NAME}'
+WHERE console_name = :console_name
+AND product_name = :product_name
 ;

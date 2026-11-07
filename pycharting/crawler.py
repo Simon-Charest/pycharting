@@ -1,14 +1,11 @@
 from bs4 import BeautifulSoup, Tag
 from datetime import datetime
-from glob import glob
-from json import load
-from fastapi import Response
-from requests import get
-from sqlite3 import Connection
+from requests import Response, get
+from sqlcipher3.dbapi2 import Connection
 from time import sleep
 
 from constant import *
-from database import execute
+from database import execute, load_collection
 
 
 def crawl_price_charting(connection: Connection, console_name: str = None) -> None:
@@ -18,13 +15,13 @@ def crawl_price_charting(connection: Connection, console_name: str = None) -> No
     insert_sql: str = DATABASE_PATH.joinpath("games/insert.sql").read_text()
     connection.cursor().execute(create_sql)
     rows: list = execute(connection, select_all_sql)
-    data: dict = _load_data(console_name, EXCLUDE_UNOWNED, EXCLUDE_REPRODUCTION, SANITIZE)
+    data: dict = _load_data(connection, console_name, EXCLUDE_UNOWNED, EXCLUDE_REPRODUCTION, SANITIZE)
     filtered: list = _filter_processed(data, rows)
 
     for game in filtered:
         endpoint = f"/{game['console_name']}/{game['product_name']}"
         url: str = f"https://www.pricecharting.com/game{endpoint}"
-        response: Response = get(url)
+        response: Response = get(url, timeout=REQUEST_TIMEOUT)
         soup: BeautifulSoup = BeautifulSoup(response.text, "html.parser")
         product_name: Tag = soup.find("h1", id="product_name")
 
@@ -46,19 +43,10 @@ def crawl_price_charting(connection: Connection, console_name: str = None) -> No
         sleep(SECONDS)
 
 
-def _load_data(title: str = None, EXCLUDE_UNOWNED: bool = False, EXCLUDE_REPRODUCTION: bool = True, SANITIZE: bool = False) -> dict:
-    """Load data from a JSON file."""
+def _load_data(connection: Connection, title: str = None, EXCLUDE_UNOWNED: bool = False, EXCLUDE_REPRODUCTION: bool = True, SANITIZE: bool = False) -> dict:
+    """Load data from the database."""
 
-    # Get all JSON files in the directory
-    paths: list = glob(str(DATA_PATH))
-    
-    path: str
-    data: dict = {}
-
-    # Loop through each JSON file
-    for path in paths:
-        # Read and load the JSON data from the file
-        data.update(load(open(path)))
+    data: dict = load_collection(connection)
 
     if title and title != "*":
         data = {title: data.get(title, [])}
@@ -125,6 +113,10 @@ def _filter_processed(data: dict, rows: list) -> list:
     for console, products in data.items():
         for product in products:
             if not any(row["console_name"] == console and row["product_name"] == product["name"] for row in rows):
-                filtered.append({"console_name": console, "product_name": product["name"]})
+                game: dict = {"console_name": console, "product_name": product["name"]}
+
+                # The same title can be owned by several people; price it once
+                if game not in filtered:
+                    filtered.append(game)
 
     return filtered

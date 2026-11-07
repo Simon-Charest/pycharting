@@ -1,212 +1,150 @@
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from json import load, loads
 from pathlib import Path
-from sqlite3 import connect, Connection
-from typing import Any
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from sqlcipher3.dbapi2 import Connection
+from typing import Annotated, Any, Literal
 from uvicorn import run
 
-try: from constant import DATABASE_PATH
-except: from pycharting.constant import DATABASE_PATH
+try:
+    from constant import API_HOST, API_PORT, API_RELOAD
+    from database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_owners, open_database
+except ImportError:
+    from pycharting.constant import API_HOST, API_PORT, API_RELOAD
+    from pycharting.database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_owners, open_database
 
+
+class RevalidatedStaticFiles(StaticFiles):
+    """Static files that browsers must check for changes before reusing their copy."""
+
+    async def get_response(self, path: str, scope: Any) -> Response:
+        response: Response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache"
+
+        return response
+
+
+origin_port: str = "" if API_PORT == 80 else f":{API_PORT}"  # Browsers omit the default port from their origin.
 app: FastAPI = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[f"http://{API_HOST}{origin_port}", f"http://localhost{origin_port}"],  # Other sites must not reach the collection.
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
 )
-app.mount("/static", StaticFiles(directory=Path(__file__).parent.joinpath("ui/static")), name="static")
-config: dict = load(open(Path(__file__).parent.joinpath("config.json")))
-connection: Connection = connect(DATABASE_PATH.joinpath("database.sqlite"))
+app.mount("/static", RevalidatedStaticFiles(directory=Path(__file__).parent.joinpath("ui/static")), name="static")
+connection: Connection = open_database()
+ensure_collection_schema(connection)
+
+RequiredText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+Cell = float | int | str | None
+
+
+class CollectionItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    group_name: RequiredText
+    name: RequiredText
+    region: Literal["NTSC", "PAL"] | None = None
+    owner_id: int | None = None
+    source: RequiredText | None = None
+    console: bool | None = None
+    gamepad: bool | None = None
+    amiibo: bool | None = None
+    wishlist: bool | None = None
+    previously_owned: bool | None = None
+    quantity: int = Field(default=1, ge=0)
+    reproduction: bool | None = None
+    virtual: bool | None = None
+    game: Cell = None
+    manual: Cell = None
+    box: Cell = None
+    pricecharting: str | None = None
+
+
+class NewCollectionItem(CollectionItem):
+    owner_id: int
+
+
+class SpreadsheetRow(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    system: RequiredText
+    title: RequiredText
+    region: Literal["NTSC", "PAL"] | None = None
+    owner_id: int | None = None
+    source: RequiredText | None = None
+    console: bool | None = None
+    amiibo: bool | None = None
+    wishlist: bool | None = None
+    gamepad: bool | None = None
+    previously_owned: bool | None = None
+    reproduction: bool | None = None
+    virtual: bool | None = None
+    game: Cell = None
+    box: Cell = None
+    manual: Cell = None
+    pricecharting: str | None = None
+    quantity: int = Field(default=1, ge=0)
 
 
 def run_api() -> None:
-    run(f"{__name__}:app", host=config["host"], port=config["port"], reload=True)
+    run(f"{__name__}:app", host=API_HOST, port=API_PORT, reload=API_RELOAD)
 
 
 @app.get("/")
-async def root() -> str:
-    document: str = Path(__file__).parent.joinpath("ui/index.html").read_text()
-    rows: list = await select()
-    row: dict
-    content: str = ""
+async def root() -> FileResponse:
+    return FileResponse(Path(__file__).parent.joinpath("ui/collection.html"), media_type="text/html", headers={"Cache-Control": "no-cache"})
 
-    for row in rows:
-        content += f"""
-                <tr>
-                    <td>{row[0]}</td>
-                    <td><input id='firstName[{row[0]}]' value='{row[1]}'></td>
-                    <td><input id='lastName[{row[0]}]' value='{row[2]}'></td>
-                    <td><input id='email[{row[0]}]' value='{row[3]}'></td>
-                    <td class='text-align-center'><input name='update' type='button' value='☑' onclick='updateUser({row[0]}, "{config["host"]}", {config["port"]});'></td>
-                    <td class='text-align-center'><input name='delete' type='button' value='☒' onclick='deleteUser({row[0]}, "{config["host"]}", {config["port"]});'></td>
-                </tr>"""
-        
-    content += f"""
-                <tr>
-                    <td></td>
-                    <td><input id='firstName' value=''></td>
-                    <td><input id='lastName' value=''></td>
-                    <td><input id='email' value=''></td>
-                    <td class='text-align-center' colspan="2"><input name='insert' type='button' value='⨁' onclick='insertUser("{config["host"]}", {config["port"]});'></td>
-                </tr>"""
 
-    return Response(document.replace("%CONTENT%", content), media_type="text/html")
+@app.get("/collection/entries")
+async def collection_entries() -> list:
+    return get_collection_entries(connection)
+
+
+@app.get("/collection/owners")
+async def collection_owners() -> list:
+    return get_owners(connection)
+
+
+@app.post("/collection/items", status_code=201)
+async def add_collection_item(item: NewCollectionItem) -> dict:
+    if not add_item(connection, item.model_dump()):
+        raise HTTPException(status_code=404, detail="Owner not found.")
+
+    return {"message": "OK"}
+
+
+@app.put("/collection/items/{id}")
+async def update_collection_item(id: int, item: CollectionItem) -> dict:
+    return _change_entry("update_item", {**item.model_dump(), "id": id})
+
+
+@app.delete("/collection/items/{id}")
+async def delete_collection_item(id: int) -> dict:
+    return _change_entry("delete_item", {"id": id})
+
+
+@app.put("/collection/rows/{id}")
+async def update_collection_row(id: int, row: SpreadsheetRow) -> dict:
+    return _change_entry("update_row", {**row.model_dump(), "id": id})
+
+
+@app.delete("/collection/rows/{id}")
+async def delete_collection_row(id: int) -> dict:
+    return _change_entry("delete_row", {"id": id})
+
+
+def _change_entry(script: str, parameters: dict) -> dict:
+    if not change_collection_entry(connection, script, parameters):
+        raise HTTPException(status_code=404, detail="Entry not found.")
+
+    return {"message": "OK"}
 
 
 @app.get("/health")
 async def health() -> dict:
     return {"message": "The state of the service is healthy."}
-
-
-@app.get("/hello")
-async def hello() -> dict:
-    return {"message": "Hello World !"}
-
-
-@app.get("/init")
-@app.post("/init")
-async def init() -> dict:
-    await drop()
-    await create()
-    users: list = loads(DATABASE_PATH.joinpath("users/data.json").read_text())
-    await insert(users)
-
-    return {"message": "Database initialized."}
-
-
-@app.post("/calc/{operator}")
-async def calc(operator: str, terms: list[float]) -> dict:
-    result: float   
-
-    if operator in ["*", "/", "÷"]:
-        result = 1
-
-        if operator == "÷":
-            operator = "/"
-
-    else:
-        result = 0
-
-    term: float
-
-    for term in terms:
-        result = eval(f"result {operator} term")
-
-    return {"result": result}
-
-
-@app.post("/mortgage")
-async def mortgage(request: dict) -> dict[str, Any]:
-    """
-    Mortgage calculation formula.
-
-    Parameters:
-        loan (float): Amount of the loan.
-        rate (float): Annual interest rate.
-        duration (int): Duration in years.
-    """
-
-    # Declaration with order of keys
-    result: dict[str, Any] = {
-        "request": {},
-        "response": {
-            "monthly": {
-                "capital": None,
-                "interest": None,
-                "payment": None
-            },
-            "total": {
-                "interest": None,
-                "payment": None
-            }, "rate": {
-                "interest": None,
-                "payment": None
-            }
-        }
-    }
-    result["request"] = request
-    result["response"]["monthly"]["payment"] = round((result["request"]["loan"] * result["request"]["rate"] / 12) / (1 - (1 + result["request"]["rate"] / 12) ** (-12 * request["duration"])), 2)  # Mortgage calculation formula.
-    result["response"]["total"]["payment"] = round(12 * result["request"]["duration"] * result["response"]["monthly"]["payment"], 2)
-    result["response"]["total"]["interest"] = round(12 * result["request"]["duration"] * result["response"]["monthly"]["payment"] - result["request"]["loan"], 2)
-    result["response"]["rate"]["payment"] = round(result["response"]["total"]["payment"] / result["request"]["loan"], 2)
-    result["response"]["rate"]["interest"]  = round(result["response"]["total"]["interest"] / result["response"]["total"]["payment"], 4)
-    result["response"]["monthly"]["interest"] = round(result["response"]["rate"]["interest"] * result["response"]["monthly"]["payment"], 2)
-    result["response"]["monthly"]["capital"] = round(result["response"]["monthly"]["payment"] - result["response"]["monthly"]["interest"], 2)
-    
-    return result
-
-
-@app.post("/users/drop")
-async def drop() -> dict:
-    sql: str = DATABASE_PATH.joinpath("users/drop.sql").read_text()
-    connection.cursor().execute(sql)
-
-    return {"message": "User table dropped."}
-
-
-@app.post("/users/create")
-async def create() -> dict:
-    sql: str = DATABASE_PATH.joinpath("users/create.sql").read_text()
-    connection.cursor().execute(sql)
-
-    return {"message": "User table created."}
-
-
-@app.get("/users/select")
-@app.get("/users/select/{id}")
-async def select(id: str = None) -> list:
-    sql: str
-    rows: list
-    
-    if id:
-        sql = DATABASE_PATH.joinpath("users/select.sql").read_text()
-        rows = connection.cursor().execute(sql, (id,)).fetchall()
-
-    else:
-        sql = DATABASE_PATH.joinpath("users/select_all.sql").read_text()
-        rows = connection.cursor().execute(sql).fetchall()
-    
-    return rows
-
-
-@app.post("/users/insert")
-async def insert(users: list[dict]) -> dict:
-    sql: str = DATABASE_PATH.joinpath("users/insert.sql").read_text()
-    user_tuples: list[tuple] = [tuple(user.values()) for user in users]
-    connection.cursor().executemany(sql, user_tuples)
-    connection.commit()
-
-    return {"message": "User created."}
-
-
-@app.put("/users/update/{id}")
-async def update(id: str, user: dict) -> dict:
-    sql: str = DATABASE_PATH.joinpath("users/update.sql").read_text()
-    user["id"] = id
-    user_tuple = tuple(user.values())
-    connection.cursor().execute(sql, user_tuple)
-    connection.commit()
-
-    return {"message": "User updated."}
-
-
-@app.post("/users/test/{id}")
-@app.put("/users/test/{id}")
-async def test(id: str, user: dict) -> dict:
-    print(id)
-    print(user)
-
-    return {"message": "OK"}
-
-
-@app.delete("/users/delete/{id}")
-async def delete(id: str) -> dict:
-    sql: str = DATABASE_PATH.joinpath("users/delete.sql").read_text()
-    connection.cursor().execute(sql, (id,))
-    connection.commit()
-
-    return {"message": "User deleted."}

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PyCharting</title>
+        <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+        <link rel="stylesheet" href="/static/collection.css?v=2">
+        <script src="/static/collection.js?v=2" defer></script>
+    </head>
+    <body>
+        <header>
+            <h1 data-i18n="heading"></h1>
+            <label class="language">
+                <span data-i18n="language"></span>
+                <select id="language">
+                    <option value="fr" lang="fr">Français</option>
+                    <option value="en" lang="en">English</option>
+                </select>
+            </label>
+        </header>
+
+        <p id="message" class="message" role="alert" hidden></p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr id="headers"></tr>
+                    <tr id="filters" class="filters">
+                        <td>
+                            <select id="filter-console" data-i18n-label="column.console"><option value="" data-i18n="filter.all"></option></select>
+                        </td>
+                        <td>
+                            <input id="filter-title" type="search" data-i18n-label="column.title" data-i18n-placeholder="filter.search">
+                        </td>
+                        <td>
+                            <select id="filter-region" data-i18n-label="column.region"><option value="" data-i18n="filter.all"></option></select>
+                        </td>
+                        <td></td>
+                        <td>
+                            <select id="filter-game" data-i18n-label="column.game"><option value="" data-i18n="filter.all"></option></select>
+                        </td>
+                        <td>
+                            <select id="filter-manual" data-i18n-label="column.manual"><option value="" data-i18n="filter.all"></option></select>
+                        </td>
+                        <td>
+                            <select id="filter-box" data-i18n-label="column.box"><option value="" data-i18n="filter.all"></option></select>
+                        </td>
+                        <td>
+                            <select id="filter-attribute" data-i18n-label="tags"><option value="" data-i18n="filter.all"></option></select>
+                        </td>
+                        <td>
+                            <select id="filter-owner" data-i18n-label="column.owner"><option value="" data-i18n="filter.all"></option></select>
+                        </td>
+                        <td>
+                            <select id="filter-source" data-i18n-label="column.source"><option value="" data-i18n="filter.all"></option></select>
+                        </td>
+                        <td>
+                            <button id="filter-reset" class="icon-button" type="button" data-i18n-title="filter.reset"></button>
+                        </td>
+                    </tr>
+                </thead>
+                <tbody id="rows"></tbody>
+                <tfoot>
+                    <tr>
+                        <td class="count-cell" colspan="3"><span id="count" role="status"></span></td>
+                        <td id="total-quantity" class="number"></td>
+                        <td id="total-game" class="number"></td>
+                        <td id="total-manual" class="number"></td>
+                        <td id="total-box" class="number"></td>
+                        <td colspan="3"></td>
+                        <td class="add-cell">
+                            <button id="add" class="icon-button primary" type="button" data-i18n-title="action.add"></button>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <dialog id="editor">
+            <form id="editor-form" method="dialog">
+                <h2 id="editor-heading"></h2>
+                <div id="editor-fields" class="fields"></div>
+                <p id="editor-error" class="message" role="alert" hidden></p>
+                <div class="dialog-actions">
+                    <button id="editor-cancel" type="button" data-i18n="editor.cancel"></button>
+                    <button class="primary" type="submit" data-i18n="editor.save"></button>
+                </div>
+            </form>
+        </dialog>
+    </body>
+</html>

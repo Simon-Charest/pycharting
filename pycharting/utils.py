@@ -2,6 +2,8 @@ from bs4 import BeautifulSoup, Tag
 from requests import Response, get
 from typing import Any
 
+from constant import REQUEST_TIMEOUT
+
 
 def convert_usd_cad(rows: list[dict], usd_cad_rate: float, included_keys: list[str] = None, excluded_keys: list[str] = None) -> list:
     row: dict
@@ -17,7 +19,7 @@ def convert_usd_cad(rows: list[dict], usd_cad_rate: float, included_keys: list[s
 
 
 def get_usd_cad_rate(url: str = "https://www.google.com/finance/quote/USD-CAD", class_: str = "YMlKec fxKbKc") -> float:
-    response: Response = get(url)
+    response: Response = get(url, timeout=REQUEST_TIMEOUT)
     soup: BeautifulSoup = BeautifulSoup(response.text, "html.parser")
     rate_element: Tag = soup.find("div", class_=class_)
 

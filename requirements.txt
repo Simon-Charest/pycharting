@@ -1,6 +1,8 @@
-bs4
-fastapi
-pytest
-pytest-asyncio
-requests
-uvicorn
+beautifulsoup4==4.15.0
+fastapi==0.162.0
+pytest==9.2.0
+pytest-asyncio==1.4.1.post1
+python-dotenv==1.2.4
+requests==2.34.2
+sqlcipher3-wheels==0.5.7
+uvicorn==0.54.0

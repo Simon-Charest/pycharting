@@ -1,4 +1,6 @@
+from datetime import date
 from fastapi import FastAPI, HTTPException, Response
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -10,10 +12,12 @@ from uvicorn import run
 
 try:
     from constant import API_HOST, API_PORT, API_RELOAD
-    from database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_owners, open_database
+    from database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_entry_prices, get_owners, open_database
+    from prices import ExchangeRateError, PriceChartingError, ProductNotFound, fetch_prices
 except ImportError:
     from pycharting.constant import API_HOST, API_PORT, API_RELOAD
-    from pycharting.database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_owners, open_database
+    from pycharting.database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_entry_prices, get_owners, open_database
+    from pycharting.prices import ExchangeRateError, PriceChartingError, ProductNotFound, fetch_prices
 
 
 class RevalidatedStaticFiles(StaticFiles):
@@ -41,6 +45,7 @@ ensure_collection_schema(connection)
 
 RequiredText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 Cell = float | int | str | None
+IsoDate = Annotated[str, StringConstraints(strip_whitespace=True, pattern=r"^\d{4}-\d{2}-\d{2}$")]  # yyyy-mm-dd
 
 
 class CollectionItem(BaseModel):
@@ -54,6 +59,7 @@ class CollectionItem(BaseModel):
     console: bool | None = None
     gamepad: bool | None = None
     amiibo: bool | None = None
+    accessory: bool | None = None
     wishlist: bool | None = None
     previously_owned: bool | None = None
     quantity: int = Field(default=1, ge=0)
@@ -62,6 +68,8 @@ class CollectionItem(BaseModel):
     game: Cell = None
     manual: Cell = None
     box: Cell = None
+    date: IsoDate | None = None
+    paid: Cell = None
     pricecharting: str | None = None
 
 
@@ -79,6 +87,7 @@ class SpreadsheetRow(BaseModel):
     source: RequiredText | None = None
     console: bool | None = None
     amiibo: bool | None = None
+    accessory: bool | None = None
     wishlist: bool | None = None
     gamepad: bool | None = None
     previously_owned: bool | None = None
@@ -87,6 +96,8 @@ class SpreadsheetRow(BaseModel):
     game: Cell = None
     box: Cell = None
     manual: Cell = None
+    date: IsoDate | None = None
+    paid: Cell = None
     pricecharting: str | None = None
     quantity: int = Field(default=1, ge=0)
 
@@ -148,3 +159,38 @@ def _change_entry(script: str, parameters: dict) -> dict:
 @app.get("/health")
 async def health() -> dict:
     return {"message": "The state of the service is healthy."}
+
+
+@app.post("/collection/{kind}/{id}/prices")
+async def update_entry_prices(kind: Literal["items", "rows"], id: int) -> dict:
+    """Refresh Item, Manual and Box from PriceCharting, in CAD, and date them today.
+
+    Only the parts that are owned, that is that have a value, are refreshed: an empty part stays empty.
+    """
+
+    singular: str = kind[:-1]
+    entry: dict | None = get_entry_prices(connection, singular, id)
+
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Entry not found.")
+
+    owned: list = [part for part in ("game", "manual", "box") if entry[part] is not None and entry[part] != ""]
+
+    if not owned:
+        raise HTTPException(status_code=409, detail="nothing_owned")
+
+    try:
+        prices: dict = await run_in_threadpool(fetch_prices, entry["pricecharting"], entry["title"], entry["console"], entry["region"])
+    except ProductNotFound:
+        raise HTTPException(status_code=409, detail="product_not_found")
+    except PriceChartingError:
+        raise HTTPException(status_code=502, detail="pricecharting")
+    except ExchangeRateError:
+        raise HTTPException(status_code=502, detail="exchange_rate")
+
+    # A part PriceCharting has no price for keeps the value it had
+    values: dict = {part: prices[part] if part in owned and prices[part] is not None else entry[part] for part in ("game", "manual", "box")}
+    values.update({"date": date.today().isoformat(), "pricecharting": prices["url"], "id": id})
+    change_collection_entry(connection, f"update_{singular}_prices", values)
+
+    return values

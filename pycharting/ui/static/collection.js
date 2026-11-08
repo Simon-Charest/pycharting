@@ -9,22 +9,31 @@ const TRANSLATIONS = {
         "count.one": "{visible} entrée",
         "count.other": "{visible} entrées",
         "empty": "Aucune entrée ne correspond à ces filtres.",
-        "column.console": "Console",
-        "column.title": "Jeu",
+        "column.console": "Matériel",
+        "column.title": "Nom",
         "column.owner": "Propriétaire",
         "column.region": "Région",
         "column.quantity": "Quantité",
-        "column.game": "Item",
+        "column.game": "Article",
         "column.manual": "Manuel",
         "column.box": "Boîte",
-        "column.details": "Tags",
-        "column.source": "Source",
+        "column.date": "Date",
+        "column.paid": "Payé",
+        "column.subtotal": "Valeur",
+        "column.total": "Différence",
+        "column.details": "Étiquettes",
         "column.actions": "Actions",
-        "filter.search": "Rechercher un titre",
+        "filter.search": "Rechercher un nom",
         "filter.all": "Tous",
         "filter.owned": "Oui",
         "filter.missing": "Non",
-        "tags": "Tags",
+        "filter.one": "1",
+        "filter.more": ">1",
+        "filter.beforeToday": "Avant aujourd'hui",
+        "filter.olderMonth": "Plus de 1 mois",
+        "filter.olderHalfYear": "Plus de 6 mois",
+        "filter.olderYear": "Plus de 1 an",
+        "tags": "Étiquettes",
         "filter.reset": "Réinitialiser",
         "flag.console": "Console",
         "flag.gamepad": "Manette",
@@ -33,24 +42,35 @@ const TRANSLATIONS = {
         "flag.previously_owned": "Anciennement possédé",
         "flag.wishlist": "Liste de souhaits",
         "flag.amiibo": "amiibo",
+        "flag.accessory": "Accessoire",
         "priceChartingLink": "PriceCharting",
         "action.edit": "Modifier",
         "action.delete": "Supprimer",
         "action.add": "Ajouter",
         "action.priceCharting": "PriceCharting",
+        "action.updatePrices": "Mettre à jour les prix et la date depuis PriceCharting",
         "editor.heading": "Modifier l'entrée",
         "editor.addHeading": "Ajouter une entrée",
-        "editor.chooseConsole": "Choisir une console…",
-        "editor.newConsole": "Nouvelle console…",
-        "editor.autoSource": "Automatique",
-        "editor.newSource": "Nouvelle source…",
+        "editor.chooseConsole": "Choisir un matériel…",
+        "editor.newConsole": "Nouveau matériel…",
         "editor.cancel": "Annuler",
         "editor.save": "Enregistrer",
         "confirm.delete": "Supprimer « {title} » ({console}, {owner}) ?",
+        "confirm.updateVisible": "Mettre à jour les prix et la date de {count} entrées visibles depuis PriceCharting, une après l'autre ?",
+        "bulk.none": "Aucune entrée visible n'a d'Article, de Manuel ou de Boîte à mettre à jour.",
+        "bulk.progress": "Mise à jour depuis PriceCharting : {done} sur {count}… Cliquez de nouveau sur le bouton PriceCharting pour arrêter.",
+        "bulk.done": "Mise à jour terminée : {updated} sur {count} entrées.",
+        "bulk.stopped": "Mise à jour arrêtée : {updated} sur {count} entrées.",
+        "bulk.failed": "Non mises à jour : {titles}.",
+        "action.stopUpdate": "Arrêter la mise à jour",
         "error.server": "Le serveur ne répond pas.",
         "error.missing": "Cette entrée n'existe plus. Rechargez la page.",
         "error.invalid": "Certaines valeurs sont invalides.",
-        "error.status": "Erreur du serveur ({status})."
+        "error.status": "Erreur du serveur ({status}).",
+        "error.nothing_owned": "« {title} » : aucune partie (Article, Manuel, Boîte) n'est remplie, il n'y a rien à mettre à jour.",
+        "error.product_not_found": "« {title} » est introuvable sur PriceCharting. Ajoutez le lien PriceCharting de l'entrée, puis réessayez.",
+        "error.pricecharting": "PriceCharting ne répond pas. Réessayez plus tard.",
+        "error.exchange_rate": "Le taux de change USD → CAD de la Banque du Canada est introuvable. Réessayez plus tard."
     },
     en: {
         "pageTitle": "PyCharting",
@@ -60,52 +80,73 @@ const TRANSLATIONS = {
         "count.one": "{visible} entry",
         "count.other": "{visible} entries",
         "empty": "No entries match these filters.",
-        "column.console": "Console",
-        "column.title": "Title",
+        "column.console": "Hardware",
+        "column.title": "Name",
         "column.owner": "Owner",
         "column.region": "Region",
         "column.quantity": "Quantity",
         "column.game": "Item",
         "column.manual": "Manual",
         "column.box": "Box",
+        "column.date": "Date",
+        "column.paid": "Paid",
+        "column.subtotal": "Value",
+        "column.total": "Difference",
         "column.details": "Tags",
-        "column.source": "Source",
         "column.actions": "Actions",
-        "filter.search": "Search for a title",
+        "filter.search": "Search for a name",
         "filter.all": "All",
         "filter.owned": "Yes",
         "filter.missing": "No",
+        "filter.one": "1",
+        "filter.more": ">1",
+        "filter.beforeToday": "Before today",
+        "filter.olderMonth": "Over 1 month",
+        "filter.olderHalfYear": "Over 6 months",
+        "filter.olderYear": "Over 1 year",
         "tags": "Tags",
         "filter.reset": "Reset",
         "flag.console": "Console",
-        "flag.gamepad": "Gamepad",
+        "flag.gamepad": "Controller",
         "flag.virtual": "Virtual",
         "flag.reproduction": "Reproduction",
         "flag.previously_owned": "Previously owned",
         "flag.wishlist": "Wishlist",
         "flag.amiibo": "amiibo",
+        "flag.accessory": "Accessory",
         "priceChartingLink": "PriceCharting",
         "action.edit": "Edit",
         "action.delete": "Delete",
         "action.add": "Add",
         "action.priceCharting": "PriceCharting",
+        "action.updatePrices": "Update prices and date from PriceCharting",
         "editor.heading": "Edit entry",
         "editor.addHeading": "Add an entry",
-        "editor.chooseConsole": "Choose a console…",
-        "editor.newConsole": "New console…",
-        "editor.autoSource": "Automatic",
-        "editor.newSource": "New source…",
+        "editor.chooseConsole": "Choose hardware…",
+        "editor.newConsole": "New hardware…",
         "editor.cancel": "Cancel",
         "editor.save": "Save",
         "confirm.delete": "Delete “{title}” ({console}, {owner})?",
+        "confirm.updateVisible": "Update the prices and date of {count} visible entries from PriceCharting, one after the other?",
+        "bulk.none": "No visible entry has an Item, Manual or Box to update.",
+        "bulk.progress": "Updating from PriceCharting: {done} of {count}… Click the PriceCharting button again to stop.",
+        "bulk.done": "Update finished: {updated} of {count} entries.",
+        "bulk.stopped": "Update stopped: {updated} of {count} entries.",
+        "bulk.failed": "Not updated: {titles}.",
+        "action.stopUpdate": "Stop the update",
         "error.server": "The server is not responding.",
         "error.missing": "This entry no longer exists. Reload the page.",
         "error.invalid": "Some values are invalid.",
-        "error.status": "Server error ({status})."
+        "error.status": "Server error ({status}).",
+        "error.nothing_owned": "“{title}”: no part (Item, Manual, Box) is filled in, so there is nothing to update.",
+        "error.product_not_found": "“{title}” was not found on PriceCharting. Add the entry's PriceCharting link, then try again.",
+        "error.pricecharting": "PriceCharting is not responding. Try again later.",
+        "error.exchange_rate": "The Bank of Canada's USD → CAD rate could not be found. Try again later."
     }
 };
 const LOCALES = { fr: "fr-CA", en: "en-CA" };
 const LANGUAGE_STORAGE_KEY = "pycharting.language";
+const VIEW_STORAGE_KEY = "pycharting.view";  // The filters and the sort, kept when the page is reloaded
 
 const COLUMNS = [
     { key: "console" },
@@ -115,22 +156,26 @@ const COLUMNS = [
     { key: "game", numeric: true },
     { key: "manual", numeric: true },
     { key: "box", numeric: true },
+    { key: "date" },
+    { key: "subtotal", numeric: true },
+    { key: "paid", numeric: true },
+    { key: "total", numeric: true },
     { key: "details", sortable: false },
     { key: "owner" },
-    { key: "source" },
     { key: "actions", sortable: false }
 ];
-const TAGS = ["console", "gamepad", "amiibo", "virtual", "reproduction", "previously_owned", "wishlist"];
+const TAGS = ["console", "gamepad", "accessory", "amiibo", "virtual", "reproduction", "previously_owned", "wishlist"];
 const OWNERSHIP = ["game", "manual", "box"];
+// Every price column: the ownership ones, then what was paid, which says nothing about what is owned
+const PRICES = [...OWNERSHIP, "paid"];
 const ROUTES = { item: "items", row: "rows" };
-const DATA_PREFIX = "pycharting/data/";
 const ICONS = {
     edit: ["M12 20h9", "M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"],
     delete: ["M3 6h18", "M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2", "M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6", "M10 11v6", "M14 11v6"],
     add: ["M12 5v14", "M5 12h14"],
     reset: ["M18 6 6 18", "M6 6l12 12"]
 };
-const FILTER_IDS = ["filter-console", "filter-title", "filter-owner", "filter-region", "filter-game", "filter-manual", "filter-box", "filter-attribute", "filter-source"];
+const FILTER_IDS = ["filter-console", "filter-title", "filter-owner", "filter-region", "filter-quantity", "filter-game", "filter-manual", "filter-box", "filter-date", "filter-paid", "filter-attribute"];
 // Full display names; the stored names stay as they are, because PriceCharting's URLs rely on them
 const CONSOLE_NAMES = {
     "3DS": "Nintendo 3DS",
@@ -184,6 +229,8 @@ let owners = [];
 let loadFailed = false;
 let sort = { key: "console", direction: 1 };
 let editing = null;
+let viewRestored = false;
+let bulkUpdate = null;  // The update of every visible entry, while it runs
 
 function t(key, parameters = {}) {
     return TRANSLATIONS[language][key].replace(/\{(\w+)\}/g, (_, name) => parameters[name]);
@@ -241,10 +288,6 @@ function normalize(text) {
     return String(text).normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 }
 
-function sourceLabel(entry) {
-    return entry.source.replace(DATA_PREFIX, "");
-}
-
 function consoleName(entry) {
     return CONSOLE_NAMES[entry.console] ?? entry.console;
 }
@@ -271,23 +314,63 @@ function isOwned(entry, key) {
     return value !== null && value !== "";
 }
 
+// Sorted by what is shown: the price of every copy, with an X first among the owned
 function ownershipSortValue(entry, key) {
+    if (!isOwned(entry, key)) {
+        return null;
+    }
+
+    return amountOf(entry, key) ?? 0;
+}
+
+// A price that can be added up: an X, or an empty value, has none
+function priceNumber(entry, key) {
     if (!isOwned(entry, key)) {
         return null;
     }
 
     const number = Number(entry.values[key]);
 
-    return Number.isNaN(number) ? 0 : number;
+    return Number.isNaN(number) ? null : number;
 }
+
+// A price for every copy, as shown: prices are stored and edited for one copy
+function amountOf(entry, key) {
+    const price = priceNumber(entry, key);
+
+    return price === null ? null : price * entry.values.quantity;
+}
+
+// Item + Manual + Box, as shown
+function subtotalOf(entry) {
+    const parts = OWNERSHIP.map(key => amountOf(entry, key)).filter(amount => amount !== null);
+
+    return parts.length ? parts.reduce((sum, amount) => sum + amount, 0) : null;
+}
+
+// Always Valeur less Payé, as both are shown; an empty value counts as 0
+function totalOf(entry) {
+    return (subtotalOf(entry) ?? 0) - (amountOf(entry, "paid") ?? 0);
+}
+
+const COMPUTED = { subtotal: subtotalOf, total: totalOf };
 
 function sortValue(entry, key) {
     if (key === "quantity") {
         return entry.values.quantity;
     }
 
-    if (OWNERSHIP.includes(key)) {
+    if (key in COMPUTED) {
+        return COMPUTED[key](entry);
+    }
+
+    // Sorted by what is shown: what was paid for every copy
+    if (PRICES.includes(key)) {
         return ownershipSortValue(entry, key);
+    }
+
+    if (key === "date") {
+        return entry.values.date || null;
     }
 
     if (key === "region") {
@@ -298,7 +381,7 @@ function sortValue(entry, key) {
         return consoleName(entry);
     }
 
-    return key === "source" ? sourceLabel(entry) : entry[key];
+    return entry[key];
 }
 
 function compare(left, right) {
@@ -322,15 +405,37 @@ function compare(left, right) {
     return collator.compare(left.console, right.console) || collator.compare(left.title, right.title) || left.id - right.id;
 }
 
+// How many months back each "older than" choice of the Date filter goes
+const DATE_AGES = { beforeToday: 0, olderMonth: 1, olderHalfYear: 6, olderYear: 12 };
+
+// Yes and No are about having a date; the other choices keep the dates older than that, and leave out entries without one
+function dateMatches(entry, wanted) {
+    const value = entry.values.date;
+
+    if (wanted === "owned" || wanted === "missing") {
+        return Boolean(value) === (wanted === "owned");
+    }
+
+    if (!value) {
+        return false;
+    }
+
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - DATE_AGES[wanted]);
+
+    return value < isoDate(cutoff);
+}
+
 function visibleEntries() {
     const title = normalize(element("filter-title").value.trim());
     const owner = element("filter-owner").value;
     const console_ = element("filter-console").value;
     const region = element("filter-region").value;
+    const quantity = element("filter-quantity").value;
+    const date = element("filter-date").value;
     const attribute = element("filter-attribute").value;
-    const source = element("filter-source").value;
 
-    const ownership = OWNERSHIP.map(key => [key, element(`filter-${key}`).value]).filter(([, wanted]) => wanted);
+    const ownership = PRICES.map(key => [key, element(`filter-${key}`).value]).filter(([, wanted]) => wanted);
 
     return entries
         .filter(entry => ownership.every(([key, wanted]) => isOwned(entry, key) === (wanted === "owned")))
@@ -338,8 +443,9 @@ function visibleEntries() {
         .filter(entry => !owner || entry.owner === owner)
         .filter(entry => !console_ || consoleName(entry) === console_)
         .filter(entry => !region || regionOf(entry) === region)
+        .filter(entry => !date || dateMatches(entry, date))
+        .filter(entry => !quantity || (quantity === "one" ? entry.values.quantity === 1 : entry.values.quantity > 1))
         .filter(entry => !attribute || entry.values[attribute] === true)
-        .filter(entry => !source || sourceLabel(entry) === source)
         .sort(compare);
 }
 
@@ -375,15 +481,19 @@ function textCell(text, className = "") {
     return cell;
 }
 
+// The price of every copy, so that each total is the sum of its column; an X stays as it is
 function ownershipCell(entry, key) {
-    const value = entry.values[key];
-    const number = Number(value);
+    const amount = amountOf(entry, key);
 
-    if (!isOwned(entry, key)) {
-        return textCell("", "number");
+    if (amount === null) {
+        return textCell(isOwned(entry, key) ? entry.values[key] : "", "number");
     }
 
-    return textCell(Number.isNaN(number) ? value : numberFormat.format(number), "number");
+    return amountCell(amount);
+}
+
+function amountCell(amount) {
+    return textCell(amount === null ? "" : numberFormat.format(amount), "number");
 }
 
 function icon(paths) {
@@ -413,23 +523,64 @@ function actionButton(action, entry, className, onClick) {
     return button;
 }
 
-function priceChartingButton(entry) {
-    const label = t("action.priceCharting");
+// The name opens PriceCharting
+function titleCell(entry) {
+    const cell = document.createElement("td");
+    cell.className = "title";
     const link = document.createElement("a");
-    link.className = "icon-button";
     link.href = priceChartingLink(entry);
     link.target = "_blank";
     link.rel = "noopener noreferrer";
-    link.title = label;
-    link.setAttribute("aria-label", `${label} ${entry.title}`);
+    link.title = t("action.priceCharting");
+    link.textContent = entry.title;
+    cell.append(link);
+
+    return cell;
+}
+
+// Refreshes Item, Manual and Box from PriceCharting, and dates them today
+function priceChartingButton(entry) {
+    const label = t("action.updatePrices");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "icon-button";
+    button.title = t("action.priceCharting");
+    button.setAttribute("aria-label", `${label} ${entry.title}`);
     const image = document.createElement("img");
     image.src = "/static/pricecharting.ico";
     image.alt = "";
     image.width = 16;
     image.height = 16;
-    link.append(image);
+    button.append(image);
+    button.addEventListener("click", () => updatePrices(entry, button));
 
-    return link;
+    return button;
+}
+
+async function updatePrices(entry, button) {
+    button.disabled = true;
+    button.classList.add("busy");
+
+    try {
+        await fetchPrices(entry);
+        showMessage("");
+    }
+    catch (error) {
+        showMessage(error.message);
+        button.disabled = false;
+        button.classList.remove("busy");
+    }
+}
+
+// Asks the server to refresh an entry from PriceCharting, then shows what it saved right away
+async function fetchPrices(entry) {
+    const saved = await request(`/collection/${ROUTES[entry.kind]}/${entry.id}/prices`, { method: "POST" }, { title: entry.title });
+
+    for (const key of [...OWNERSHIP, "date", "pricecharting"]) {
+        entry.values[key] = saved[key];
+    }
+
+    render();
 }
 
 function renderHeaders() {
@@ -488,13 +639,16 @@ function renderRows(visible) {
         );
         row.append(
             textCell(consoleName(entry)),
-            textCell(entry.title, "title"),
+            titleCell(entry),
             textCell(regionOf(entry) ?? ""),
             textCell(entry.values.quantity, "number"),
             ...OWNERSHIP.map(key => ownershipCell(entry, key)),
+            textCell(entry.values.date ?? "", "date"),
+            amountCell(subtotalOf(entry)),
+            ownershipCell(entry, "paid"),
+            amountCell(totalOf(entry)),
             detailsCell(entry),
             textCell(entry.owner),
-            textCell(sourceLabel(entry), "source"),
             actions
         );
         rows.append(row);
@@ -502,6 +656,7 @@ function renderRows(visible) {
 }
 
 function render() {
+    saveView();
     renderHeaders();
 
     if (entries === null) {
@@ -516,13 +671,19 @@ function render() {
     renderTotals(visible);
 }
 
-// Totals of the visible entries; an X means owned, but has no price to add
+// Tags whose entries stay out of the totals: not owned, or with no collector value
+const UNCOUNTED_TAGS = ["wishlist", "reproduction", "virtual"];
+
+// Totals of the visible entries, except those with an uncounted tag; an X means owned, but has no price to add
 function renderTotals(visible) {
+    visible = visible.filter(entry => !UNCOUNTED_TAGS.some(key => entry.values[key]));
     element("total-quantity").textContent = visible.reduce((sum, entry) => sum + entry.values.quantity, 0);
 
-    for (const key of OWNERSHIP) {
-        const priced = visible.filter(entry => isOwned(entry, key) && !Number.isNaN(Number(entry.values[key])));
-        const total = priced.reduce((sum, entry) => sum + Number(entry.values[key]) * entry.values.quantity, 0);
+    // Each total is the sum of its column as shown
+    const columns = [...PRICES.map(key => [key, entry => amountOf(entry, key)]), ...Object.entries(COMPUTED)];
+
+    for (const [key, amount] of columns) {
+        const total = visible.reduce((sum, entry) => sum + (amount(entry) ?? 0), 0);
         element(`total-${key}`).textContent = numberFormat.format(total);
     }
 }
@@ -547,8 +708,9 @@ function fillFilters() {
     fillSelect("filter-owner", unique(all.map(entry => entry.owner)));
     fillSelect("filter-console", unique(all.map(consoleName)));
     fillSelect("filter-region", REGIONS.map(region => [region, region]));
-    OWNERSHIP.forEach(key => fillSelect(`filter-${key}`, [["owned", t("filter.owned")], ["missing", t("filter.missing")]]));
-    fillSelect("filter-source", unique(all.map(sourceLabel)));
+    fillSelect("filter-quantity", [["one", t("filter.one")], ["more", t("filter.more")]]);
+    PRICES.forEach(key => fillSelect(`filter-${key}`, [["owned", t("filter.owned")], ["missing", t("filter.missing")]]));
+    fillSelect("filter-date", [["owned", t("filter.owned")], ["missing", t("filter.missing")], ...Object.keys(DATE_AGES).map(age => [age, t(`filter.${age}`)])]);
     fillSelect("filter-attribute", sortedTags(TAGS).map(key => [key, t(`flag.${key}`)]));
 }
 
@@ -566,12 +728,25 @@ function storedConsoleName(displayName) {
     return [...counts].sort((left, right) => right[1] - left[1])[0]?.[0] ?? "";
 }
 
-function showMessage(text) {
+function showMessage(text, info = false) {
     element("message").textContent = text;
     element("message").hidden = !text;
+    element("message").classList.toggle("info", info);
 }
 
-async function request(url, options = {}) {
+// The server explains some refusals with a code, which has its own message
+async function errorCode(response) {
+    try {
+        const detail = (await response.json()).detail;
+
+        return typeof detail === "string" && `error.${detail}` in TRANSLATIONS[language] ? `error.${detail}` : null;
+    }
+    catch {
+        return null;
+    }
+}
+
+async function request(url, options = {}, parameters = {}) {
     let response;
 
     try {
@@ -586,6 +761,12 @@ async function request(url, options = {}) {
     }
 
     if (!response.ok) {
+        const code = await errorCode(response);
+
+        if (code) {
+            throw new Error(t(code, parameters));
+        }
+
         throw new Error(response.status === 422 ? t("error.invalid") : t("error.status", { status: response.status }));
     }
 
@@ -596,7 +777,51 @@ async function loadEntries() {
     entries = await request("/collection/entries");
     owners = await request("/collection/owners");
     fillFilters();
+
+    // Only once the lists have their choices can the saved ones be selected again
+    if (!viewRestored) {
+        restoreView();
+        viewRestored = true;
+    }
+
     render();
+}
+
+function restoreView() {
+    let saved;
+
+    try {
+        saved = JSON.parse(localStorage.getItem(VIEW_STORAGE_KEY));
+    }
+    catch {
+        return;  // Storage can be unavailable or hold something else: start from the default view
+    }
+
+    for (const [id, value] of Object.entries(saved?.filters ?? {})) {
+        const control = FILTER_IDS.includes(id) ? element(id) : null;
+
+        // A choice that no longer exists, like a deleted owner, falls back to All
+        if (control && (control.tagName !== "SELECT" || [...control.options].some(option => option.value === value))) {
+            control.value = value;
+        }
+    }
+
+    if (COLUMNS.some(column => column.key === saved?.sort?.key && column.sortable !== false) && [1, -1].includes(saved.sort.direction)) {
+        sort = saved.sort;
+    }
+}
+
+function saveView() {
+    if (!viewRestored) {
+        return;  // Saving before the saved view is back would erase it
+    }
+
+    try {
+        localStorage.setItem(VIEW_STORAGE_KEY, JSON.stringify({ filters: Object.fromEntries(FILTER_IDS.map(id => [id, element(id).value])), sort }));
+    }
+    catch {
+        // The view then only lasts until the page is reloaded
+    }
 }
 
 function field(name, label, value, options = {}) {
@@ -689,21 +914,6 @@ function regionField(current) {
     return selectField("region", t("column.region"), choices, current ?? "");
 }
 
-// Only a new entry can start without a source: an existing one always shows the source it has
-function sourceField(current, isNew) {
-    const known = new Map(entries.map(entry => [entry.source, sourceLabel(entry)]));
-    const choices = [...known].map(([value, label]) => [label, value]).sort(([left], [right]) => collator.compare(left, right));
-
-    return choiceField("source", t("column.source"), isNew ? [[t("editor.autoSource"), ""], ...choices] : choices, current, t("editor.newSource"), false);
-}
-
-// An untouched source stays null, so the entry keeps following its source file
-function sourceFieldValue(form) {
-    const value = choiceFieldValue(form, "source").trim();
-
-    return value === "" || value === editing?.source ? null : value;
-}
-
 function selectField(name, label, options, value) {
     const wrapper = document.createElement("label");
     const select = document.createElement("select");
@@ -754,10 +964,9 @@ function openEditor(entry) {
             field("name", t("column.title"), entry.title, { required: true }),
             regionField(regionOf(entry)),
             field("quantity", t("column.quantity"), entry.values.quantity, { type: "number", min: 0 }),
-            ...OWNERSHIP.map(key => field(key, t(`column.${key}`), priceText(entry.values[key]))),
+            ...priceFields(entry.values),
             tagsField(TAGS, entry.values),
             selectField("owner_id", t("column.owner"), owners, entry.values.owner_id),
-            sourceField(entry.source, false),
             field("pricecharting", t("priceChartingLink"), entry.values.pricecharting, { type: "url" })
         );
     }
@@ -767,10 +976,9 @@ function openEditor(entry) {
             field("title", t("column.title"), entry.title, { required: true }),
             regionField(regionOf(entry)),
             field("quantity", t("column.quantity"), entry.values.quantity, { type: "number", min: 0 }),
-            ...OWNERSHIP.map(key => field(key, t(`column.${key}`), priceText(entry.values[key]))),
+            ...priceFields(entry.values),
             tagsField(TAGS, entry.values),
             selectField("owner_id", t("column.owner"), owners, entry.values.owner_id),
-            sourceField(entry.source, false),
             field("pricecharting", t("priceChartingLink"), entry.values.pricecharting, { type: "url" })
         );
     }
@@ -782,7 +990,6 @@ function openEditor(entry) {
 function openAddForm() {
     editing = null;
     const filteredOwner = owners.find(owner => owner.name === element("filter-owner").value);
-    const filteredSource = entries.find(entry => sourceLabel(entry) === element("filter-source").value)?.source;
     element("editor-heading").textContent = t("editor.addHeading");
     element("editor-error").hidden = true;
     element("editor-fields").replaceChildren(
@@ -790,13 +997,35 @@ function openAddForm() {
         field("name", t("column.title"), "", { required: true }),
         regionField(element("filter-region").value),
         field("quantity", t("column.quantity"), 1, { type: "number", min: 0 }),
-        ...OWNERSHIP.map(key => field(key, t(`column.${key}`), null)),
+        ...priceFields({}),
         tagsField(TAGS, {}),
         selectField("owner_id", t("column.owner"), owners, (filteredOwner ?? owners[0])?.id),
-        sourceField(filteredSource, true),
         field("pricecharting", t("priceChartingLink"), null, { type: "url" })
     );
     element("editor").showModal();
+}
+
+// Item, Manual and Box, the date of those prices, then what was paid
+// Changing Item, Manual or Box dates the prices today; the date can still be changed afterwards
+function priceFields(values) {
+    const fields = PRICES.map(key => field(key, t(`column.${key}`), priceText(values[key])));
+    const date = field("date", t("column.date"), values.date, { type: "date" });
+    fields.splice(OWNERSHIP.length, 0, date);
+
+    for (const wrapper of fields.slice(0, OWNERSHIP.length)) {
+        wrapper.querySelector("input").addEventListener("input", () => date.querySelector("input").value = today());
+    }
+
+    return fields;
+}
+
+// Today in the viewer's time zone, as yyyy-mm-dd
+function today() {
+    return isoDate(new Date());
+}
+
+function isoDate(day) {
+    return [day.getFullYear(), day.getMonth() + 1, day.getDate()].map(part => String(part).padStart(2, "0")).join("-");
 }
 
 // A price as shown in the form: always two decimals, and without thousands separators so it stays editable
@@ -837,8 +1066,9 @@ function editorPayload() {
             name: form.name.value,
             region: form.region.value || null,
             owner_id: Number(form.owner_id.value),
-            source: sourceFieldValue(form),
+            source: null,  // An entry keeps its source; a new one gets the owner's
             quantity: form.quantity.value === "" ? 1 : Number(form.quantity.value),
+            date: form.date.value || null,
             pricecharting: form.pricecharting.value.trim() || null
         };
 
@@ -846,7 +1076,7 @@ function editorPayload() {
             payload[key] = form[key].checked ? true : null;
         }
 
-        for (const key of OWNERSHIP) {
+        for (const key of PRICES) {
             payload[key] = cellValue(form[key], values[key]);
         }
 
@@ -858,8 +1088,9 @@ function editorPayload() {
         title: form.title.value,
         region: form.region.value || null,
         owner_id: Number(form.owner_id.value),
-        source: sourceFieldValue(form),
+        source: null,
         quantity: form.quantity.value === "" ? 1 : Number(form.quantity.value),
+        date: form.date.value || null,
         pricecharting: form.pricecharting.value.trim() || null
     };
 
@@ -867,7 +1098,7 @@ function editorPayload() {
         payload[key] = form[key].checked ? true : null;
     }
 
-    for (const key of OWNERSHIP) {
+    for (const key of PRICES) {
         payload[key] = cellValue(form[key], values[key]);
     }
 
@@ -898,6 +1129,66 @@ async function saveEditor(event) {
     }
 }
 
+const BULK_PAUSE = 1000;  // Milliseconds between two entries, to go easy on PriceCharting
+
+// Updates every visible entry that owns a part, one after the other; a second click stops after the current one
+async function updateVisiblePrices() {
+    const button = element("update-visible-prices");
+
+    if (bulkUpdate) {
+        bulkUpdate.stopped = true;
+
+        return;
+    }
+
+    const targets = visibleEntries().filter(entry => OWNERSHIP.some(key => isOwned(entry, key)));
+
+    if (!targets.length) {
+        showMessage(t("bulk.none"), true);
+
+        return;
+    }
+
+    if (!confirm(t("confirm.updateVisible", { count: targets.length }))) {
+        return;
+    }
+
+    bulkUpdate = { stopped: false };
+    button.classList.add("busy");
+    button.title = t("action.stopUpdate");
+    button.setAttribute("aria-label", button.title);
+    const failed = [];
+    let updated = 0;
+
+    for (const [index, entry] of targets.entries()) {
+        if (bulkUpdate.stopped) {
+            break;
+        }
+
+        showMessage(t("bulk.progress", { done: index, count: targets.length }), true);
+
+        try {
+            await fetchPrices(entry);
+            updated++;
+        }
+        catch {
+            failed.push(entry.title);
+        }
+
+        if (index < targets.length - 1 && !bulkUpdate.stopped) {
+            await new Promise(resolve => setTimeout(resolve, BULK_PAUSE));
+        }
+    }
+
+    const summary = t(bulkUpdate.stopped ? "bulk.stopped" : "bulk.done", { updated, count: targets.length });
+    bulkUpdate = null;
+    button.classList.remove("busy");
+    button.title = t("action.priceCharting");
+    button.setAttribute("aria-label", button.title);
+
+    showMessage(failed.length ? `${summary} ${t("bulk.failed", { titles: failed.join(", ") })}` : summary, !failed.length);
+}
+
 async function removeEntry(entry) {
     if (!confirm(t("confirm.delete", { title: entry.title, console: entry.console, owner: entry.owner }))) {
         return;
@@ -916,6 +1207,7 @@ async function removeEntry(entry) {
 element("language").addEventListener("change", event => setLanguage(event.target.value, true));
 element("filters").addEventListener("input", render);
 element("filter-reset").append(icon(ICONS.reset));
+element("update-visible-prices").addEventListener("click", updateVisiblePrices);
 element("filter-reset").addEventListener("click", () => {
     FILTER_IDS.forEach(id => element(id).value = "");
     render();

@@ -5,9 +5,11 @@ try: from constant import *
 except ImportError: from pycharting.constant import *
 
 
-BOOLEAN_KEYS: set[str] = {"amiibo", "console", "gamepad", "previously_owned", "reproduction", "virtual", "wishlist"}
-ADDED_ITEM_COLUMNS: tuple[str, ...] = ("game", "manual", "box", "pricecharting", "amiibo", "wishlist")  # Columns that older databases lack.
-ADDED_ROW_COLUMNS: tuple[str, ...] = ("gamepad", "previously_owned", "reproduction", "virtual", "wishlist")  # Same, for spreadsheet rows.
+BOOLEAN_KEYS: set[str] = {"accessory", "amiibo", "console", "gamepad", "previously_owned", "reproduction", "virtual", "wishlist"}
+ADDED_ITEM_COLUMNS: tuple[str, ...] = ("game", "manual", "box", "paid", "pricecharting", "amiibo", "wishlist", "accessory")  # Columns that older databases lack.
+ADDED_ROW_COLUMNS: tuple[str, ...] = ("accessory", "gamepad", "previously_owned", "reproduction", "virtual", "wishlist")  # Same, for spreadsheet rows.
+ADDED_ROW_PRICE_COLUMNS: tuple[str, ...] = ("paid",)  # Same, for spreadsheet rows, without a type: a price can be a number or an X.
+ADDED_TEXT_COLUMNS: tuple[str, ...] = ("date",)  # Columns that older databases lack, in both tables: the yyyy-mm-dd date of the Item, Manual and Box prices.
 
 
 def open_database(file: Path = DATABASE_FILE, password: str = DATABASE_PASSWORD) -> Connection:
@@ -36,9 +38,6 @@ def ensure_collection_schema(connection: Connection) -> None:
 
     connection.commit()
 
-    if "paid" in existing:
-        connection.executescript(DATABASE_PATH.joinpath("collection/migrate_paid.sql").read_text())
-
     if "quantity" not in {row[1] for row in connection.execute("PRAGMA table_info(spreadsheet_rows)")}:
         connection.executescript(DATABASE_PATH.joinpath("collection/migrate_quantity.sql").read_text())
 
@@ -47,6 +46,17 @@ def ensure_collection_schema(connection: Connection) -> None:
     for column in ADDED_ROW_COLUMNS:
         if column not in existing_rows:
             connection.execute(f'ALTER TABLE spreadsheet_rows ADD COLUMN "{column}" INTEGER')
+
+    for column in ADDED_ROW_PRICE_COLUMNS:
+        if column not in existing_rows:
+            connection.execute(f'ALTER TABLE spreadsheet_rows ADD COLUMN "{column}"')
+
+    for column in ADDED_TEXT_COLUMNS:
+        if column not in existing:
+            connection.execute(f'ALTER TABLE collection_items ADD COLUMN "{column}" TEXT')
+
+        if column not in existing_rows:
+            connection.execute(f'ALTER TABLE spreadsheet_rows ADD COLUMN "{column}" TEXT')
 
     connection.commit()
 
@@ -105,6 +115,14 @@ def add_collection_item(connection: Connection, parameters: dict) -> bool:
     connection.commit()
 
     return count > 0
+
+
+def get_entry_prices(connection: Connection, kind: str, id: int) -> dict | None:
+    """The title, console, region, parts and PriceCharting link of an item or a spreadsheet row."""
+
+    rows: list = execute(connection, DATABASE_PATH.joinpath(f"collection/select_{kind}_prices.sql").read_text(), {"id": id})
+
+    return rows[0] if rows else None
 
 
 def change_collection_entry(connection: Connection, script: str, parameters: dict) -> bool:

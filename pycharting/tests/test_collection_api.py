@@ -34,7 +34,8 @@ class TestCollectionApi:
         ]
         assert actual[0]["values"]["virtual"] is True
         assert actual[0]["values"]["game"] == "43.98"
-        assert "paid" not in actual[0]["values"]
+        assert actual[0]["values"]["paid"] is None
+        assert actual[1]["values"]["paid"] is None
         assert actual[1]["source"] == "pycharting/data/video_games.xlsx (Feuil1)"
 
     @mark.asyncio
@@ -281,28 +282,84 @@ class TestCollectionApi:
         with raises(ValueError):
             api.SpreadsheetRow(system="3DS", title="Kid Icarus", quantity=-1)
 
-    def test_paid_values_move_to_game_and_the_column_is_removed(self, tmp_path: Path) -> None:
+    def test_paid_values_stay_apart_from_the_game(self, tmp_path: Path) -> None:
         # Arrange
         database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
         load_collection(database)
-        database.execute("ALTER TABLE collection_items ADD COLUMN paid")
         database.execute("INSERT INTO owners (id, name) VALUES (1, 'A')")
         database.execute("INSERT INTO source_files (id, owner_id, path, sha256, content) VALUES (1, 1, 'a', '', x'')")
         database.executemany(
             "INSERT INTO collection_items (source_file_id, position, group_name, name, paid, game) VALUES (1, ?, 'Wii', ?, ?, ?)",
-            [(0, "Price", 12.5, None), (1, "Free", 0, None), (2, "Text", "43.98", None), (3, "Unpriced", None, None), (4, "Set by hand", 1, 9)]
+            [(0, "Price", 12.5, None), (1, "Free", 0, 9)]
         )
         database.commit()
 
         # Act
+        load_collection(database)  # A later start must leave the paid values where they are.
         entries: list = get_collection_entries(database)
-        load_collection(database)  # A second run must find nothing left to do.
-        columns: list = [row[1] for row in database.execute("PRAGMA table_info(collection_items)")]
         database.close()
 
         # Assert
-        assert [entry["values"]["game"] for entry in entries] == [12.5, 0, "43.98", None, 9]
-        assert "paid" not in columns
+        assert [(entry["values"]["paid"], entry["values"]["game"]) for entry in entries] == [(12.5, None), (0, 9)]
+
+    @mark.asyncio
+    async def test_paid_is_saved_on_items_and_rows(self, connection: Connection) -> None:
+        # Act
+        await api.update_collection_item(1, api.CollectionItem(group_name="Wii", name="Zelda", paid=20))
+        await api.update_collection_row(1, api.SpreadsheetRow(system="3DS", title="Kid Icarus", paid="5.50"))
+
+        # Assert
+        assert [entry["values"]["paid"] for entry in get_collection_entries(connection)] == [20, "5.50"]
+
+    @mark.asyncio
+    async def test_date_is_saved_on_items_and_rows(self, connection: Connection) -> None:
+        # Act
+        await api.update_collection_item(1, api.CollectionItem(group_name="Wii", name="Zelda", date="2026-11-08"))
+        await api.update_collection_row(1, api.SpreadsheetRow(system="3DS", title="Kid Icarus", date="2025-01-31"))
+
+        # Assert
+        assert [entry["values"]["date"] for entry in get_collection_entries(connection)] == ["2026-11-08", "2025-01-31"]
+
+    def test_date_must_be_yyyy_mm_dd(self) -> None:
+        # Act and assert
+        with raises(ValueError):
+            api.CollectionItem(group_name="Wii", name="Zelda", date="08/11/2026")
+
+    def test_older_databases_gain_the_date_column(self, tmp_path: Path) -> None:
+        # Arrange
+        database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
+        load_collection(database)
+        database.execute('ALTER TABLE collection_items DROP COLUMN "date"')
+        database.execute('ALTER TABLE spreadsheet_rows DROP COLUMN "date"')
+        database.commit()
+
+        # Act
+        load_collection(database)
+        item_columns: list = [row[1] for row in database.execute("PRAGMA table_info(collection_items)")]
+        row_columns: list = [row[1] for row in database.execute("PRAGMA table_info(spreadsheet_rows)")]
+        database.close()
+
+        # Assert
+        assert "date" in item_columns
+        assert "date" in row_columns
+
+    def test_older_databases_gain_the_paid_column(self, tmp_path: Path) -> None:
+        # Arrange
+        database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
+        load_collection(database)
+        database.execute("ALTER TABLE collection_items DROP COLUMN paid")
+        database.execute("ALTER TABLE spreadsheet_rows DROP COLUMN paid")
+        database.commit()
+
+        # Act
+        load_collection(database)
+        item_columns: list = [row[1] for row in database.execute("PRAGMA table_info(collection_items)")]
+        row_columns: list = [row[1] for row in database.execute("PRAGMA table_info(spreadsheet_rows)")]
+        database.close()
+
+        # Assert
+        assert "paid" in item_columns
+        assert "paid" in row_columns
 
     @mark.asyncio
     async def test_item_keeps_its_pricecharting_link(self, connection: Connection) -> None:
@@ -360,3 +417,167 @@ class TestCollectionApi:
 
         # Assert
         assert "*" not in middleware.kwargs["allow_origins"]
+
+
+PRODUCT_PAGE: str = """<h1 id="product_name">Zelda</h1><div id="full-prices"><table>
+<tr><td>Loose</td><td>$1,043.50</td></tr><tr><td>Box Only</td><td>$12.00</td></tr><tr><td>Manual Only</td><td>-</td></tr>
+</table></div>"""
+
+
+class FakeResponse:
+    def __init__(self, url: str, text: str, status_code: int = 200) -> None:
+        self.url, self.text, self.status_code, self.ok = url, text, status_code, status_code < 400
+
+
+class TestPrices:
+    @fixture(autouse=True)
+    def rate(self, monkeypatch) -> None:
+        import pycharting.prices as prices
+        monkeypatch.setattr(prices, "usd_cad_rate", lambda: 1.5)
+
+    def test_product_page_gives_a_price_for_each_part_in_cad(self, monkeypatch) -> None:
+        # Arrange
+        import pycharting.prices as prices
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE))
+
+        # Act
+        actual: dict = prices.fetch_prices("https://www.pricecharting.com/game/wii/zelda", "Zelda", "Wii", None)
+
+        # Assert
+        assert actual == {"url": "https://www.pricecharting.com/game/wii/zelda", "game": 1565.25, "manual": None, "box": 18.0}
+
+    def test_search_picks_the_result_with_exactly_that_title(self, monkeypatch) -> None:
+        # Arrange
+        import pycharting.prices as prices
+        search: str = """<table id="games_table"><tr><td class="title"><a href="https://p/zelda-ii">Zelda II</a></td></tr>
+        <tr><td class="title"><a href="https://p/zelda">Zelda</a></td></tr></table>"""
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE if url == "https://p/zelda" else search))
+
+        # Act
+        actual: dict = prices.fetch_prices(None, "zelda", "Wii", "PAL")
+
+        # Assert
+        assert actual["url"] == "https://p/zelda"
+
+    def test_search_without_that_title_finds_nothing(self, monkeypatch) -> None:
+        # Arrange
+        import pycharting.prices as prices
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, "<table id='games_table'></table>"))
+
+        # Act and assert
+        with raises(prices.ProductNotFound):
+            prices.fetch_prices(None, "Zelda", "Wii", None)
+
+
+class TestUpdatePrices:
+    @mark.asyncio
+    async def test_only_owned_parts_are_refreshed_and_dated(self, connection: Connection, monkeypatch) -> None:
+        # Arrange
+        connection.execute("UPDATE collection_items SET box = 'X' WHERE id = 1")
+        connection.commit()
+        monkeypatch.setattr(api, "fetch_prices", lambda *_: {"url": "https://p/zelda", "game": 50.0, "manual": 9.0, "box": None})
+
+        # Act
+        await api.update_entry_prices("items", 1)
+        values: dict = get_collection_entries(connection)[0]["values"]
+
+        # Assert
+        assert (values["game"], values["manual"], values["box"], values["pricecharting"]) == (50.0, None, "X", "https://p/zelda")
+        assert values["date"] == api.date.today().isoformat()
+
+    @mark.asyncio
+    async def test_a_row_is_refreshed_too(self, connection: Connection, monkeypatch) -> None:
+        # Arrange
+        monkeypatch.setattr(api, "fetch_prices", lambda *_: {"url": "https://p/kid-icarus", "game": 1.0, "manual": 2.0, "box": 3.0})
+
+        # Act
+        await api.update_entry_prices("rows", 1)
+        values: dict = get_collection_entries(connection)[1]["values"]
+
+        # Assert
+        assert (values["game"], values["manual"], values["box"]) == (None, None, 3.0)
+
+    @mark.asyncio
+    async def test_nothing_owned_is_refused(self, connection: Connection) -> None:
+        # Arrange
+        connection.execute("UPDATE collection_items SET game = NULL WHERE id = 1")
+        connection.commit()
+
+        # Act and assert
+        with raises(HTTPException) as error:
+            await api.update_entry_prices("items", 1)
+
+        assert error.value.detail == "nothing_owned"
+
+    @mark.asyncio
+    async def test_missing_entry_is_not_found(self, connection: Connection) -> None:
+        # Act and assert
+        with raises(HTTPException) as error:
+            await api.update_entry_prices("items", 99)
+
+        assert error.value.status_code == 404
+
+
+class TestExchangeRate:
+    def test_rate_comes_from_the_bank_of_canada_once_a_day(self, monkeypatch) -> None:
+        # Arrange
+        import pycharting.prices as prices
+        calls: list = []
+
+        class Rate:
+            def raise_for_status(self) -> None: pass
+            def json(self) -> dict: return {"observations": [{"d": "2026-11-06", "FXUSDCAD": {"v": "1.4113"}}]}
+
+        monkeypatch.setattr(prices, "_rates", {})
+        monkeypatch.setattr(prices, "get", lambda url, **_: calls.append(url) or Rate())
+
+        # Act
+        actual: list = [prices.usd_cad_rate(), prices.usd_cad_rate()]
+
+        # Assert
+        assert actual == [1.4113, 1.4113]
+        assert calls == [prices.RATE_URL]
+
+    def test_missing_rate_is_an_error(self, monkeypatch) -> None:
+        # Arrange
+        import pycharting.prices as prices
+
+        class Empty:
+            def raise_for_status(self) -> None: pass
+            def json(self) -> dict: return {"observations": []}
+
+        monkeypatch.setattr(prices, "_rates", {})
+        monkeypatch.setattr(prices, "get", lambda url, **_: Empty())
+
+        # Act and assert
+        with raises(prices.ExchangeRateError):
+            prices.usd_cad_rate()
+
+
+class TestAccessory:
+    @mark.asyncio
+    async def test_accessory_is_saved_on_items_and_rows(self, connection: Connection) -> None:
+        # Act
+        await api.update_collection_item(1, api.CollectionItem(group_name="Wii", name="Zelda", accessory=True))
+        await api.update_collection_row(1, api.SpreadsheetRow(system="3DS", title="Kid Icarus", accessory=True))
+
+        # Assert
+        assert [entry["values"]["accessory"] for entry in get_collection_entries(connection)] == [True, True]
+
+    def test_older_databases_gain_the_accessory_column(self, tmp_path: Path) -> None:
+        # Arrange
+        database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
+        load_collection(database)
+        database.execute("ALTER TABLE collection_items DROP COLUMN accessory")
+        database.execute("ALTER TABLE spreadsheet_rows DROP COLUMN accessory")
+        database.commit()
+
+        # Act
+        load_collection(database)
+        item_columns: list = [row[1] for row in database.execute("PRAGMA table_info(collection_items)")]
+        row_columns: list = [row[1] for row in database.execute("PRAGMA table_info(spreadsheet_rows)")]
+        database.close()
+
+        # Assert
+        assert "accessory" in item_columns
+        assert "accessory" in row_columns

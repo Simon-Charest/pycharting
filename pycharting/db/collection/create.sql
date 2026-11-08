@@ -28,6 +28,7 @@ TABLE IF NOT EXISTS collection_items
     , console INTEGER
     , gamepad INTEGER
     , amiibo INTEGER
+    , accessory INTEGER
     , wishlist INTEGER
     , previously_owned INTEGER
     , quantity INTEGER DEFAULT 1
@@ -36,6 +37,8 @@ TABLE IF NOT EXISTS collection_items
     , game
     , manual
     , box
+    , "date" TEXT
+    , paid
     , pricecharting
     , region TEXT
     , owner_id INTEGER REFERENCES owners (id)
@@ -55,9 +58,12 @@ TABLE IF NOT EXISTS spreadsheet_rows
     , title
     , console
     , amiibo
+    , accessory INTEGER
     , game
     , box
+    , "date" TEXT
     , manual
+    , paid
     , pricecharting
     , quantity INTEGER DEFAULT 1
     , gamepad INTEGER

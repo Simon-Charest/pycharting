@@ -197,6 +197,10 @@ tfoot .icon-button {
     color: var(--danger);
 }
 
+.message.info {
+    color: var(--muted);
+}
+
 .table-wrapper {
     overflow: auto;
     max-height: calc(100vh - 110px);
@@ -256,15 +260,34 @@ td.number {
     white-space: nowrap;
 }
 
+td.date {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
 td.title {
     min-width: 170px;
     font-weight: 500;
 }
 
-td.source {
-    color: var(--muted);
-    font-size: 13px;
-    overflow-wrap: anywhere;
+td.title a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+td.title a:hover,
+td.title a:focus-visible {
+    text-decoration: underline;
+}
+
+.icon-button.busy img {
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    50% {
+        opacity: 0.3;
+    }
 }
 
 td.actions {

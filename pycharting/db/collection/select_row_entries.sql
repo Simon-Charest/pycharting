@@ -7,9 +7,12 @@ SELECT r.id
     , r.region
     , r.console
     , r.amiibo
+    , r.accessory
     , r.game
     , r.box
     , r.manual
+    , r."date"
+    , r.paid
     , r.pricecharting
     , r.quantity
     , r.gamepad

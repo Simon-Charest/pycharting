@@ -8,6 +8,7 @@ SELECT i.id
     , i.console
     , i.gamepad
     , i.amiibo
+    , i.accessory
     , i.wishlist
     , i.previously_owned
     , i.quantity
@@ -16,6 +17,8 @@ SELECT i.id
     , i.game
     , i.manual
     , i.box
+    , i."date"
+    , i.paid
     , i.pricecharting
 FROM collection_items AS i
 JOIN source_files AS f ON f.id = i.source_file_id

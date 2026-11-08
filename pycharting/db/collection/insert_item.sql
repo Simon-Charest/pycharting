@@ -8,6 +8,7 @@ INTO collection_items
     , console
     , gamepad
     , amiibo
+    , accessory
     , wishlist
     , previously_owned
     , quantity
@@ -16,6 +17,8 @@ INTO collection_items
     , game
     , manual
     , box
+    , "date"
+    , paid
     , pricecharting
     , region
     , source
@@ -27,6 +30,7 @@ SELECT f.id
     , :console
     , :gamepad
     , :amiibo
+    , :accessory
     , :wishlist
     , :previously_owned
     , :quantity
@@ -35,6 +39,8 @@ SELECT f.id
     , :game
     , :manual
     , :box
+    , :date
+    , :paid
     , :pricecharting
     , :region
     , :source

@@ -5,8 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>PyCharting</title>
         <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-        <link rel="stylesheet" href="/static/collection.css?v=2">
-        <script src="/static/collection.js?v=2" defer></script>
+        <link rel="stylesheet" href="/static/collection.css?v=25">
+        <script src="/static/collection.js?v=35" defer></script>
     </head>
     <body>
         <header>
@@ -36,7 +36,9 @@
                         <td>
                             <select id="filter-region" data-i18n-label="column.region"><option value="" data-i18n="filter.all"></option></select>
                         </td>
-                        <td></td>
+                        <td>
+                            <select id="filter-quantity" data-i18n-label="column.quantity"><option value="" data-i18n="filter.all"></option></select>
+                        </td>
                         <td>
                             <select id="filter-game" data-i18n-label="column.game"><option value="" data-i18n="filter.all"></option></select>
                         </td>
@@ -47,16 +49,22 @@
                             <select id="filter-box" data-i18n-label="column.box"><option value="" data-i18n="filter.all"></option></select>
                         </td>
                         <td>
+                            <select id="filter-date" data-i18n-label="column.date"><option value="" data-i18n="filter.all"></option></select>
+                        </td>
+                        <td></td>
+                        <td>
+                            <select id="filter-paid" data-i18n-label="column.paid"><option value="" data-i18n="filter.all"></option></select>
+                        </td>
+                        <td></td>
+                        <td>
                             <select id="filter-attribute" data-i18n-label="tags"><option value="" data-i18n="filter.all"></option></select>
                         </td>
                         <td>
                             <select id="filter-owner" data-i18n-label="column.owner"><option value="" data-i18n="filter.all"></option></select>
                         </td>
-                        <td>
-                            <select id="filter-source" data-i18n-label="column.source"><option value="" data-i18n="filter.all"></option></select>
-                        </td>
-                        <td>
-                            <button id="filter-reset" class="icon-button" type="button" data-i18n-title="filter.reset"></button>
+                        <td class="actions">
+                            <button id="update-visible-prices" class="icon-button" type="button" data-i18n-title="action.priceCharting"><img src="/static/pricecharting.ico" alt="" width="16" height="16"></button><!-- No space between the buttons, as in the rows below
+                         --><button id="filter-reset" class="icon-button" type="button" data-i18n-title="filter.reset"></button>
                         </td>
                     </tr>
                 </thead>
@@ -68,7 +76,11 @@
                         <td id="total-game" class="number"></td>
                         <td id="total-manual" class="number"></td>
                         <td id="total-box" class="number"></td>
-                        <td colspan="3"></td>
+                        <td></td>
+                        <td id="total-subtotal" class="number"></td>
+                        <td id="total-paid" class="number"></td>
+                        <td id="total-total" class="number"></td>
+                        <td colspan="2"></td>
                         <td class="add-cell">
                             <button id="add" class="icon-button primary" type="button" data-i18n-title="action.add"></button>
                         </td>

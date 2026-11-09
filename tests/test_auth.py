@@ -109,7 +109,8 @@ class TestSignIn:
         # Assert
         assert client.get("/").status_code == 200
         assert client.get("/collection/entries").status_code == 200
-        assert client.get("/auth/me").json() == {"username": ADMIN[0], "role": "administrator"}
+        me: dict = client.get("/auth/me").json()
+        assert (me["username"], me["role"], isinstance(me["id"], int)) == (ADMIN[0], "administrator", True)
         assert client.get("/login").headers["location"] == "/"
 
     def test_the_session_cookie_is_out_of_reach_of_scripts(self, client: TestClient) -> None:
@@ -210,3 +211,115 @@ class TestRoles:
 
         # Act and assert
         assert client.delete("/collection/items/1").status_code == 200
+
+
+class TestUsers:
+    def ids(self, client: TestClient) -> dict:
+        return {user["username"]: user["id"] for user in client.get("/accounts").json()}
+
+    def test_an_administrator_sees_the_accounts_without_their_passwords(self, client: TestClient) -> None:
+        # Arrange
+        sign_in(client, ADMIN)
+
+        # Act
+        response = client.get("/accounts")
+
+        # Assert
+        assert client.get("/users").status_code == 200
+        assert [(user["username"], user["role"]) for user in response.json()] == [(ADMIN[0], "administrator"), (VIEWER[0], "collaborator")]
+        assert all(set(user) == {"id", "username", "role"} for user in response.json())
+
+    def test_a_collaborator_cannot_see_the_accounts(self, client: TestClient) -> None:
+        # Arrange
+        sign_in(client, VIEWER)
+
+        # Act and assert
+        assert (client.get("/users").status_code, client.get("/users").headers["location"]) == (303, "/")
+        assert client.get("/accounts").status_code == 403
+        assert client.post("/accounts", json={"username": "x", "role": "administrator", "password": "12345678"}).status_code == 403
+
+    def test_without_session_the_accounts_are_refused(self, client: TestClient) -> None:
+        # Act and assert
+        assert client.get("/accounts").status_code == 401
+        assert client.get("/users").headers["location"] == "/login"
+
+    def test_an_administrator_adds_an_account_that_can_sign_in(self, client: TestClient) -> None:
+        # Arrange
+        sign_in(client, ADMIN)
+
+        # Act
+        response = client.post("/accounts", json={"username": "newcomer", "role": "collaborator", "password": "a long password"})
+        other: TestClient = TestClient(api.app, follow_redirects=False)
+
+        # Assert
+        assert response.status_code == 201
+        assert other.post("/auth/login", json={"username": "newcomer", "password": "a long password"}).status_code == 200
+
+    def test_names_cannot_be_taken_twice_and_passwords_must_be_long_enough(self, client: TestClient) -> None:
+        # Arrange
+        sign_in(client, ADMIN)
+
+        # Act and assert
+        assert client.post("/accounts", json={"username": "Viewer", "role": "collaborator", "password": "a long password"}).json()["detail"] == "user_exists"
+        assert client.post("/accounts", json={"username": "short", "role": "collaborator", "password": "1234567"}).status_code == 422
+
+    def test_a_new_password_signs_the_account_out_everywhere(self, client: TestClient) -> None:
+        # Arrange
+        viewer: TestClient = TestClient(api.app, follow_redirects=False)
+        sign_in(viewer, VIEWER)
+        sign_in(client, ADMIN)
+
+        # Act
+        response = client.put(f"/accounts/{self.ids(client)[VIEWER[0]]}", json={"password": "a brand new one"})
+
+        # Assert
+        assert response.status_code == 200
+        assert viewer.get("/collection/entries").status_code == 401
+        assert viewer.post("/auth/login", json={"username": VIEWER[0], "password": "a brand new one"}).status_code == 200
+
+    def test_a_role_change_applies_at_once(self, client: TestClient) -> None:
+        # Arrange
+        viewer: TestClient = TestClient(api.app, follow_redirects=False)
+        sign_in(viewer, VIEWER)
+        sign_in(client, ADMIN)
+
+        # Act
+        client.put(f"/accounts/{self.ids(client)[VIEWER[0]]}", json={"role": "administrator"})
+
+        # Assert
+        assert viewer.get("/accounts").status_code == 200
+
+    def test_an_administrator_cannot_demote_or_delete_themselves(self, client: TestClient) -> None:
+        # Arrange
+        sign_in(client, ADMIN)
+        own: int = self.ids(client)[ADMIN[0]]
+
+        # Act
+        responses: list = [client.put(f"/accounts/{own}", json={"role": "collaborator"}), client.delete(f"/accounts/{own}")]
+
+        # Assert
+        assert [(response.status_code, response.json()["detail"]) for response in responses] == [(409, "self")] * 2
+        assert client.put(f"/accounts/{own}", json={"password": "my own new one"}).status_code == 200
+        assert client.get("/accounts").status_code == 200  # Changing one's own password keeps one signed in
+
+    def test_deleting_an_account_signs_it_out(self, client: TestClient) -> None:
+        # Arrange
+        viewer: TestClient = TestClient(api.app, follow_redirects=False)
+        sign_in(viewer, VIEWER)
+        sign_in(client, ADMIN)
+
+        # Act
+        response = client.delete(f"/accounts/{self.ids(client)[VIEWER[0]]}")
+
+        # Assert
+        assert response.status_code == 200
+        assert viewer.get("/collection/entries").status_code == 401
+        assert VIEWER[0] not in self.ids(client)
+
+    def test_unknown_accounts_are_not_found(self, client: TestClient) -> None:
+        # Arrange
+        sign_in(client, ADMIN)
+
+        # Act and assert
+        assert client.put("/accounts/999", json={"role": "collaborator"}).status_code == 404
+        assert client.delete("/accounts/999").status_code == 404

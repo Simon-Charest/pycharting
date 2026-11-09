@@ -7,7 +7,7 @@ from secrets import token_bytes, token_urlsafe
 from sqlcipher3.dbapi2 import Connection
 from time import monotonic
 
-from src.database import add_session, add_user, delete_session, get_session_user, get_user, set_user_password, set_user_role
+from src.database import add_session, add_user, delete_session, delete_user, delete_user_sessions, get_session_user, get_user, get_users, set_user_password, set_user_role, update_user
 
 
 ADMINISTRATOR: str = "administrator"  # Can change the collection
@@ -70,6 +70,44 @@ def change_role(connection: Connection, username: str, role: str) -> bool:
     _check_role(role)
 
     return set_user_role(connection, username.strip(), role)
+
+
+class SelfChange(Exception):
+    """An administrator may not demote or delete their own account: the site could be left without one."""
+
+
+def list_accounts(connection: Connection) -> list:
+    return get_users(connection)
+
+
+def update_account(connection: Connection, acting_id: int, id: int, role: str | None = None, password: str | None = None) -> bool:
+    """Change another account's role, or any account's password; return False if there is no such account.
+
+    A new password signs that account out everywhere, except for administrators changing their own.
+    """
+
+    if role is not None:
+        _check_role(role)
+
+        if id == acting_id and role != ADMINISTRATOR:
+            raise SelfChange()
+
+    if not update_user(connection, id, role, hash_password(password) if password else None):
+        return False
+
+    if password and id != acting_id:
+        delete_user_sessions(connection, id)
+
+    return True
+
+
+def delete_account(connection: Connection, acting_id: int, id: int) -> bool:
+    """Return False if there is no such account."""
+
+    if id == acting_id:
+        raise SelfChange()
+
+    return delete_user(connection, id)
 
 
 def _check_role(role: str) -> None:

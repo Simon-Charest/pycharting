@@ -143,6 +143,36 @@ def set_user_role(connection: Connection, username: str, role: str) -> bool:
     return count > 0
 
 
+def get_users(connection: Connection) -> list:
+    """Every account, by name, without its password hash."""
+
+    return execute(connection, SQL_PATH.joinpath("select_users.sql").read_text())
+
+
+def update_user(connection: Connection, id: int, role: str | None, password_hash: str | None) -> bool:
+    """Change an account's role and/or password; return False if there is no such account."""
+
+    count: int = connection.execute(SQL_PATH.joinpath("update_user.sql").read_text(), {"id": id, "role": role, "password_hash": password_hash}).rowcount
+    connection.commit()
+
+    return count > 0
+
+
+def delete_user(connection: Connection, id: int) -> bool:
+    """Delete an account and sign it out everywhere; return False if there is no such account."""
+
+    connection.execute(SQL_PATH.joinpath("delete_user_sessions.sql").read_text(), {"id": id})
+    count: int = connection.execute(SQL_PATH.joinpath("delete_user.sql").read_text(), {"id": id}).rowcount
+    connection.commit()
+
+    return count > 0
+
+
+def delete_user_sessions(connection: Connection, id: int) -> None:
+    connection.execute(SQL_PATH.joinpath("delete_user_sessions.sql").read_text(), {"id": id})
+    connection.commit()
+
+
 def add_session(connection: Connection, token_hash: str, user_id: int, days: int) -> None:
     """Remember a signed-in browser, and forget the sessions that have expired."""
 

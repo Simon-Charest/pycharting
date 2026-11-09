@@ -59,6 +59,8 @@ const TRANSLATIONS = {
         "editor.cancel": "Annuler",
         "editor.save": "Enregistrer",
         "action.logout": "Se déconnecter",
+        "nav.home": "Accueil",
+        "nav.users": "Utilisateurs",
         "role.administrator": "Administrateur",
         "role.collaborator": "Collaborateur (lecture seule)",
         "account": "{username} · {role}",
@@ -138,6 +140,8 @@ const TRANSLATIONS = {
         "editor.cancel": "Cancel",
         "editor.save": "Save",
         "action.logout": "Sign out",
+        "nav.home": "Home",
+        "nav.users": "Users",
         "role.administrator": "Administrator",
         "role.collaborator": "Collaborator (read-only)",
         "account": "{username} · {role}",
@@ -810,6 +814,20 @@ function renderAccount() {
     element("account-name").textContent = account ? t("account", { username: account.username, role: t(`role.${account.role}`) }) : "";
     element("add").disabled = !canEdit();
     element("update-visible-prices").disabled = !canEdit();
+    setLinkEnabled(element("nav-users"), canEdit());
+}
+
+// A link a collaborator cannot follow: visible, but disabled like the buttons
+function setLinkEnabled(link, enabled) {
+    if (enabled) {
+        link.href = link.dataset.href ?? link.getAttribute("href");
+        link.removeAttribute("aria-disabled");
+    }
+    else {
+        link.dataset.href ??= link.getAttribute("href");
+        link.removeAttribute("href");
+        link.setAttribute("aria-disabled", "true");
+    }
 }
 
 async function signOut() {

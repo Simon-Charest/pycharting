@@ -5,12 +5,16 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>PyCharting</title>
         <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-        <link rel="stylesheet" href="/static/collection.css?v=30">
-        <script src="/static/collection.js?v=41" defer></script>
+        <link rel="stylesheet" href="/static/collection.css?v=32">
+        <script src="/static/collection.js?v=42" defer></script>
     </head>
     <body>
         <header>
             <h1 data-i18n="heading"></h1>
+            <nav class="pages">
+                <a href="/" aria-current="page" data-i18n="nav.home"></a>
+                <a id="nav-users" href="/users" data-i18n="nav.users"></a>
+            </nav>
             <div class="account">
                 <span id="account-name"></span>
                 <button id="logout" class="icon-button" type="button" data-i18n-title="action.logout"></button>

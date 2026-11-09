@@ -9,7 +9,7 @@ from sqlcipher3.dbapi2 import Connection
 from typing import Annotated, Any, Literal
 from uvicorn import run
 
-from src.auth import ADMINISTRATOR, SESSION_COOKIE, SESSION_DAYS, is_locked, session_user, sign_in, sign_out
+from src.auth import ADMINISTRATOR, ROLES, SESSION_COOKIE, SESSION_DAYS, SelfChange, create_account, delete_account, is_locked, list_accounts, session_user, sign_in, sign_out, update_account
 from src.constant import API_HOST, API_ORIGINS, API_PORT, API_RELOAD, UI_PATH
 from src.database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_entry_prices, get_owners, open_database
 from src.prices import ExchangeRateError, PriceChartingError, ProductNotFound, fetch_prices
@@ -41,6 +41,8 @@ ensure_collection_schema(connection)
 # Everything else needs a signed-in account: the collection, its Web API and the API's documentation
 PUBLIC_PATHS: tuple = ("/login", "/auth/", "/static/", "/health")
 READ_METHODS: tuple = ("GET", "HEAD", "OPTIONS")
+API_PATHS: tuple = ("/collection/", "/accounts")  # Answer with an error the page can read, rather than a redirect
+ADMINISTRATOR_PATHS: tuple = ("/users", "/accounts")  # The Users page and its Web API
 
 
 @app.middleware("http")
@@ -52,13 +54,18 @@ async def require_sign_in(request: Request, call_next: Any) -> Response:
 
     if user is None:
         # The page goes to the sign-in form; the Web API answers, so that the page can send it there too
-        if request.url.path.startswith("/collection/"):
+        if request.url.path.startswith(API_PATHS):
             return JSONResponse({"detail": "not_signed_in"}, status_code=401)
 
         return RedirectResponse("/login", status_code=303)
 
-    # Collaborators can only look: adding, editing, deleting and updating prices are for administrators
-    if request.method not in READ_METHODS and user["role"] != ADMINISTRATOR:
+    # Collaborators can only look: adding, editing, deleting and updating prices are for administrators,
+    # and so is anything about the accounts, even looking at them
+    if (request.method not in READ_METHODS or request.url.path.startswith(ADMINISTRATOR_PATHS)) and user["role"] != ADMINISTRATOR:
+        # A collaborator who opens the Users page lands back on Home
+        if not request.url.path.startswith(API_PATHS):
+            return RedirectResponse("/", status_code=303)
+
         return JSONResponse({"detail": "read_only"}, status_code=403)
 
     request.state.user = user
@@ -269,3 +276,70 @@ async def update_entry_prices(kind: Literal["items", "rows"], id: int) -> dict:
     change_collection_entry(connection, f"update_{singular}_prices", values)
 
     return values
+
+
+Password = Annotated[str, StringConstraints(min_length=8, max_length=1024)]
+Role = Literal["administrator", "collaborator"]
+
+
+class NewAccount(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    username: RequiredText
+    role: Role
+    password: Password
+
+
+class AccountChange(BaseModel):
+    """A missing role or password keeps the one the account has."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    role: Role | None = None
+    password: Password | None = None
+
+
+@app.get("/users")
+async def users_page() -> FileResponse:
+    """The Users page, for administrators."""
+
+    return FileResponse(UI_PATH.joinpath("users.html"), media_type="text/html", headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/accounts")
+async def users() -> list:
+    return list_accounts(connection)
+
+
+@app.post("/accounts", status_code=201)
+async def add_user(account: NewAccount) -> dict:
+    if not create_account(connection, account.username, account.password, account.role):
+        raise HTTPException(status_code=409, detail="user_exists")
+
+    return {"message": "OK"}
+
+
+@app.put("/accounts/{id}")
+async def update_user(id: int, change: AccountChange, request: Request) -> dict:
+    try:
+        found: bool = update_account(connection, request.state.user["id"], id, change.role, change.password)
+    except SelfChange:
+        raise HTTPException(status_code=409, detail="self")
+
+    if not found:
+        raise HTTPException(status_code=404, detail="Account not found.")
+
+    return {"message": "OK"}
+
+
+@app.delete("/accounts/{id}")
+async def delete_user(id: int, request: Request) -> dict:
+    try:
+        found: bool = delete_account(connection, request.state.user["id"], id)
+    except SelfChange:
+        raise HTTPException(status_code=409, detail="self")
+
+    if not found:
+        raise HTTPException(status_code=404, detail="Account not found.")
+
+    return {"message": "OK"}

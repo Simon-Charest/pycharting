@@ -1,4 +1,5 @@
-SELECT u.username
+SELECT u.id
+    , u.username
     , u.role
 FROM sessions AS s
 JOIN users AS u ON u.id = s.user_id

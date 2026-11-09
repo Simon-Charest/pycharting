@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PyCharting</title>
+        <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+        <link rel="stylesheet" href="/static/collection.css?v=32">
+        <script src="/static/users.js?v=1" defer></script>
+    </head>
+    <body>
+        <header>
+            <h1 data-i18n="heading"></h1>
+            <nav class="pages">
+                <a href="/" data-i18n="nav.home"></a>
+                <a href="/users" aria-current="page" data-i18n="nav.users"></a>
+            </nav>
+            <div class="account">
+                <span id="account-name"></span>
+                <button id="logout" class="icon-button" type="button" data-i18n-title="action.logout"></button>
+            </div>
+            <div class="language" role="group" data-i18n-label="language">
+                <button class="icon-button flag" type="button" data-language="fr" lang="fr" title="Français" aria-label="Français"><img src="/static/flag-qc.svg" alt="" width="21" height="14"></button>
+                <button class="icon-button flag" type="button" data-language="en" lang="en" title="English" aria-label="English"><img src="/static/flag-ca.svg" alt="" width="28" height="14"></button>
+            </div>
+        </header>
+
+        <p id="message" class="message" role="alert" hidden></p>
+
+        <main class="users table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col"><span data-i18n="column.username"></span></th>
+                        <th scope="col"><span data-i18n="column.role"></span></th>
+                        <th scope="col"><span data-i18n="column.password"></span></th>
+                        <th scope="col"><span data-i18n="column.actions"></span></th>
+                    </tr>
+                </thead>
+                <tbody id="users"></tbody>
+                <tfoot>
+                    <tr id="new-user">
+                        <td><input name="username" autocomplete="off" autocapitalize="none" spellcheck="false" data-i18n-placeholder="new.username" data-i18n-label="column.username"></td>
+                        <td>
+                            <select name="role" data-i18n-label="column.role">
+                                <option value="collaborator" data-i18n="role.collaborator"></option>
+                                <option value="administrator" data-i18n="role.administrator"></option>
+                            </select>
+                        </td>
+                        <td><input name="password" type="password" autocomplete="new-password" minlength="8" data-i18n-placeholder="new.password" data-i18n-label="column.password"></td>
+                        <td class="actions">
+                            <button id="add-user" class="icon-button accent" type="button" data-i18n-title="action.add"></button>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </main>
+
+        <footer class="site-footer">
+            <span data-i18n="footer.poweredBy"></span>
+            <span data-i18n="footer.privacy"></span>
+            <span data-i18n="footer.copyright"></span>
+        </footer>
+    </body>
+</html>

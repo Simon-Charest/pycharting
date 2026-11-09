@@ -45,7 +45,7 @@ body {
 header {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: center;  /* The buttons have no text to line up on: centre everything */
     gap: 4px 16px;
 }
 
@@ -108,19 +108,31 @@ button.danger {
     outline-offset: 1px;
 }
 
+/* The language, as two flags at the far right of the header; the current one stands out */
 .language {
     display: flex;
     align-items: center;
-    gap: 8px;
     margin-left: auto;
-    color: var(--muted);
-    font-size: 13px;
 }
 
-.language select {
-    width: auto;
-    color: var(--text);
-    font-size: 15px;
+/* After the account, which already pushes both to the right */
+.account + .language {
+    margin-left: 0;
+}
+
+/* Only the other language's flag is dimmed; its frame stays like every other button's */
+.flag img {
+    display: block;
+    opacity: 0.5;
+}
+
+.flag:hover img,
+.flag[aria-pressed="true"] img {
+    opacity: 1;
+}
+
+.flag[aria-pressed="true"] {
+    border-color: var(--accent);
 }
 
 .filters td {
@@ -192,8 +204,13 @@ tfoot .add-cell {
     text-align: right;
 }
 
-tfoot .icon-button {
+.icon-button:last-child {
     margin-right: 0;
+}
+
+/* Adding stands out by its colour, in the same frame as the other buttons */
+.icon-button.accent {
+    color: var(--accent);
 }
 
 .message {
@@ -296,6 +313,7 @@ td.title a:focus-visible {
 
 td.actions {
     white-space: nowrap;
+    text-align: right;
 }
 
 .icon-button {
@@ -428,6 +446,7 @@ dialog::backdrop {
     display: flex;
     align-items: center;
     gap: 8px;
+    margin-left: auto;
     color: var(--muted);
     font-size: 13px;
 }

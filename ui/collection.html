@@ -5,22 +5,19 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>PyCharting</title>
         <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-        <link rel="stylesheet" href="/static/collection.css?v=27">
-        <script src="/static/collection.js?v=39" defer></script>
+        <link rel="stylesheet" href="/static/collection.css?v=30">
+        <script src="/static/collection.js?v=41" defer></script>
     </head>
     <body>
         <header>
             <h1 data-i18n="heading"></h1>
-            <label class="language">
-                <span data-i18n="language"></span>
-                <select id="language">
-                    <option value="fr" lang="fr">Français</option>
-                    <option value="en" lang="en">English</option>
-                </select>
-            </label>
             <div class="account">
                 <span id="account-name"></span>
-                <button id="logout" type="button" data-i18n="action.logout"></button>
+                <button id="logout" class="icon-button" type="button" data-i18n-title="action.logout"></button>
+            </div>
+            <div class="language" role="group" data-i18n-label="language">
+                <button class="icon-button flag" type="button" data-language="fr" lang="fr" title="Français" aria-label="Français"><img src="/static/flag-qc.svg" alt="" width="21" height="14"></button>
+                <button class="icon-button flag" type="button" data-language="en" lang="en" title="English" aria-label="English"><img src="/static/flag-ca.svg" alt="" width="28" height="14"></button>
             </div>
         </header>
 
@@ -86,7 +83,7 @@
                         <td id="total-total" class="number"></td>
                         <td colspan="2"></td>
                         <td class="add-cell">
-                            <button id="add" class="icon-button primary" type="button" data-i18n-title="action.add"></button>
+                            <button id="add" class="icon-button accent" type="button" data-i18n-title="action.add"></button>
                         </td>
                     </tr>
                 </tfoot>

@@ -189,7 +189,8 @@ const ICONS = {
     edit: ["M12 20h9", "M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"],
     delete: ["M3 6h18", "M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2", "M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6", "M10 11v6", "M14 11v6"],
     add: ["M12 5v14", "M5 12h14"],
-    reset: ["M18 6 6 18", "M6 6l12 12"]
+    reset: ["M18 6 6 18", "M6 6l12 12"],
+    logout: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"]
 };
 const FILTER_IDS = ["filter-console", "filter-title", "filter-owner", "filter-region", "filter-quantity", "filter-game", "filter-manual", "filter-box", "filter-date", "filter-paid", "filter-attribute"];
 // Full display names; the stored names stay as they are, because PriceCharting's URLs rely on them
@@ -274,7 +275,7 @@ function setLanguage(value, remember = false) {
     numberFormat = new Intl.NumberFormat(LOCALES[language], { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     document.documentElement.lang = language;
     document.title = t("pageTitle");
-    element("language").value = language;
+    document.querySelectorAll("[data-language]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.language === language)));
     document.querySelectorAll("[data-i18n]").forEach(node => node.textContent = t(node.dataset.i18n));
     document.querySelectorAll("[data-i18n-placeholder]").forEach(node => node.placeholder = t(node.dataset.i18nPlaceholder));
     document.querySelectorAll("[data-i18n-label]").forEach(node => node.setAttribute("aria-label", t(node.dataset.i18nLabel)));
@@ -1253,7 +1254,7 @@ async function removeEntry(entry) {
     }
 }
 
-element("language").addEventListener("change", event => setLanguage(event.target.value, true));
+document.querySelectorAll("[data-language]").forEach(button => button.addEventListener("click", () => setLanguage(button.dataset.language, true)));
 element("filters").addEventListener("input", render);
 element("filter-reset").append(icon(ICONS.reset));
 element("update-visible-prices").addEventListener("click", updateVisiblePrices);
@@ -1262,6 +1263,7 @@ element("filter-reset").addEventListener("click", () => {
     render();
 });
 element("add").append(icon(ICONS.add));
+element("logout").append(icon(ICONS.logout));
 element("add").addEventListener("click", openAddForm);
 element("logout").addEventListener("click", signOut);
 element("editor-form").addEventListener("submit", saveEditor);

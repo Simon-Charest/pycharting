@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 300 200">
+    <title>Québec</title>
+    <rect width="300" height="200" fill="#003da5"/>
+    <path fill="#fff" d="M125 0h50v200h-50zM0 75h300v50H0z"/>
+    <defs>
+        <!-- A fleur-de-lis, about 46 high, centred on its own origin -->
+        <path id="lis" fill="#fff" d="M0-24C7-16 9-8 3 2h-6C-9-8-7-16 0-24zM-3 4C-6-4-16-10-21-3c-3 5 1 10 6 8-3-1-4-5-1-7 4-2 8 2 9 6zM3 4C6-4 16-10 21-3c3 5-1 10-6 8 3-1 4-5 1-7-4-2-8 2-9 6zM-14 4h28v5h-28zM-3 9h6l3 13c-4-3-8-3-12 0z"/>
+    </defs>
+    <use xlink:href="#lis" x="62.5" y="37.5"/>
+    <use xlink:href="#lis" x="237.5" y="37.5"/>
+    <use xlink:href="#lis" x="62.5" y="162.5"/>
+    <use xlink:href="#lis" x="237.5" y="162.5"/>
+</svg>

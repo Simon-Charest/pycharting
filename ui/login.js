@@ -41,8 +41,9 @@ function setLanguage(value, remember = false) {
     language = value;
     document.documentElement.lang = language;
     document.title = TEXT[language].pageTitle;
-    document.getElementById("language").value = language;
+    document.querySelectorAll("[data-language]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.language === language)));
     document.querySelectorAll("[data-i18n]").forEach(node => node.textContent = TEXT[language][node.dataset.i18n]);
+    document.querySelectorAll("[data-i18n-label]").forEach(node => node.setAttribute("aria-label", TEXT[language][node.dataset.i18nLabel]));
 
     if (remember) {
         try {
@@ -106,6 +107,6 @@ async function signIn(event) {
     button.disabled = false;
 }
 
-document.getElementById("language").addEventListener("change", event => setLanguage(event.target.value, true));
+document.querySelectorAll("[data-language]").forEach(button => button.addEventListener("click", () => setLanguage(button.dataset.language, true)));
 document.getElementById("login-form").addEventListener("submit", signIn);
 setLanguage(initialLanguage());

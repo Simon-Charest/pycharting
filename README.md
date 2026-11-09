@@ -57,6 +57,10 @@ python -m venv .venv
 ```
 6. Activate virtual environment:
 ```
+# Ubuntu
+source .venv/bin/activate
+
+# Windows
 .venv\Scripts\Activate.ps1
 ```
 7. Upgrade pip:

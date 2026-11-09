@@ -65,7 +65,7 @@ const TRANSLATIONS = {
         "help": "Aide",
         "legend.heading": "Légende",
         "legend.previouslyOwned": "« {tag} » : un article possédé pendant l'enfance, puis racheté.",
-        "legend.totals": "Les entrées « {reproduction} », « {virtual} » et « {wishlist} » ne comptent pas dans les totaux.",
+        "legend.totals": "Les entrées « {reproduction} », « {virtual} », « {damaged} » et « {wishlist} » ne comptent pas dans les totaux.",
         "role.administrator": "Administrateur",
         "role.collaborator": "Collaborateur (lecture seule)",
         "account": "{username} · {role}",
@@ -151,7 +151,7 @@ const TRANSLATIONS = {
         "help": "Help",
         "legend.heading": "Legend",
         "legend.previouslyOwned": "“{tag}”: an item owned as a child, then bought back.",
-        "legend.totals": "“{reproduction}”, “{virtual}” and “{wishlist}” entries do not count in the totals.",
+        "legend.totals": "“{reproduction}”, “{virtual}”, “{damaged}” and “{wishlist}” entries do not count in the totals.",
         "role.administrator": "Administrator",
         "role.collaborator": "Collaborator (read-only)",
         "account": "{username} · {role}",
@@ -317,7 +317,7 @@ function setLanguage(value, remember = false) {
 // Built from the tags' own names, so that the legend follows them when they are renamed
 function renderLegend() {
     element("legend-previously-owned").textContent = t("legend.previouslyOwned", { tag: t("flag.previously_owned") });
-    element("legend-totals").textContent = t("legend.totals", { reproduction: t("flag.reproduction"), virtual: t("flag.virtual"), wishlist: t("flag.wishlist") });
+    element("legend-totals").textContent = t("legend.totals", { reproduction: t("flag.reproduction"), virtual: t("flag.virtual"), damaged: t("flag.damaged"), wishlist: t("flag.wishlist") });
 }
 
 // Under the ? button, lined up on its right edge
@@ -739,8 +739,8 @@ function render() {
     renderTotals(visible);
 }
 
-// Tags whose entries stay out of the totals: not owned, or with no collector value
-const UNCOUNTED_TAGS = ["wishlist", "reproduction", "virtual"];
+// Tags whose entries stay out of the totals: not owned, or with no (or little) collector value
+const UNCOUNTED_TAGS = ["wishlist", "reproduction", "virtual", "damaged"];
 
 // Totals of the visible entries, except those with an uncounted tag; an X means owned, but has no price to add
 function renderTotals(visible) {

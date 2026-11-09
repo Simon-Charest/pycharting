@@ -95,7 +95,7 @@ python . set-role NAME collaborator
 ## Deployment
 1. Set the `DEPLOY_*` settings in `.env` (see `.env.example`);
 2. The first time only, once the repository is cloned on the server, copy `.env` and the database there (`DEPLOY_DIR/.env` and `DEPLOY_DIR/data/database.sqlite`): they are never in Git;
-3. Deploy: commits and pushes every change, updates the server, then (re)starts its service on `127.0.0.1:8000`:
+3. Deploy: commits and pushes every change, updates the server, (re)starts its service on `127.0.0.1:8000`, then brings back a copy of the production database, kept in `data/backups` and copied over the local one (`python . backup FILE` makes such a copy, even while the site runs):
 ```
 .\bin\deploy.ps1
 ```

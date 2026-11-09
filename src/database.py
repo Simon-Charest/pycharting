@@ -8,6 +8,7 @@ BOOLEAN_KEYS: set[str] = {"accessory", "amiibo", "console", "gamepad", "previous
 ADDED_ITEM_COLUMNS: tuple[str, ...] = ("game", "manual", "box", "paid", "pricecharting", "amiibo", "wishlist", "accessory")  # Columns that older databases lack.
 ADDED_ROW_COLUMNS: tuple[str, ...] = ("accessory", "gamepad", "previously_owned", "reproduction", "virtual", "wishlist")  # Same, for spreadsheet rows.
 ADDED_ROW_PRICE_COLUMNS: tuple[str, ...] = ("paid",)  # Same, for spreadsheet rows, without a type: a price can be a number or an X.
+ADDED_USER_COLUMNS: tuple[str, ...] = ("first_name", "last_name")  # Same, for accounts.
 ADDED_TEXT_COLUMNS: tuple[str, ...] = ("date",)  # Columns that older databases lack, in both tables: the yyyy-mm-dd date of the Item, Manual and Box prices.
 
 
@@ -25,10 +26,29 @@ def open_database(file: Path = DATABASE_FILE, password: str = DATABASE_PASSWORD)
     return connection
 
 
+def backup_database(connection: Connection, file: Path, password: str = DATABASE_PASSWORD) -> None:
+    """Write a consistent copy of the whole database, encrypted with the same password, even while the site runs."""
+
+    file.unlink(missing_ok=True)
+    escaped_file: str = str(file).replace("'", "''")  # ATTACH does not support bound parameters for the key.
+    escaped_password: str = password.replace("'", "''")
+    connection.execute(f"ATTACH DATABASE '{escaped_file}' AS backup KEY '{escaped_password}'")
+
+    try:
+        connection.execute("SELECT sqlcipher_export('backup')")
+    finally:
+        connection.execute("DETACH DATABASE backup")
+
+
 def ensure_collection_schema(connection: Connection) -> None:
     """Create the collection tables, and add the columns that older databases lack."""
 
     connection.executescript(SQL_PATH.joinpath("create.sql").read_text())
+    existing_users: set = {row[1] for row in connection.execute("PRAGMA table_info(users)")}
+
+    for column in ADDED_USER_COLUMNS:
+        if column not in existing_users:
+            connection.execute(f'ALTER TABLE users ADD COLUMN "{column}" TEXT')
     existing: set = {row[1] for row in connection.execute("PRAGMA table_info(collection_items)")}
 
     for column in ADDED_ITEM_COLUMNS:
@@ -116,10 +136,11 @@ def get_user(connection: Connection, username: str) -> dict | None:
     return rows[0] if rows else None
 
 
-def add_user(connection: Connection, username: str, password_hash: str, role: str) -> bool:
+def add_user(connection: Connection, username: str, password_hash: str, role: str, first_name: str | None = None, last_name: str | None = None) -> bool:
     """Add an account; return False if that name is already taken."""
 
-    count: int = connection.execute(SQL_PATH.joinpath("insert_user.sql").read_text(), {"username": username, "password_hash": password_hash, "role": role}).rowcount
+    parameters: dict = {"username": username, "password_hash": password_hash, "role": role, "first_name": first_name, "last_name": last_name}
+    count: int = connection.execute(SQL_PATH.joinpath("insert_user.sql").read_text(), parameters).rowcount
     connection.commit()
 
     return count > 0
@@ -149,10 +170,12 @@ def get_users(connection: Connection) -> list:
     return execute(connection, SQL_PATH.joinpath("select_users.sql").read_text())
 
 
-def update_user(connection: Connection, id: int, role: str | None, password_hash: str | None) -> bool:
-    """Change an account's role and/or password; return False if there is no such account."""
+def update_user(connection: Connection, id: int, role: str | None, password_hash: str | None, names: tuple | None = None) -> bool:
+    """Change an account's role, password and/or (first name, last name); return False if there is no such account."""
 
-    count: int = connection.execute(SQL_PATH.joinpath("update_user.sql").read_text(), {"id": id, "role": role, "password_hash": password_hash}).rowcount
+    first_name, last_name = names or (None, None)
+    parameters: dict = {"id": id, "role": role, "password_hash": password_hash, "set_names": names is not None, "first_name": first_name, "last_name": last_name}
+    count: int = connection.execute(SQL_PATH.joinpath("update_user.sql").read_text(), parameters).rowcount
     connection.commit()
 
     return count > 0

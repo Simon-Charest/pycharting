@@ -26,6 +26,8 @@ def main() -> None:
     add_user = commands.add_parser("add-user", help="create an account")
     add_user.add_argument("username")
     add_user.add_argument("--role", choices=("administrator", "collaborator"), default="collaborator", help="collaborators can only look (default)")
+    add_user.add_argument("--first-name")
+    add_user.add_argument("--last-name")
     add_user.add_argument("--password-stdin", action="store_true", help="read the password from the standard input")
     set_password = commands.add_parser("set-password", help="change an account's password")
     set_password.add_argument("username")
@@ -33,6 +35,8 @@ def main() -> None:
     set_role = commands.add_parser("set-role", help="make an account an administrator or a collaborator")
     set_role.add_argument("username")
     set_role.add_argument("role", choices=("administrator", "collaborator"))
+    backup = commands.add_parser("backup", help="write a consistent copy of the database, even while the site runs")
+    backup.add_argument("file")
     arguments: Namespace = parser.parse_args()
 
     if arguments.command is None:
@@ -43,13 +47,21 @@ def main() -> None:
         return
 
     from src.auth import change_password, change_role, create_account
-    from src.database import ensure_collection_schema, open_database
+    from pathlib import Path
+    from src.database import backup_database, ensure_collection_schema, open_database
 
     connection = open_database()
     ensure_collection_schema(connection)
 
+    if arguments.command == "backup":
+        backup_database(connection, Path(arguments.file))
+        connection.close()
+        print(f"Database copied to {arguments.file}.")
+
+        return
+
     if arguments.command == "add-user":
-        done: bool = create_account(connection, arguments.username, read_password(arguments.password_stdin), arguments.role)
+        done: bool = create_account(connection, arguments.username, read_password(arguments.password_stdin), arguments.role, arguments.first_name, arguments.last_name)
         message: str = f"{arguments.username} added as {arguments.role}." if done else f"{arguments.username} already exists."
     elif arguments.command == "set-password":
         done = change_password(connection, arguments.username, read_password(arguments.password_stdin))

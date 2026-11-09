@@ -6,7 +6,7 @@
         <title>PyCharting</title>
         <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
         <link rel="stylesheet" href="/static/collection.css?v=32">
-        <script src="/static/users.js?v=1" defer></script>
+        <script src="/static/users.js?v=2" defer></script>
     </head>
     <body>
         <header>
@@ -32,6 +32,8 @@
                 <thead>
                     <tr>
                         <th scope="col"><span data-i18n="column.username"></span></th>
+                        <th scope="col"><span data-i18n="column.firstName"></span></th>
+                        <th scope="col"><span data-i18n="column.lastName"></span></th>
                         <th scope="col"><span data-i18n="column.role"></span></th>
                         <th scope="col"><span data-i18n="column.password"></span></th>
                         <th scope="col"><span data-i18n="column.actions"></span></th>
@@ -41,6 +43,8 @@
                 <tfoot>
                     <tr id="new-user">
                         <td><input name="username" autocomplete="off" autocapitalize="none" spellcheck="false" data-i18n-placeholder="new.username" data-i18n-label="column.username"></td>
+                        <td><input name="first_name" autocomplete="off" maxlength="100" data-i18n-label="column.firstName"></td>
+                        <td><input name="last_name" autocomplete="off" maxlength="100" data-i18n-label="column.lastName"></td>
                         <td>
                             <select name="role" data-i18n-label="column.role">
                                 <option value="collaborator" data-i18n="role.collaborator"></option>

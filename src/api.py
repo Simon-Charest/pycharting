@@ -282,19 +282,26 @@ Password = Annotated[str, StringConstraints(min_length=8, max_length=1024)]
 Role = Literal["administrator", "collaborator"]
 
 
+PersonName = Annotated[str, StringConstraints(strip_whitespace=True, max_length=100)]
+
+
 class NewAccount(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     username: RequiredText
+    first_name: PersonName | None = None
+    last_name: PersonName | None = None
     role: Role
     password: Password
 
 
 class AccountChange(BaseModel):
-    """A missing role or password keeps the one the account has."""
+    """A missing role or password keeps the one the account has; names change only when both are given."""
 
     model_config = ConfigDict(extra="forbid")
 
+    first_name: PersonName | None = None
+    last_name: PersonName | None = None
     role: Role | None = None
     password: Password | None = None
 
@@ -313,7 +320,7 @@ async def users() -> list:
 
 @app.post("/accounts", status_code=201)
 async def add_user(account: NewAccount) -> dict:
-    if not create_account(connection, account.username, account.password, account.role):
+    if not create_account(connection, account.username, account.password, account.role, account.first_name, account.last_name):
         raise HTTPException(status_code=409, detail="user_exists")
 
     return {"message": "OK"}
@@ -322,7 +329,8 @@ async def add_user(account: NewAccount) -> dict:
 @app.put("/accounts/{id}")
 async def update_user(id: int, change: AccountChange, request: Request) -> dict:
     try:
-        found: bool = update_account(connection, request.state.user["id"], id, change.role, change.password)
+        names: tuple | None = (change.first_name, change.last_name) if {"first_name", "last_name"} & change.model_fields_set else None
+        found: bool = update_account(connection, request.state.user["id"], id, change.role, change.password, names)
     except SelfChange:
         raise HTTPException(status_code=409, detail="self")
 

@@ -17,6 +17,8 @@ const TEXT = {
         "role.administrator": "Administrateur",
         "role.collaborator": "Collaborateur (lecture seule)",
         "column.username": "Nom d'utilisateur",
+        "column.firstName": "Prénom",
+        "column.lastName": "Nom",
         "column.role": "Rôle",
         "column.password": "Nouveau mot de passe",
         "column.actions": "Actions",
@@ -31,7 +33,7 @@ const TEXT = {
         "error.self": "Vous ne pouvez ni retirer votre propre rôle d'administrateur ni supprimer votre compte.",
         "error.read_only": "Seuls les administrateurs peuvent gérer les comptes.",
         "error.invalid": "Un nom et un mot de passe de 8 caractères ou plus sont requis.",
-        "error.nothing": "Choisissez un autre rôle ou entrez un nouveau mot de passe.",
+        "error.nothing": "Rien n'a changé pour ce compte.",
         "error.missing": "Ce compte n'existe plus. Rechargez la page.",
         "error.server": "Le serveur ne répond pas.",
         "error.status": "Erreur du serveur ({status}).",
@@ -54,6 +56,8 @@ const TEXT = {
         "role.administrator": "Administrator",
         "role.collaborator": "Collaborator (read-only)",
         "column.username": "Username",
+        "column.firstName": "First name",
+        "column.lastName": "Last name",
         "column.role": "Role",
         "column.password": "New password",
         "column.actions": "Actions",
@@ -68,7 +72,7 @@ const TEXT = {
         "error.self": "You can neither remove your own administrator role nor delete your own account.",
         "error.read_only": "Only administrators can manage the accounts.",
         "error.invalid": "A name and a password of 8 characters or more are required.",
-        "error.nothing": "Choose another role or enter a new password.",
+        "error.nothing": "Nothing changed for this account.",
         "error.missing": "This account no longer exists. Reload the page.",
         "error.server": "The server is not responding.",
         "error.status": "Server error ({status}).",
@@ -193,8 +197,23 @@ async function request(url, options = {}) {
     return response.json();
 }
 
+// The person's name when it is known, otherwise the username
+function displayName(user) {
+    return [user.first_name, user.last_name].filter(Boolean).join(" ") || user.username;
+}
+
 function renderAccount() {
-    element("account-name").textContent = account ? t("account", { username: account.username, role: t(`role.${account.role}`) }) : "";
+    element("account-name").textContent = account ? t("account", { username: displayName(account), role: t(`role.${account.role}`) }) : "";
+}
+
+function textInput(value, label) {
+    const input = document.createElement("input");
+    input.value = value ?? "";
+    input.maxLength = 100;
+    input.autocomplete = "off";
+    input.setAttribute("aria-label", label);
+
+    return input;
 }
 
 function roleSelect(current, disabled) {
@@ -238,6 +257,8 @@ function renderUsers() {
 
     for (const user of users) {
         const self = user.id === account?.id;
+        const firstName = textInput(user.first_name, `${t("column.firstName")} ${user.username}`);
+        const lastName = textInput(user.last_name, `${t("column.lastName")} ${user.username}`);
         const role = roleSelect(user.role, self);
         const password = document.createElement("input");
         password.type = "password";
@@ -246,12 +267,12 @@ function renderUsers() {
         password.placeholder = t("unchanged");
         password.setAttribute("aria-label", `${t("column.password")} ${user.username}`);
         const actions = cell(
-            iconButton("save", user.username, "icon-button", () => saveUser(user, role, password)),
+            iconButton("save", user.username, "icon-button", () => saveUser(user, firstName, lastName, role, password)),
             iconButton("delete", user.username, "icon-button danger", () => deleteUser(user), self)
         );
         actions.className = "actions";
         const row = document.createElement("tr");
-        row.append(cell(self ? t("you", { username: user.username }) : user.username), cell(role), cell(password), actions);
+        row.append(cell(self ? t("you", { username: user.username }) : user.username), cell(firstName), cell(lastName), cell(role), cell(password), actions);
         body.append(row);
     }
 }
@@ -261,8 +282,13 @@ async function loadUsers() {
     renderUsers();
 }
 
-async function saveUser(user, role, password) {
+async function saveUser(user, firstName, lastName, role, password) {
     const change = {};
+
+    if (firstName.value.trim() !== (user.first_name ?? "") || lastName.value.trim() !== (user.last_name ?? "")) {
+        change.first_name = firstName.value.trim();
+        change.last_name = lastName.value.trim();
+    }
 
     if (role.value !== user.role) {
         change.role = role.value;
@@ -280,6 +306,13 @@ async function saveUser(user, role, password) {
 
     try {
         await request(`/accounts/${user.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(change) });
+
+        // One's own name also shows in the header
+        if (user.id === account.id) {
+            account = await request("/auth/me");
+            renderAccount();
+        }
+
         await loadUsers();
         showMessage(t("saved", { username: user.username }), true);
     }
@@ -306,6 +339,8 @@ async function deleteUser(user) {
 async function addUser() {
     const row = element("new-user");
     const username = row.querySelector("[name=username]");
+    const firstName = row.querySelector("[name=first_name]");
+    const lastName = row.querySelector("[name=last_name]");
     const role = row.querySelector("[name=role]");
     const password = row.querySelector("[name=password]");
 
@@ -316,9 +351,11 @@ async function addUser() {
     }
 
     try {
-        await request("/accounts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: username.value.trim(), role: role.value, password: password.value }) });
+        await request("/accounts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: username.value.trim(), first_name: firstName.value.trim(), last_name: lastName.value.trim(), role: role.value, password: password.value }) });
         showMessage(t("added", { username: username.value.trim() }), true);
         username.value = "";
+        firstName.value = "";
+        lastName.value = "";
         password.value = "";
         role.value = "collaborator";
         await loadUsers();

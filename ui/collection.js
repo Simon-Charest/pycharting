@@ -811,7 +811,8 @@ function canEdit() {
 }
 
 function renderAccount() {
-    element("account-name").textContent = account ? t("account", { username: account.username, role: t(`role.${account.role}`) }) : "";
+    const name = account ? [account.first_name, account.last_name].filter(Boolean).join(" ") || account.username : "";
+    element("account-name").textContent = account ? t("account", { username: name, role: t(`role.${account.role}`) }) : "";
     element("add").disabled = !canEdit();
     element("update-visible-prices").disabled = !canEdit();
     setLinkEnabled(element("nav-users"), canEdit());

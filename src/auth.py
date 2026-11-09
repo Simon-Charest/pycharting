@@ -50,12 +50,18 @@ def verify_password(password: str, stored: str) -> bool:
 _UNKNOWN_USER_HASH: str = hash_password(token_urlsafe(16))
 
 
-def create_account(connection: Connection, username: str, password: str, role: str = COLLABORATOR) -> bool:
+def create_account(connection: Connection, username: str, password: str, role: str = COLLABORATOR, first_name: str | None = None, last_name: str | None = None) -> bool:
     """Return False if that name is already taken."""
 
     _check_role(role)
 
-    return add_user(connection, username.strip(), hash_password(password), role)
+    return add_user(connection, username.strip(), hash_password(password), role, _name(first_name), _name(last_name))
+
+
+def _name(value: str | None) -> str | None:
+    """An empty name is no name."""
+
+    return value.strip() or None if value else None
 
 
 def change_password(connection: Connection, username: str, password: str) -> bool:
@@ -80,7 +86,7 @@ def list_accounts(connection: Connection) -> list:
     return get_users(connection)
 
 
-def update_account(connection: Connection, acting_id: int, id: int, role: str | None = None, password: str | None = None) -> bool:
+def update_account(connection: Connection, acting_id: int, id: int, role: str | None = None, password: str | None = None, names: tuple | None = None) -> bool:
     """Change another account's role, or any account's password; return False if there is no such account.
 
     A new password signs that account out everywhere, except for administrators changing their own.
@@ -92,7 +98,9 @@ def update_account(connection: Connection, acting_id: int, id: int, role: str | 
         if id == acting_id and role != ADMINISTRATOR:
             raise SelfChange()
 
-    if not update_user(connection, id, role, hash_password(password) if password else None):
+    names = (_name(names[0]), _name(names[1])) if names is not None else None
+
+    if not update_user(connection, id, role, hash_password(password) if password else None, names):
         return False
 
     if password and id != acting_id:

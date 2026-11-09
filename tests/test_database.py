@@ -2,7 +2,7 @@ from pathlib import Path
 from pytest import raises
 from sqlcipher3.dbapi2 import Connection, DatabaseError
 
-from src.database import ensure_collection_schema, open_database
+from src.database import backup_database, ensure_collection_schema, open_database
 
 
 PASSWORD: str = "it's a secret"
@@ -45,3 +45,24 @@ class TestDatabase:
         # Act and assert
         with raises(ValueError):
             open_database(tmp_path.joinpath("test.sqlite"), "")
+
+    def test_backup_is_a_full_encrypted_copy(self, tmp_path: Path) -> None:
+        # Arrange
+        source: Path = tmp_path.joinpath("test.sqlite")
+        copy: Path = tmp_path.joinpath("copy.sqlite")
+        _create_database(source)
+        copy.write_bytes(b"an older copy, replaced")
+        connection: Connection = open_database(source, PASSWORD)
+
+        # Act
+        backup_database(connection, copy, PASSWORD)
+        connection.close()
+        restored: Connection = open_database(copy, PASSWORD)
+        names: list = [row[0] for row in restored.execute("SELECT name FROM collection_items ORDER BY name")]
+        restored.close()
+
+        # Assert
+        assert names == ["Wii Console", "Zelda"]
+        assert not copy.read_bytes().startswith(b"SQLite format 3")
+        with raises(DatabaseError):
+            open_database(copy, "wrong")

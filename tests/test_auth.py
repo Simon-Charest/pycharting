@@ -227,7 +227,7 @@ class TestUsers:
         # Assert
         assert client.get("/users").status_code == 200
         assert [(user["username"], user["role"]) for user in response.json()] == [(ADMIN[0], "administrator"), (VIEWER[0], "collaborator")]
-        assert all(set(user) == {"id", "username", "role"} for user in response.json())
+        assert all(set(user) == {"id", "username", "first_name", "last_name", "role"} for user in response.json())
 
     def test_a_collaborator_cannot_see_the_accounts(self, client: TestClient) -> None:
         # Arrange
@@ -323,3 +323,59 @@ class TestUsers:
         # Act and assert
         assert client.put("/accounts/999", json={"role": "collaborator"}).status_code == 404
         assert client.delete("/accounts/999").status_code == 404
+
+    def test_administrators_come_first_then_by_last_name(self, client: TestClient, connection: Connection) -> None:
+        # Arrange
+        auth.create_account(connection, "zed", "a long password", auth.ADMINISTRATOR, "Zoé", "Arsenault")
+        auth.create_account(connection, "amy", "a long password", auth.COLLABORATOR, "Amy", "Bérubé")
+        auth.create_account(connection, "bob", "a long password", auth.COLLABORATOR, "Bob", "Arsenault")
+        sign_in(client, ADMIN)
+
+        # Act
+        actual: list = [user["username"] for user in client.get("/accounts").json()]
+
+        # Assert: last names first, accounts without one last, within each role
+        assert actual == ["zed", ADMIN[0], "bob", "amy", VIEWER[0]]
+
+    def test_names_are_added_changed_and_cleared(self, client: TestClient) -> None:
+        # Arrange
+        sign_in(client, ADMIN)
+        client.post("/accounts", json={"username": "newcomer", "first_name": " Jo ", "last_name": "Papin", "role": "collaborator", "password": "a long password"})
+        id: int = self.ids(client)["newcomer"]
+        named = lambda: next((user["first_name"], user["last_name"]) for user in client.get("/accounts").json() if user["id"] == id)
+
+        # Act and assert
+        assert named() == ("Jo", "Papin")
+        client.put(f"/accounts/{id}", json={"first_name": "Jonathan", "last_name": "Papin"})
+        assert named() == ("Jonathan", "Papin")
+        client.put(f"/accounts/{id}", json={"role": "collaborator"})  # Names left out stay as they are
+        assert named() == ("Jonathan", "Papin")
+        client.put(f"/accounts/{id}", json={"first_name": "", "last_name": ""})
+        assert named() == (None, None)
+
+    def test_the_header_gets_the_signed_in_name(self, client: TestClient, connection: Connection) -> None:
+        # Arrange
+        sign_in(client, ADMIN)
+        client.put(f"/accounts/{self.ids(client)[ADMIN[0]]}", json={"first_name": "Simon", "last_name": "Charest"})
+
+        # Act
+        me: dict = client.get("/auth/me").json()
+
+        # Assert
+        assert (me["first_name"], me["last_name"]) == ("Simon", "Charest")
+
+    def test_older_databases_gain_the_name_columns(self, tmp_path: Path) -> None:
+        # Arrange
+        database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
+        ensure_collection_schema(database)
+        database.execute("ALTER TABLE users DROP COLUMN first_name")
+        database.execute("ALTER TABLE users DROP COLUMN last_name")
+        database.commit()
+
+        # Act
+        ensure_collection_schema(database)
+        columns: list = [row[1] for row in database.execute("PRAGMA table_info(users)")]
+        database.close()
+
+        # Assert
+        assert {"first_name", "last_name"} <= set(columns)

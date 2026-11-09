@@ -4,11 +4,12 @@ from sqlcipher3.dbapi2 import Connection, Cursor, connect
 from src.constant import DATABASE_FILE, DATABASE_PASSWORD, SQL_PATH
 
 
-BOOLEAN_KEYS: set[str] = {"accessory", "amiibo", "console", "damaged", "duplicate", "gamepad", "previously_owned", "reproduction", "virtual", "wishlist"}
-ADDED_ITEM_COLUMNS: tuple[str, ...] = ("game", "manual", "box", "paid", "pricecharting", "amiibo", "wishlist", "accessory", "damaged", "duplicate")  # Columns that older databases lack.
-ADDED_ROW_COLUMNS: tuple[str, ...] = ("accessory", "damaged", "duplicate", "gamepad", "previously_owned", "reproduction", "virtual", "wishlist")  # Same, for spreadsheet rows.
+BOOLEAN_KEYS: set[str] = {"accessory", "amiibo", "console", "damaged", "selling", "gamepad", "previously_owned", "reproduction", "virtual", "wishlist"}
+ADDED_ITEM_COLUMNS: tuple[str, ...] = ("game", "manual", "box", "paid", "pricecharting", "amiibo", "wishlist", "accessory", "damaged", "selling")  # Columns that older databases lack.
+ADDED_ROW_COLUMNS: tuple[str, ...] = ("accessory", "damaged", "selling", "gamepad", "previously_owned", "reproduction", "virtual", "wishlist")  # Same, for spreadsheet rows.
 ADDED_ROW_PRICE_COLUMNS: tuple[str, ...] = ("paid",)  # Same, for spreadsheet rows, without a type: a price can be a number or an X.
 ADDED_USER_COLUMNS: tuple[str, ...] = ("first_name", "last_name")  # Same, for accounts.
+RENAMED_COLUMNS: dict[str, str] = {"duplicate": "selling"}  # Old name: new name, in both tables.
 ADDED_TEXT_COLUMNS: tuple[str, ...] = ("date",)  # Columns that older databases lack, in both tables: the yyyy-mm-dd date of the Item, Manual and Box prices.
 
 
@@ -44,6 +45,15 @@ def ensure_collection_schema(connection: Connection) -> None:
     """Create the collection tables, and add the columns that older databases lack."""
 
     connection.executescript(SQL_PATH.joinpath("create.sql").read_text())
+
+    # Renamed tags keep their values; done before the missing columns are added, so the new name is not created empty
+    for table in ("collection_items", "spreadsheet_rows"):
+        columns: set = {row[1] for row in connection.execute(f"PRAGMA table_info({table})")}
+
+        for old, new in RENAMED_COLUMNS.items():
+            if old in columns and new not in columns:
+                connection.execute(f'ALTER TABLE {table} RENAME COLUMN "{old}" TO "{new}"')
+
     existing_users: set = {row[1] for row in connection.execute("PRAGMA table_info(users)")}
 
     for column in ADDED_USER_COLUMNS:

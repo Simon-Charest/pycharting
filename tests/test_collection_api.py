@@ -603,22 +603,22 @@ class TestDamaged:
         assert "damaged" in row_columns
 
 
-class TestDuplicate:
+class TestSelling:
     @mark.asyncio
-    async def test_duplicate_is_saved_on_items_and_rows(self, connection: Connection) -> None:
+    async def test_selling_is_saved_on_items_and_rows(self, connection: Connection) -> None:
         # Act
-        await api.update_collection_item(1, api.CollectionItem(group_name="Wii", name="Zelda", duplicate=True))
-        await api.update_collection_row(1, api.SpreadsheetRow(system="3DS", title="Kid Icarus", duplicate=True))
+        await api.update_collection_item(1, api.CollectionItem(group_name="Wii", name="Zelda", selling=True))
+        await api.update_collection_row(1, api.SpreadsheetRow(system="3DS", title="Kid Icarus", selling=True))
 
         # Assert
-        assert [entry["values"]["duplicate"] for entry in get_collection_entries(connection)] == [True, True]
+        assert [entry["values"]["selling"] for entry in get_collection_entries(connection)] == [True, True]
 
-    def test_older_databases_gain_the_duplicate_column(self, tmp_path: Path) -> None:
+    def test_older_databases_gain_the_selling_column(self, tmp_path: Path) -> None:
         # Arrange
         database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
         ensure_collection_schema(database)
-        database.execute("ALTER TABLE collection_items DROP COLUMN duplicate")
-        database.execute("ALTER TABLE spreadsheet_rows DROP COLUMN duplicate")
+        database.execute("ALTER TABLE collection_items DROP COLUMN selling")
+        database.execute("ALTER TABLE spreadsheet_rows DROP COLUMN selling")
         database.commit()
 
         # Act
@@ -628,5 +628,30 @@ class TestDuplicate:
         database.close()
 
         # Assert
-        assert "duplicate" in item_columns
-        assert "duplicate" in row_columns
+        assert "selling" in item_columns
+        assert "selling" in row_columns
+
+    def test_the_duplicate_column_becomes_selling_with_its_values(self, tmp_path: Path) -> None:
+        # Arrange
+        database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
+        ensure_collection_schema(database)
+
+        for table in ("collection_items", "spreadsheet_rows"):
+            database.execute(f"ALTER TABLE {table} RENAME COLUMN selling TO duplicate")
+
+        database.execute("INSERT INTO owners (name) VALUES ('Simon')")
+        database.execute("INSERT INTO source_files (owner_id, path, sha256, content) VALUES (1, 'old.json', '', x'')")
+        database.execute("INSERT INTO collection_items (source_file_id, position, group_name, name, duplicate) VALUES (1, 0, 'NES', 'Zelda', 1)")
+        database.commit()
+
+        # Act
+        ensure_collection_schema(database)
+        item_columns: list = [row[1] for row in database.execute("PRAGMA table_info(collection_items)")]
+        row_columns: list = [row[1] for row in database.execute("PRAGMA table_info(spreadsheet_rows)")]
+        selling: list = [row[0] for row in database.execute("SELECT selling FROM collection_items")]
+        database.close()
+
+        # Assert
+        assert "selling" in item_columns and "duplicate" not in item_columns
+        assert "selling" in row_columns and "duplicate" not in row_columns
+        assert selling == [1]

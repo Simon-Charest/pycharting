@@ -545,3 +545,26 @@ button.primary:disabled:hover {
 .users tfoot td {
     background: var(--surface-alt);
 }
+
+/* The legend, opened by the ? button and closed by clicking anywhere else or by Escape */
+.legend {
+    position: fixed;
+    inset: auto;  /* Placed under the button by the script */
+    width: min(380px, calc(100vw - 32px));
+    margin: 0;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
+}
+
+.legend ul {
+    margin: 8px 0 0;
+    padding-left: 20px;
+}
+
+.legend li + li {
+    margin-top: 6px;
+}

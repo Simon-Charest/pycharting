@@ -61,6 +61,10 @@ const TRANSLATIONS = {
         "action.logout": "Se déconnecter",
         "nav.home": "Accueil",
         "nav.users": "Utilisateurs",
+        "help": "Aide",
+        "legend.heading": "Légende",
+        "legend.previouslyOwned": "« {tag} » : un article possédé pendant l'enfance, puis racheté.",
+        "legend.totals": "Les entrées « {reproduction} », « {virtual} » et « {wishlist} » ne comptent pas dans les totaux.",
         "role.administrator": "Administrateur",
         "role.collaborator": "Collaborateur (lecture seule)",
         "account": "{username} · {role}",
@@ -142,6 +146,10 @@ const TRANSLATIONS = {
         "action.logout": "Sign out",
         "nav.home": "Home",
         "nav.users": "Users",
+        "help": "Help",
+        "legend.heading": "Legend",
+        "legend.previouslyOwned": "“{tag}”: an item owned as a child, then bought back.",
+        "legend.totals": "“{reproduction}”, “{virtual}” and “{wishlist}” entries do not count in the totals.",
         "role.administrator": "Administrator",
         "role.collaborator": "Collaborator (read-only)",
         "account": "{username} · {role}",
@@ -194,7 +202,8 @@ const ICONS = {
     delete: ["M3 6h18", "M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2", "M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6", "M10 11v6", "M14 11v6"],
     add: ["M12 5v14", "M5 12h14"],
     reset: ["M18 6 6 18", "M6 6l12 12"],
-    logout: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"]
+    logout: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"],
+    help: ["M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z", "M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3", "M12 17h.01"]
 };
 const FILTER_IDS = ["filter-console", "filter-title", "filter-owner", "filter-region", "filter-quantity", "filter-game", "filter-manual", "filter-box", "filter-date", "filter-paid", "filter-attribute"];
 // Full display names; the stored names stay as they are, because PriceCharting's URLs rely on them
@@ -300,6 +309,25 @@ function setLanguage(value, remember = false) {
     fillFilters();
     render();
     renderAccount();
+    renderLegend();
+}
+
+// Built from the tags' own names, so that the legend follows them when they are renamed
+function renderLegend() {
+    element("legend-previously-owned").textContent = t("legend.previouslyOwned", { tag: t("flag.previously_owned") });
+    element("legend-totals").textContent = t("legend.totals", { reproduction: t("flag.reproduction"), virtual: t("flag.virtual"), wishlist: t("flag.wishlist") });
+}
+
+// Under the ? button, lined up on its right edge
+function placeLegend(event) {
+    if (event.newState !== "open") {
+        return;
+    }
+
+    const button = element("help").getBoundingClientRect();
+    const legend = element("legend");
+    legend.style.top = `${button.bottom + 8}px`;
+    legend.style.right = `${document.documentElement.clientWidth - button.right}px`;
 }
 
 // In alphabetical order for the language shown
@@ -1283,6 +1311,8 @@ element("filter-reset").addEventListener("click", () => {
 });
 element("add").append(icon(ICONS.add));
 element("logout").append(icon(ICONS.logout));
+element("help").append(icon(ICONS.help));
+element("legend").addEventListener("beforetoggle", placeLegend);
 element("add").addEventListener("click", openAddForm);
 element("logout").addEventListener("click", signOut);
 element("editor-form").addEventListener("submit", saveEditor);

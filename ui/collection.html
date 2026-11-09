@@ -5,8 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>PyCharting</title>
         <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-        <link rel="stylesheet" href="/static/collection.css?v=32">
-        <script src="/static/collection.js?v=43" defer></script>
+        <link rel="stylesheet" href="/static/collection.css?v=33">
+        <script src="/static/collection.js?v=44" defer></script>
     </head>
     <body>
         <header>
@@ -23,6 +23,7 @@
                 <button class="icon-button flag" type="button" data-language="fr" lang="fr" title="Français" aria-label="Français"><img src="/static/flag-qc.svg" alt="" width="21" height="14"></button>
                 <button class="icon-button flag" type="button" data-language="en" lang="en" title="English" aria-label="English"><img src="/static/flag-ca.svg" alt="" width="28" height="14"></button>
             </div>
+            <button id="help" class="icon-button" type="button" popovertarget="legend" data-i18n-title="help"></button>
         </header>
 
         <p id="message" class="message" role="alert" hidden></p>
@@ -92,6 +93,14 @@
                     </tr>
                 </tfoot>
             </table>
+        </div>
+
+        <div id="legend" class="legend" popover>
+            <h2 data-i18n="legend.heading"></h2>
+            <ul>
+                <li id="legend-previously-owned"></li>
+                <li id="legend-totals"></li>
+            </ul>
         </div>
 
         <dialog id="editor">

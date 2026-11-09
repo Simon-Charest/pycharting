@@ -10,6 +10,7 @@ SELECT i.id
     , i.amiibo
     , i.accessory
     , i.damaged
+    , i.duplicate
     , i.wishlist
     , i.previously_owned
     , i.quantity

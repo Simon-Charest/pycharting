@@ -9,6 +9,7 @@ SELECT r.id
     , r.amiibo
     , r.accessory
     , r.damaged
+    , r.duplicate
     , r.game
     , r.box
     , r.manual

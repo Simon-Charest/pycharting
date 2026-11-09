@@ -90,6 +90,7 @@ class CollectionItem(BaseModel):
     amiibo: bool | None = None
     accessory: bool | None = None
     damaged: bool | None = None
+    duplicate: bool | None = None
     wishlist: bool | None = None
     previously_owned: bool | None = None
     quantity: int = Field(default=1, ge=0)
@@ -119,6 +120,7 @@ class SpreadsheetRow(BaseModel):
     amiibo: bool | None = None
     accessory: bool | None = None
     damaged: bool | None = None
+    duplicate: bool | None = None
     wishlist: bool | None = None
     gamepad: bool | None = None
     previously_owned: bool | None = None

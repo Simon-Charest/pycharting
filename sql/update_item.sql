@@ -6,6 +6,7 @@ SET group_name = :group_name
     , amiibo = :amiibo
     , accessory = :accessory
     , damaged = :damaged
+    , duplicate = :duplicate
     , wishlist = :wishlist
     , previously_owned = :previously_owned
     , quantity = :quantity

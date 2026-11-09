@@ -10,6 +10,7 @@ INTO collection_items
     , amiibo
     , accessory
     , damaged
+    , duplicate
     , wishlist
     , previously_owned
     , quantity
@@ -33,6 +34,7 @@ SELECT f.id
     , :amiibo
     , :accessory
     , :damaged
+    , :duplicate
     , :wishlist
     , :previously_owned
     , :quantity

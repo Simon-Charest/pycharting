@@ -4,9 +4,9 @@ from sqlcipher3.dbapi2 import Connection, Cursor, connect
 from src.constant import DATABASE_FILE, DATABASE_PASSWORD, SQL_PATH
 
 
-BOOLEAN_KEYS: set[str] = {"accessory", "amiibo", "console", "damaged", "gamepad", "previously_owned", "reproduction", "virtual", "wishlist"}
-ADDED_ITEM_COLUMNS: tuple[str, ...] = ("game", "manual", "box", "paid", "pricecharting", "amiibo", "wishlist", "accessory", "damaged")  # Columns that older databases lack.
-ADDED_ROW_COLUMNS: tuple[str, ...] = ("accessory", "damaged", "gamepad", "previously_owned", "reproduction", "virtual", "wishlist")  # Same, for spreadsheet rows.
+BOOLEAN_KEYS: set[str] = {"accessory", "amiibo", "console", "damaged", "duplicate", "gamepad", "previously_owned", "reproduction", "virtual", "wishlist"}
+ADDED_ITEM_COLUMNS: tuple[str, ...] = ("game", "manual", "box", "paid", "pricecharting", "amiibo", "wishlist", "accessory", "damaged", "duplicate")  # Columns that older databases lack.
+ADDED_ROW_COLUMNS: tuple[str, ...] = ("accessory", "damaged", "duplicate", "gamepad", "previously_owned", "reproduction", "virtual", "wishlist")  # Same, for spreadsheet rows.
 ADDED_ROW_PRICE_COLUMNS: tuple[str, ...] = ("paid",)  # Same, for spreadsheet rows, without a type: a price can be a number or an X.
 ADDED_USER_COLUMNS: tuple[str, ...] = ("first_name", "last_name")  # Same, for accounts.
 ADDED_TEXT_COLUMNS: tuple[str, ...] = ("date",)  # Columns that older databases lack, in both tables: the yyyy-mm-dd date of the Item, Manual and Box prices.

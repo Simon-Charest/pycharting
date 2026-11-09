@@ -5,6 +5,7 @@ SET system = :system
     , amiibo = :amiibo
     , accessory = :accessory
     , damaged = :damaged
+    , duplicate = :duplicate
     , game = :game
     , box = :box
     , manual = :manual

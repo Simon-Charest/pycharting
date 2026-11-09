@@ -30,6 +30,7 @@ TABLE IF NOT EXISTS collection_items
     , amiibo INTEGER
     , accessory INTEGER
     , damaged INTEGER
+    , duplicate INTEGER
     , wishlist INTEGER
     , previously_owned INTEGER
     , quantity INTEGER DEFAULT 1
@@ -61,6 +62,7 @@ TABLE IF NOT EXISTS spreadsheet_rows
     , amiibo
     , accessory INTEGER
     , damaged INTEGER
+    , duplicate INTEGER
     , game
     , box
     , "date" TEXT

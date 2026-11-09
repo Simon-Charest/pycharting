@@ -9,6 +9,8 @@
     --accent: #2456c7;
     --accent-text: #ffffff;
     --danger: #b3261e;
+    --gain: #1a7f37;
+    --loss: #b3261e;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,6 +24,8 @@
         --accent: #8ab0ff;
         --accent-text: #10151f;
         --danger: #ff9d94;
+        --gain: #6fdc8c;
+        --loss: #ff9d94;
     }
 }
 
@@ -567,4 +571,13 @@ button.primary:disabled:hover {
 
 .legend li + li {
     margin-top: 6px;
+}
+
+/* Difference: value above what was paid, or below */
+td.gain {
+    color: var(--gain);
+}
+
+td.loss {
+    color: var(--loss);
 }

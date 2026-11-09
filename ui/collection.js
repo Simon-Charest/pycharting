@@ -547,6 +547,19 @@ function amountCell(amount) {
     return textCell(amount === null ? "" : numberFormat.format(amount), "number");
 }
 
+// Green when the value is above what was paid, red when below
+function differenceCell(amount) {
+    const cell = amountCell(amount);
+    setSign(cell, amount);
+
+    return cell;
+}
+
+function setSign(node, amount) {
+    node.classList.toggle("gain", amount > 0.005);
+    node.classList.toggle("loss", amount < -0.005);
+}
+
 function icon(paths) {
     const namespace = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(namespace, "svg");
@@ -699,7 +712,7 @@ function renderRows(visible) {
             textCell(entry.values.date ?? "", "date"),
             amountCell(subtotalOf(entry)),
             ownershipCell(entry, "paid"),
-            amountCell(totalOf(entry)),
+            differenceCell(totalOf(entry)),
             detailsCell(entry),
             textCell(entry.owner),
             actions
@@ -738,6 +751,10 @@ function renderTotals(visible) {
     for (const [key, amount] of columns) {
         const total = visible.reduce((sum, entry) => sum + (amount(entry) ?? 0), 0);
         element(`total-${key}`).textContent = numberFormat.format(total);
+
+        if (key === "total") {
+            setSign(element("total-total"), total);
+        }
     }
 }
 

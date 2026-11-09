@@ -4,6 +4,9 @@ const TRANSLATIONS = {
     fr: {
         "pageTitle": "PyCharting",
         "heading": "PyCharting",
+        "footer.poweredBy": "Propulsé par Ubuntu, Python, NGINX, Let's Encrypt et Namecheap.",
+        "footer.privacy": "Ce site ne conserve aucune donnée sur ses visiteurs.",
+        "footer.copyright": "© SLCTI. Tous droits réservés.",
         "language": "Langue",
         "loading": "Chargement…",
         "count.one": "{visible} entrée",
@@ -75,6 +78,9 @@ const TRANSLATIONS = {
     en: {
         "pageTitle": "PyCharting",
         "heading": "PyCharting",
+        "footer.poweredBy": "Powered by Ubuntu, Python, NGINX, Let's Encrypt and Namecheap.",
+        "footer.privacy": "This site keeps no data about its visitors.",
+        "footer.copyright": "© SLCTI. All rights reserved.",
         "language": "Language",
         "loading": "Loading…",
         "count.one": "{visible} entry",

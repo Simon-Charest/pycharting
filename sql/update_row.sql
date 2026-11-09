@@ -4,6 +4,7 @@ SET system = :system
     , console = :console
     , amiibo = :amiibo
     , accessory = :accessory
+    , damaged = :damaged
     , game = :game
     , box = :box
     , manual = :manual

@@ -46,6 +46,7 @@ const TRANSLATIONS = {
         "flag.wishlist": "Liste de souhaits",
         "flag.amiibo": "amiibo",
         "flag.accessory": "Accessoire",
+        "flag.damaged": "Endommagé",
         "priceChartingLink": "PriceCharting",
         "action.edit": "Modifier",
         "action.delete": "Supprimer",
@@ -131,6 +132,7 @@ const TRANSLATIONS = {
         "flag.wishlist": "Wishlist",
         "flag.amiibo": "amiibo",
         "flag.accessory": "Accessory",
+        "flag.damaged": "Damaged",
         "priceChartingLink": "PriceCharting",
         "action.edit": "Edit",
         "action.delete": "Delete",
@@ -192,7 +194,7 @@ const COLUMNS = [
     { key: "owner" },
     { key: "actions", sortable: false }
 ];
-const TAGS = ["console", "gamepad", "accessory", "amiibo", "virtual", "reproduction", "previously_owned", "wishlist"];
+const TAGS = ["console", "gamepad", "accessory", "amiibo", "virtual", "reproduction", "previously_owned", "damaged", "wishlist"];
 const OWNERSHIP = ["game", "manual", "box"];
 // Every price column: the ownership ones, then what was paid, which says nothing about what is owned
 const PRICES = [...OWNERSHIP, "paid"];

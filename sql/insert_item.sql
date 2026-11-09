@@ -9,6 +9,7 @@ INTO collection_items
     , gamepad
     , amiibo
     , accessory
+    , damaged
     , wishlist
     , previously_owned
     , quantity
@@ -31,6 +32,7 @@ SELECT f.id
     , :gamepad
     , :amiibo
     , :accessory
+    , :damaged
     , :wishlist
     , :previously_owned
     , :quantity

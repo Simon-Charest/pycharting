@@ -572,3 +572,32 @@ class TestAccessory:
         # Assert
         assert "accessory" in item_columns
         assert "accessory" in row_columns
+
+
+class TestDamaged:
+    @mark.asyncio
+    async def test_damaged_is_saved_on_items_and_rows(self, connection: Connection) -> None:
+        # Act
+        await api.update_collection_item(1, api.CollectionItem(group_name="Wii", name="Zelda", damaged=True))
+        await api.update_collection_row(1, api.SpreadsheetRow(system="3DS", title="Kid Icarus", damaged=True))
+
+        # Assert
+        assert [entry["values"]["damaged"] for entry in get_collection_entries(connection)] == [True, True]
+
+    def test_older_databases_gain_the_damaged_column(self, tmp_path: Path) -> None:
+        # Arrange
+        database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
+        ensure_collection_schema(database)
+        database.execute("ALTER TABLE collection_items DROP COLUMN damaged")
+        database.execute("ALTER TABLE spreadsheet_rows DROP COLUMN damaged")
+        database.commit()
+
+        # Act
+        ensure_collection_schema(database)
+        item_columns: list = [row[1] for row in database.execute("PRAGMA table_info(collection_items)")]
+        row_columns: list = [row[1] for row in database.execute("PRAGMA table_info(spreadsheet_rows)")]
+        database.close()
+
+        # Assert
+        assert "damaged" in item_columns
+        assert "damaged" in row_columns

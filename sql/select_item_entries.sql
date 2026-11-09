@@ -9,6 +9,7 @@ SELECT i.id
     , i.gamepad
     , i.amiibo
     , i.accessory
+    , i.damaged
     , i.wishlist
     , i.previously_owned
     , i.quantity

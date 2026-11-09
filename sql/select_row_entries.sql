@@ -8,6 +8,7 @@ SELECT r.id
     , r.console
     , r.amiibo
     , r.accessory
+    , r.damaged
     , r.game
     , r.box
     , r.manual

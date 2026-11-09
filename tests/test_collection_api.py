@@ -3,14 +3,14 @@ from pytest import fixture, mark, raises
 from fastapi import HTTPException
 from sqlcipher3.dbapi2 import Connection
 
-import pycharting.api as api
-from pycharting.database import get_collection_entries, load_collection, open_database
+import src.api as api
+from src.database import ensure_collection_schema, get_collection_entries, open_database
 
 
 @fixture
 def connection(tmp_path: Path, monkeypatch) -> Connection:
     database: Connection = open_database(tmp_path.joinpath("test.sqlite"), "secret")
-    load_collection(database)
+    ensure_collection_schema(database)
     database.execute("INSERT INTO owners (id, name) VALUES (1, 'Owner One'), (2, 'Owner Two')")
     database.execute("INSERT INTO source_files (id, owner_id, path, sha256, content) VALUES (1, 1, 'pycharting/data/jo/jo.json', '', x''), (2, 2, 'pycharting/data/video_games.xlsx', '', x'')")
     database.execute("INSERT INTO collection_items (id, source_file_id, position, group_name, name, game, 'virtual') VALUES (1, 1, 0, 'Wii', 'Zelda', '43.98', 1)")
@@ -53,15 +53,15 @@ class TestCollectionApi:
         assert entries[1]["title"] == "Kid Icarus"
 
     @mark.asyncio
-    async def test_edited_item_reaches_the_crawler_data(self, connection: Connection) -> None:
+    async def test_edited_item_is_saved(self, connection: Connection) -> None:
         # Act
         await api.update_collection_item(1, api.CollectionItem(group_name="Wii U", name="Zelda 2"))
 
         # Assert
-        assert load_collection(connection) == {"Wii U": [{"name": "Zelda 2"}]}
+        assert (get_collection_entries(connection)[0]["console"], get_collection_entries(connection)[0]["title"]) == ("Wii U", "Zelda 2")
 
     @mark.asyncio
-    async def test_add_item_for_chosen_owner_reaches_the_crawler_data(self, connection: Connection) -> None:
+    async def test_add_item_for_chosen_owner(self, connection: Connection) -> None:
         # Act
         await api.add_collection_item(api.NewCollectionItem(owner_id=2, group_name="Wii", name="Mario", game=5))
         await api.add_collection_item(api.NewCollectionItem(owner_id=2, group_name="Wii", name="Metroid"))
@@ -70,7 +70,6 @@ class TestCollectionApi:
         added: list = [entry for entry in get_collection_entries(connection) if entry["source"] == "added/Owner Two"]
         assert [(entry["owner"], entry["title"]) for entry in added] == [("Owner Two", "Mario"), ("Owner Two", "Metroid")]
         assert added[0]["values"]["game"] == 5
-        assert {"name": "Mario"} in load_collection(connection)["Wii"]
 
     @mark.asyncio
     async def test_add_item_for_unknown_owner_returns_404(self, connection: Connection) -> None:
@@ -103,7 +102,7 @@ class TestCollectionApi:
     def test_older_database_gets_the_new_columns_and_keeps_its_data(self, tmp_path: Path) -> None:
         # Arrange
         database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
-        load_collection(database)
+        ensure_collection_schema(database)
         database.execute("INSERT INTO owners (id, name) VALUES (1, 'A')")
         database.execute("INSERT INTO source_files (id, owner_id, path, sha256, content) VALUES (1, 1, 'a', '', x'')")
         database.execute("INSERT INTO collection_items (source_file_id, position, group_name, name) VALUES (1, 0, 'Wii', 'Zelda')")
@@ -114,7 +113,7 @@ class TestCollectionApi:
 
         # Act
         actual: list = get_collection_entries(database)
-        load_collection(database)  # A second run must not try to add them again.
+        ensure_collection_schema(database)  # A second run must not try to add them again.
         database.close()
 
         # Assert
@@ -125,7 +124,7 @@ class TestCollectionApi:
     def test_older_database_gets_a_quantity_of_1_except_where_one_is_set(self, tmp_path: Path) -> None:
         # Arrange
         database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
-        load_collection(database)
+        ensure_collection_schema(database)
         database.execute("INSERT INTO owners (id, name) VALUES (1, 'A')")
         database.execute("INSERT INTO source_files (id, owner_id, path, sha256, content) VALUES (1, 1, 'a', '', x'')")
         database.executemany("INSERT INTO collection_items (source_file_id, position, group_name, name, quantity) VALUES (1, ?, 'Wii', ?, ?)", [(0, "One", None), (1, "Two", 2)])
@@ -135,7 +134,7 @@ class TestCollectionApi:
 
         # Act
         entries: list = get_collection_entries(database)
-        load_collection(database)  # A second run must find nothing left to do.
+        ensure_collection_schema(database)  # A second run must find nothing left to do.
         database.close()
 
         # Assert
@@ -179,7 +178,7 @@ class TestCollectionApi:
     def test_older_database_rows_get_the_new_tags_empty(self, tmp_path: Path) -> None:
         # Arrange
         database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
-        load_collection(database)
+        ensure_collection_schema(database)
         database.execute("INSERT INTO owners (id, name) VALUES (1, 'A')")
         database.execute("INSERT INTO source_files (id, owner_id, path, sha256, content) VALUES (1, 1, 'a', '', x'')")
         database.execute("INSERT INTO spreadsheet_rows (source_file_id, sheet, row_index, system, title, amiibo) VALUES (1, 'Feuil2', 2, '3DS', 'Row', 'X')")
@@ -190,7 +189,7 @@ class TestCollectionApi:
 
         # Act
         values: dict = get_collection_entries(database)[0]["values"]
-        load_collection(database)  # A second run must find nothing left to do.
+        ensure_collection_schema(database)  # A second run must find nothing left to do.
         database.close()
 
         # Assert
@@ -240,18 +239,10 @@ class TestCollectionApi:
         with raises(ValueError):
             api.CollectionItem(group_name="Wii", name="Zelda", region="Mars")
 
-    @mark.asyncio
-    async def test_crawler_still_gets_the_pal_console_name(self, connection: Connection) -> None:
-        # Act
-        await api.update_collection_item(1, api.CollectionItem(group_name="Wii", name="Zelda", region="PAL"))
-
-        # Assert
-        assert load_collection(connection) == {"PAL Wii": [{"name": "Zelda"}]}
-
     def test_older_database_moves_the_pal_prefix_into_the_region(self, tmp_path: Path) -> None:
         # Arrange
         database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
-        load_collection(database)
+        ensure_collection_schema(database)
         database.execute("INSERT INTO owners (id, name) VALUES (1, 'A')")
         database.execute("INSERT INTO source_files (id, owner_id, path, sha256, content) VALUES (1, 1, 'a', '', x'')")
         database.executemany(
@@ -267,7 +258,7 @@ class TestCollectionApi:
 
         # Act
         entries: list = get_collection_entries(database)
-        load_collection(database)  # A second run must find nothing left to do.
+        ensure_collection_schema(database)  # A second run must find nothing left to do.
         database.close()
 
         # Assert
@@ -285,7 +276,7 @@ class TestCollectionApi:
     def test_paid_values_stay_apart_from_the_game(self, tmp_path: Path) -> None:
         # Arrange
         database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
-        load_collection(database)
+        ensure_collection_schema(database)
         database.execute("INSERT INTO owners (id, name) VALUES (1, 'A')")
         database.execute("INSERT INTO source_files (id, owner_id, path, sha256, content) VALUES (1, 1, 'a', '', x'')")
         database.executemany(
@@ -295,7 +286,7 @@ class TestCollectionApi:
         database.commit()
 
         # Act
-        load_collection(database)  # A later start must leave the paid values where they are.
+        ensure_collection_schema(database)  # A later start must leave the paid values where they are.
         entries: list = get_collection_entries(database)
         database.close()
 
@@ -328,13 +319,13 @@ class TestCollectionApi:
     def test_older_databases_gain_the_date_column(self, tmp_path: Path) -> None:
         # Arrange
         database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
-        load_collection(database)
+        ensure_collection_schema(database)
         database.execute('ALTER TABLE collection_items DROP COLUMN "date"')
         database.execute('ALTER TABLE spreadsheet_rows DROP COLUMN "date"')
         database.commit()
 
         # Act
-        load_collection(database)
+        ensure_collection_schema(database)
         item_columns: list = [row[1] for row in database.execute("PRAGMA table_info(collection_items)")]
         row_columns: list = [row[1] for row in database.execute("PRAGMA table_info(spreadsheet_rows)")]
         database.close()
@@ -346,13 +337,13 @@ class TestCollectionApi:
     def test_older_databases_gain_the_paid_column(self, tmp_path: Path) -> None:
         # Arrange
         database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
-        load_collection(database)
+        ensure_collection_schema(database)
         database.execute("ALTER TABLE collection_items DROP COLUMN paid")
         database.execute("ALTER TABLE spreadsheet_rows DROP COLUMN paid")
         database.commit()
 
         # Act
-        load_collection(database)
+        ensure_collection_schema(database)
         item_columns: list = [row[1] for row in database.execute("PRAGMA table_info(collection_items)")]
         row_columns: list = [row[1] for row in database.execute("PRAGMA table_info(spreadsheet_rows)")]
         database.close()
@@ -432,12 +423,12 @@ class FakeResponse:
 class TestPrices:
     @fixture(autouse=True)
     def rate(self, monkeypatch) -> None:
-        import pycharting.prices as prices
+        import src.prices as prices
         monkeypatch.setattr(prices, "usd_cad_rate", lambda: 1.5)
 
     def test_product_page_gives_a_price_for_each_part_in_cad(self, monkeypatch) -> None:
         # Arrange
-        import pycharting.prices as prices
+        import src.prices as prices
         monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE))
 
         # Act
@@ -448,7 +439,7 @@ class TestPrices:
 
     def test_search_picks_the_result_with_exactly_that_title(self, monkeypatch) -> None:
         # Arrange
-        import pycharting.prices as prices
+        import src.prices as prices
         search: str = """<table id="games_table"><tr><td class="title"><a href="https://p/zelda-ii">Zelda II</a></td></tr>
         <tr><td class="title"><a href="https://p/zelda">Zelda</a></td></tr></table>"""
         monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE if url == "https://p/zelda" else search))
@@ -461,7 +452,7 @@ class TestPrices:
 
     def test_search_without_that_title_finds_nothing(self, monkeypatch) -> None:
         # Arrange
-        import pycharting.prices as prices
+        import src.prices as prices
         monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, "<table id='games_table'></table>"))
 
         # Act and assert
@@ -521,7 +512,7 @@ class TestUpdatePrices:
 class TestExchangeRate:
     def test_rate_comes_from_the_bank_of_canada_once_a_day(self, monkeypatch) -> None:
         # Arrange
-        import pycharting.prices as prices
+        import src.prices as prices
         calls: list = []
 
         class Rate:
@@ -540,7 +531,7 @@ class TestExchangeRate:
 
     def test_missing_rate_is_an_error(self, monkeypatch) -> None:
         # Arrange
-        import pycharting.prices as prices
+        import src.prices as prices
 
         class Empty:
             def raise_for_status(self) -> None: pass
@@ -567,13 +558,13 @@ class TestAccessory:
     def test_older_databases_gain_the_accessory_column(self, tmp_path: Path) -> None:
         # Arrange
         database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
-        load_collection(database)
+        ensure_collection_schema(database)
         database.execute("ALTER TABLE collection_items DROP COLUMN accessory")
         database.execute("ALTER TABLE spreadsheet_rows DROP COLUMN accessory")
         database.commit()
 
         # Act
-        load_collection(database)
+        ensure_collection_schema(database)
         item_columns: list = [row[1] for row in database.execute("PRAGMA table_info(collection_items)")]
         row_columns: list = [row[1] for row in database.execute("PRAGMA table_info(spreadsheet_rows)")]
         database.close()

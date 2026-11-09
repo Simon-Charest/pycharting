@@ -1,6 +1,6 @@
 from pytest import mark
 
-from pycharting.api import health, root
+from src.api import health, root
 
 
 class TestRoot:

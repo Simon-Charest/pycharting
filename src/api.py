@@ -4,20 +4,14 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 from sqlcipher3.dbapi2 import Connection
 from typing import Annotated, Any, Literal
 from uvicorn import run
 
-try:
-    from constant import API_HOST, API_PORT, API_RELOAD
-    from database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_entry_prices, get_owners, open_database
-    from prices import ExchangeRateError, PriceChartingError, ProductNotFound, fetch_prices
-except ImportError:
-    from pycharting.constant import API_HOST, API_PORT, API_RELOAD
-    from pycharting.database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_entry_prices, get_owners, open_database
-    from pycharting.prices import ExchangeRateError, PriceChartingError, ProductNotFound, fetch_prices
+from src.constant import API_HOST, API_ORIGINS, API_PORT, API_RELOAD, UI_PATH
+from src.database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_entry_prices, get_owners, open_database
+from src.prices import ExchangeRateError, PriceChartingError, ProductNotFound, fetch_prices
 
 
 class RevalidatedStaticFiles(StaticFiles):
@@ -34,12 +28,12 @@ origin_port: str = "" if API_PORT == 80 else f":{API_PORT}"  # Browsers omit the
 app: FastAPI = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[f"http://{API_HOST}{origin_port}", f"http://localhost{origin_port}"],  # Other sites must not reach the collection.
+    allow_origins=[f"http://{API_HOST}{origin_port}", f"http://localhost{origin_port}", *API_ORIGINS],  # Other sites must not reach the collection.
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
 )
-app.mount("/static", RevalidatedStaticFiles(directory=Path(__file__).parent.joinpath("ui/static")), name="static")
+app.mount("/static", RevalidatedStaticFiles(directory=UI_PATH), name="static")
 connection: Connection = open_database()
 ensure_collection_schema(connection)
 
@@ -108,7 +102,7 @@ def run_api() -> None:
 
 @app.get("/")
 async def root() -> FileResponse:
-    return FileResponse(Path(__file__).parent.joinpath("ui/collection.html"), media_type="text/html", headers={"Cache-Control": "no-cache"})
+    return FileResponse(UI_PATH.joinpath("collection.html"), media_type="text/html", headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/collection/entries")

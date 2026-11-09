@@ -1,5 +1,5 @@
 # PyCharting
-PyCharting: A crawler for PriceCharting.com
+PyCharting: A video game collection, priced with PriceCharting.com
 
 ## Built With
 
@@ -70,7 +70,7 @@ pip install -r requirements.txt
 9. Configure the solution: copy `.env.example` to `.env`, which holds every setting, and set at least `DATABASE_FILE` and `DATABASE_PASSWORD`. To use the existing collection, restore your backup of the encrypted database file and its password (neither is stored in Git);
 10. Run solution:
 ```
-python pycharting --api
+python .
 ```
 11. Run tests (they use a temporary database, never the one in `.env`):
 ```
@@ -78,6 +78,14 @@ pytest
 ```
 12. Browse, add, edit and delete collection entries: [PyCharting](http://localhost);
 13. Consult [OpenAPI Specification](http://localhost/docs).
+
+## Deployment
+1. Set the `DEPLOY_*` settings in `.env` (see `.env.example`);
+2. The first time only, once the repository is cloned on the server, copy `.env` and the database there (`DEPLOY_DIR/.env` and `DEPLOY_DIR/data/database.sqlite`): they are never in Git;
+3. Deploy: commits and pushes every change, updates the server, then (re)starts its service on `127.0.0.1:8000`:
+```
+.\bin\deploy.ps1
+```
 
 ## License
 - Distributed under the [MIT License](https://opensource.org/license/mit/). See [LICENSE.txt](./LICENSE.txt) for more information.

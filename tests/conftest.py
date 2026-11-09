@@ -9,4 +9,4 @@ from tempfile import TemporaryDirectory
 _directory: TemporaryDirectory = TemporaryDirectory(ignore_cleanup_errors=True)
 environ["DATABASE_FILE"] = str(Path(_directory.name).joinpath("test.sqlite"))
 environ["DATABASE_PASSWORD"] = "test"
-load_dotenv(Path(__file__).parents[2].joinpath(".env.example"))
+load_dotenv(Path(__file__).parents[1].joinpath(".env.example"))

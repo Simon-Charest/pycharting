@@ -3,8 +3,7 @@ from datetime import date
 from requests import RequestException, Response, get
 from urllib.parse import quote
 
-try: from constant import REQUEST_TIMEOUT
-except ImportError: from pycharting.constant import REQUEST_TIMEOUT
+from src.constant import REQUEST_TIMEOUT
 
 
 SEARCH_URL: str = "https://www.pricecharting.com/search-products?type=prices&q="

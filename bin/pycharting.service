@@ -1,0 +1,19 @@
+# Template installed by bin/server-deploy.sh, which fills in @USER@, @DIR@ and @PORT@.
+[Unit]
+Description=PyCharting (pycharting.slcti.ca)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=@USER@
+WorkingDirectory=@DIR@
+# These win over .env, so the server's .env can stay a plain copy of the one on the PC
+Environment=API_HOST=127.0.0.1
+Environment=API_PORT=@PORT@
+Environment=API_RELOAD=false
+Environment=API_ORIGINS=https://pycharting.slcti.ca
+ExecStart=@DIR@/.venv/bin/python .
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

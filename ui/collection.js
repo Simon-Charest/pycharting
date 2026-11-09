@@ -58,6 +58,10 @@ const TRANSLATIONS = {
         "editor.newConsole": "Nouveau système…",
         "editor.cancel": "Annuler",
         "editor.save": "Enregistrer",
+        "action.logout": "Se déconnecter",
+        "role.administrator": "Administrateur",
+        "role.collaborator": "Collaborateur (lecture seule)",
+        "account": "{username} · {role}",
         "confirm.delete": "Supprimer « {title} » ({console}, {owner}) ?",
         "confirm.updateVisible": "Mettre à jour les prix et la date de {count} entrées visibles depuis PriceCharting, une après l'autre ?",
         "bulk.none": "Aucune entrée visible n'a d'Article, de Manuel ou de Boîte à mettre à jour.",
@@ -70,6 +74,7 @@ const TRANSLATIONS = {
         "error.missing": "Cette entrée n'existe plus. Rechargez la page.",
         "error.invalid": "Certaines valeurs sont invalides.",
         "error.status": "Erreur du serveur ({status}).",
+        "error.read_only": "Votre compte est en lecture seule.",
         "error.nothing_owned": "« {title} » : aucune partie (Article, Manuel, Boîte) n'est remplie, il n'y a rien à mettre à jour.",
         "error.product_not_found": "« {title} » est introuvable sur PriceCharting. Ajoutez le lien PriceCharting de l'entrée, puis réessayez.",
         "error.pricecharting": "PriceCharting ne répond pas. Réessayez plus tard.",
@@ -132,6 +137,10 @@ const TRANSLATIONS = {
         "editor.newConsole": "New system…",
         "editor.cancel": "Cancel",
         "editor.save": "Save",
+        "action.logout": "Sign out",
+        "role.administrator": "Administrator",
+        "role.collaborator": "Collaborator (read-only)",
+        "account": "{username} · {role}",
         "confirm.delete": "Delete “{title}” ({console}, {owner})?",
         "confirm.updateVisible": "Update the prices and date of {count} visible entries from PriceCharting, one after the other?",
         "bulk.none": "No visible entry has an Item, Manual or Box to update.",
@@ -144,6 +153,7 @@ const TRANSLATIONS = {
         "error.missing": "This entry no longer exists. Reload the page.",
         "error.invalid": "Some values are invalid.",
         "error.status": "Server error ({status}).",
+        "error.read_only": "Your account is read-only.",
         "error.nothing_owned": "“{title}”: no part (Item, Manual, Box) is filled in, so there is nothing to update.",
         "error.product_not_found": "“{title}” was not found on PriceCharting. Add the entry's PriceCharting link, then try again.",
         "error.pricecharting": "PriceCharting is not responding. Try again later.",
@@ -236,6 +246,7 @@ let loadFailed = false;
 let sort = { key: "console", direction: 1 };
 let editing = null;
 let viewRestored = false;
+let account = null;  // The signed-in account: { username, role }
 let bulkUpdate = null;  // The update of every visible entry, while it runs
 
 function t(key, parameters = {}) {
@@ -283,6 +294,7 @@ function setLanguage(value, remember = false) {
 
     fillFilters();
     render();
+    renderAccount();
 }
 
 // In alphabetical order for the language shown
@@ -525,6 +537,7 @@ function actionButton(action, entry, className, onClick) {
     button.setAttribute("aria-label", `${t(`action.${action}`)} ${entry.title}`);
     button.append(icon(ICONS[action]));
     button.addEventListener("click", onClick);
+    button.disabled = !canEdit();
 
     return button;
 }
@@ -552,6 +565,7 @@ function priceChartingButton(entry) {
     button.className = "icon-button";
     button.title = t("action.priceCharting");
     button.setAttribute("aria-label", `${label} ${entry.title}`);
+    button.disabled = !canEdit();
     const image = document.createElement("img");
     image.src = "/static/pricecharting.ico";
     image.alt = "";
@@ -762,6 +776,13 @@ async function request(url, options = {}, parameters = {}) {
         throw new Error(t("error.server"));
     }
 
+    // The session has expired, or the account signed out elsewhere
+    if (response.status === 401) {
+        location.replace("/login");
+
+        throw new Error(t("error.server"));
+    }
+
     if (response.status === 404) {
         throw new Error(t("error.missing"));
     }
@@ -779,7 +800,29 @@ async function request(url, options = {}, parameters = {}) {
     return response.json();
 }
 
+// Collaborators can only look: the buttons that change the collection stay visible, but disabled
+function canEdit() {
+    return account?.role === "administrator";
+}
+
+function renderAccount() {
+    element("account-name").textContent = account ? t("account", { username: account.username, role: t(`role.${account.role}`) }) : "";
+    element("add").disabled = !canEdit();
+    element("update-visible-prices").disabled = !canEdit();
+}
+
+async function signOut() {
+    try {
+        await fetch("/auth/logout", { method: "POST" });
+    }
+    finally {
+        location.replace("/login");
+    }
+}
+
 async function loadEntries() {
+    account ??= await request("/auth/me");
+    renderAccount();
     entries = await request("/collection/entries");
     owners = await request("/collection/owners");
     fillFilters();
@@ -1220,6 +1263,7 @@ element("filter-reset").addEventListener("click", () => {
 });
 element("add").append(icon(ICONS.add));
 element("add").addEventListener("click", openAddForm);
+element("logout").addEventListener("click", signOut);
 element("editor-form").addEventListener("submit", saveEditor);
 element("editor-cancel").addEventListener("click", () => element("editor").close());
 

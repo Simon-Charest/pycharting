@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PyCharting</title>
+        <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+        <link rel="stylesheet" href="/static/collection.css?v=27">
+        <script src="/static/login.js?v=1" defer></script>
+    </head>
+    <body>
+        <header>
+            <h1 data-i18n="heading"></h1>
+            <label class="language">
+                <span data-i18n="language"></span>
+                <select id="language">
+                    <option value="fr" lang="fr">Français</option>
+                    <option value="en" lang="en">English</option>
+                </select>
+            </label>
+        </header>
+
+        <main class="login">
+            <form id="login-form">
+                <h2 data-i18n="login.heading"></h2>
+                <div class="fields">
+                    <label>
+                        <span data-i18n="login.username"></span>
+                        <input name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
+                    </label>
+                    <label>
+                        <span data-i18n="login.password"></span>
+                        <input name="password" type="password" autocomplete="current-password" required>
+                    </label>
+                </div>
+                <p id="login-error" class="message" role="alert" hidden></p>
+                <button class="primary" type="submit" data-i18n="login.submit"></button>
+            </form>
+        </main>
+
+        <footer class="site-footer">
+            <span data-i18n="footer.poweredBy"></span>
+            <span data-i18n="footer.privacy"></span>
+            <span data-i18n="footer.copyright"></span>
+        </footer>
+    </body>
+</html>

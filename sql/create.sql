@@ -77,3 +77,25 @@ TABLE IF NOT EXISTS spreadsheet_rows
     , UNIQUE (source_file_id, sheet, row_index)
 )
 ;
+
+-- Accounts that may sign in; the password is only kept as a scrypt hash.
+-- An administrator can change the collection; a collaborator can only look at it.
+CREATE
+TABLE IF NOT EXISTS users
+(
+    id INTEGER PRIMARY KEY
+    , username TEXT NOT NULL UNIQUE COLLATE NOCASE
+    , password_hash TEXT NOT NULL
+    , role TEXT NOT NULL DEFAULT 'collaborator' CHECK (role IN ('administrator', 'collaborator'))
+)
+;
+
+-- Signed-in browsers; the cookie's token is only kept as a SHA-256 hash
+CREATE
+TABLE IF NOT EXISTS sessions
+(
+    token_hash TEXT PRIMARY KEY
+    , user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE
+    , expires TEXT NOT NULL
+)
+;

@@ -79,6 +79,15 @@ pytest
 12. Browse, add, edit and delete collection entries: [PyCharting](http://localhost);
 13. Consult [OpenAPI Specification](http://localhost/docs).
 
+## Accounts
+Everyone signs in first. An administrator can change the collection; a collaborator can only look at it. Manage accounts from the project folder (on the server: `DEPLOY_DIR`, with `.venv/bin/python`); passwords are typed in, never written on the command line:
+```
+python . add-user NAME --role administrator
+python . add-user NAME --role collaborator
+python . set-password NAME
+python . set-role NAME collaborator
+```
+
 ## Deployment
 1. Set the `DEPLOY_*` settings in `.env` (see `.env.example`);
 2. The first time only, once the repository is cloned on the server, copy `.env` and the database there (`DEPLOY_DIR/.env` and `DEPLOY_DIR/data/database.sqlite`): they are never in Git;

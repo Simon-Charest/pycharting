@@ -17,7 +17,7 @@ def open_database(file: Path = DATABASE_FILE, password: str = DATABASE_PASSWORD)
     if not password or file.is_dir():
         raise ValueError("DATABASE_FILE and DATABASE_PASSWORD must be set in .env (see .env.example).")
 
-    connection: Connection = connect(file)
+    connection: Connection = connect(file, check_same_thread=False)  # Every query runs on the server's one event loop; tests drive it from another thread
     escaped_password: str = password.replace("'", "''")  # PRAGMA does not support bound parameters.
     connection.execute(f"PRAGMA key = '{escaped_password}'")
     connection.execute("SELECT COUNT(1) FROM sqlite_master").fetchone()
@@ -106,6 +106,62 @@ def get_entry_prices(connection: Connection, kind: str, id: int) -> dict | None:
     rows: list = execute(connection, SQL_PATH.joinpath(f"select_{kind}_prices.sql").read_text(), {"id": id})
 
     return rows[0] if rows else None
+
+
+def get_user(connection: Connection, username: str) -> dict | None:
+    """The account with that name, whatever its case, with its password hash."""
+
+    rows: list = execute(connection, SQL_PATH.joinpath("select_user.sql").read_text(), {"username": username})
+
+    return rows[0] if rows else None
+
+
+def add_user(connection: Connection, username: str, password_hash: str, role: str) -> bool:
+    """Add an account; return False if that name is already taken."""
+
+    count: int = connection.execute(SQL_PATH.joinpath("insert_user.sql").read_text(), {"username": username, "password_hash": password_hash, "role": role}).rowcount
+    connection.commit()
+
+    return count > 0
+
+
+def set_user_password(connection: Connection, username: str, password_hash: str) -> bool:
+    """Replace an account's password; return False if there is no such account."""
+
+    count: int = connection.execute(SQL_PATH.joinpath("update_user_password.sql").read_text(), {"username": username, "password_hash": password_hash}).rowcount
+    connection.commit()
+
+    return count > 0
+
+
+def set_user_role(connection: Connection, username: str, role: str) -> bool:
+    """Make an account an administrator or a collaborator; return False if there is no such account."""
+
+    count: int = connection.execute(SQL_PATH.joinpath("update_user_role.sql").read_text(), {"username": username, "role": role}).rowcount
+    connection.commit()
+
+    return count > 0
+
+
+def add_session(connection: Connection, token_hash: str, user_id: int, days: int) -> None:
+    """Remember a signed-in browser, and forget the sessions that have expired."""
+
+    connection.execute(SQL_PATH.joinpath("delete_expired_sessions.sql").read_text())
+    connection.execute(SQL_PATH.joinpath("insert_session.sql").read_text(), {"token_hash": token_hash, "user_id": user_id, "days": days})
+    connection.commit()
+
+
+def get_session_user(connection: Connection, token_hash: str) -> dict | None:
+    """The name and role of the account of a session that has not expired."""
+
+    rows: list = execute(connection, SQL_PATH.joinpath("select_session_user.sql").read_text(), {"token_hash": token_hash})
+
+    return rows[0] if rows else None
+
+
+def delete_session(connection: Connection, token_hash: str) -> None:
+    connection.execute(SQL_PATH.joinpath("delete_session.sql").read_text(), {"token_hash": token_hash})
+    connection.commit()
 
 
 def change_collection_entry(connection: Connection, script: str, parameters: dict) -> bool:

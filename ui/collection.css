@@ -422,3 +422,53 @@ dialog::backdrop {
         text-align: center;
     }
 }
+
+/* The signed-in account and its sign-out button, at the right of the header */
+.account {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* Buttons a collaborator cannot use: visible, but clearly unavailable */
+button:disabled,
+button:disabled:hover {
+    background: var(--surface);
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+button.primary:disabled,
+button.primary:disabled:hover {
+    background: var(--accent);
+}
+
+/* The sign-in page */
+.login {
+    width: 100%;
+    max-width: 420px;
+    margin: 48px auto 0;
+}
+
+.login form {
+    display: grid;
+    gap: 16px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+}
+
+.login .message {
+    margin: 0;
+}
+
+.login label {
+    grid-template-columns: 1fr;
+}
+
+.login label > input {
+    grid-column: 1;
+}

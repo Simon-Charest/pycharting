@@ -1,14 +1,15 @@
 from datetime import date
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 from sqlcipher3.dbapi2 import Connection
 from typing import Annotated, Any, Literal
 from uvicorn import run
 
+from src.auth import ADMINISTRATOR, SESSION_COOKIE, SESSION_DAYS, is_locked, session_user, sign_in, sign_out
 from src.constant import API_HOST, API_ORIGINS, API_PORT, API_RELOAD, UI_PATH
 from src.database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_entry_prices, get_owners, open_database
 from src.prices import ExchangeRateError, PriceChartingError, ProductNotFound, fetch_prices
@@ -36,6 +37,33 @@ app.add_middleware(
 app.mount("/static", RevalidatedStaticFiles(directory=UI_PATH), name="static")
 connection: Connection = open_database()
 ensure_collection_schema(connection)
+
+# Everything else needs a signed-in account: the collection, its Web API and the API's documentation
+PUBLIC_PATHS: tuple = ("/login", "/auth/", "/static/", "/health")
+READ_METHODS: tuple = ("GET", "HEAD", "OPTIONS")
+
+
+@app.middleware("http")
+async def require_sign_in(request: Request, call_next: Any) -> Response:
+    if request.url.path.startswith(PUBLIC_PATHS):
+        return await call_next(request)
+
+    user: dict | None = session_user(connection, request.cookies.get(SESSION_COOKIE))
+
+    if user is None:
+        # The page goes to the sign-in form; the Web API answers, so that the page can send it there too
+        if request.url.path.startswith("/collection/"):
+            return JSONResponse({"detail": "not_signed_in"}, status_code=401)
+
+        return RedirectResponse("/login", status_code=303)
+
+    # Collaborators can only look: adding, editing, deleting and updating prices are for administrators
+    if request.method not in READ_METHODS and user["role"] != ADMINISTRATOR:
+        return JSONResponse({"detail": "read_only"}, status_code=403)
+
+    request.state.user = user
+
+    return await call_next(request)
 
 RequiredText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 Cell = float | int | str | None
@@ -103,6 +131,59 @@ def run_api() -> None:
 @app.get("/")
 async def root() -> FileResponse:
     return FileResponse(UI_PATH.joinpath("collection.html"), media_type="text/html", headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/login", response_model=None)
+async def login_page(request: Request) -> FileResponse | RedirectResponse:
+    """The front page for anyone who is not signed in."""
+
+    if session_user(connection, request.cookies.get(SESSION_COOKIE)):
+        return RedirectResponse("/", status_code=303)
+
+    return FileResponse(UI_PATH.joinpath("login.html"), media_type="text/html", headers={"Cache-Control": "no-cache"})
+
+
+class Credentials(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    username: RequiredText
+    password: Annotated[str, StringConstraints(min_length=1, max_length=1024)]
+
+
+@app.post("/auth/login")
+async def login(credentials: Credentials, request: Request, response: Response) -> dict:
+    if is_locked(credentials.username):
+        raise HTTPException(status_code=429, detail="too_many_attempts")
+
+    # Not in a thread pool: the database connection is only ever used from the event loop
+    token: str | None = sign_in(connection, credentials.username, credentials.password)
+
+    if token is None:
+        raise HTTPException(status_code=401, detail="invalid_credentials")
+
+    # Behind NGINX, the browser's connection is HTTPS even though NGINX reaches the app over HTTP
+    secure: bool = request.headers.get("x-forwarded-proto", request.url.scheme) == "https"
+    response.set_cookie(SESSION_COOKIE, token, max_age=SESSION_DAYS * 24 * 60 * 60, httponly=True, secure=secure, samesite="lax")
+
+    return {"message": "OK"}
+
+
+@app.post("/auth/logout")
+async def logout(request: Request, response: Response) -> dict:
+    sign_out(connection, request.cookies.get(SESSION_COOKIE))
+    response.delete_cookie(SESSION_COOKIE)
+
+    return {"message": "OK"}
+
+
+@app.get("/auth/me")
+async def me(request: Request) -> dict:
+    user: dict | None = session_user(connection, request.cookies.get(SESSION_COOKIE))
+
+    if user is None:
+        raise HTTPException(status_code=401, detail="not_signed_in")
+
+    return user
 
 
 @app.get("/collection/entries")

@@ -53,6 +53,7 @@ const TRANSLATIONS = {
         "action.edit": "Modifier",
         "action.delete": "Supprimer",
         "action.add": "Ajouter",
+        "action.exportCsv": "Exporter vers CSV",
         "action.export": "Exporter vers Excel",
         "action.priceCharting": "PriceCharting",
         "action.updatePrices": "Mettre à jour les prix et la date depuis PriceCharting",
@@ -144,6 +145,7 @@ const TRANSLATIONS = {
         "action.edit": "Edit",
         "action.delete": "Delete",
         "action.add": "Add",
+        "action.exportCsv": "Export to CSV",
         "action.export": "Export to Excel",
         "action.priceCharting": "PriceCharting",
         "action.updatePrices": "Update prices and date from PriceCharting",
@@ -215,6 +217,8 @@ const ICONS = {
     add: ["M12 5v14", "M5 12h14"],
     // A spreadsheet: a page with its corner folded, and a grid of cells
     export: ["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z", "M14 2v6h6", "M8 13h2", "M14 13h2", "M8 17h2", "M14 17h2"],
+    // A text file: the same page, with lines of text
+    csv: ["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z", "M14 2v6h6", "M8 9h2", "M8 13h8", "M8 17h8"],
     reset: ["M18 6 6 18", "M6 6l12 12"],
     logout: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"],
     help: ["M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z", "M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3", "M12 17h.01"]
@@ -823,12 +827,8 @@ function exportCells(entry) {
     };
 }
 
-function exportToExcel() {
-    if (entries === null) {
-        return;
-    }
-
-    // The columns on screen: no actions, and neither Paid nor Difference for a buyer
+// The columns on screen: no actions, and neither Paid nor Difference for a buyer; then the visible rows, as sorted
+function exportTable() {
     const hidePaid = document.body.classList.contains("hide-paid");
     const columns = COLUMNS.filter(column => column.key !== "actions" && !(hidePaid && PAID_COLUMNS.includes(column.key)));
     const rows = visibleEntries().map(entry => {
@@ -836,12 +836,49 @@ function exportToExcel() {
 
         return columns.map(column => cells[column.key]);
     });
-    const blob = xlsx(columns, rows);
+
+    return { columns, rows };
+}
+
+function download(blob, extension) {
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `pycharting-${today()}.xlsx`;
+    link.download = `pycharting-${today()}.${extension}`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(link.href), 0);
+}
+
+function exportToExcel() {
+    if (entries === null) {
+        return;
+    }
+
+    const { columns, rows } = exportTable();
+    download(xlsx(columns, rows), "xlsx");
+}
+
+// In French, Excel expects a semicolon between the values and a comma before the decimals
+function exportToCsv() {
+    if (entries === null) {
+        return;
+    }
+
+    const { columns, rows } = exportTable();
+    const separator = language === "fr" ? ";" : ",";
+    const decimals = new Intl.NumberFormat(LOCALES[language], { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false });
+    const text = (value, column) => {
+        if (typeof value === "number") {
+            return column.key === "quantity" ? String(value) : decimals.format(value);
+        }
+
+        const string = String(value ?? "");
+
+        return /[";,\r\n]/.test(string) ? `"${string.replace(/"/g, '""')}"` : string;
+    };
+    const lines = [columns.map(column => text(t(`column.${column.key}`), column)), ...rows.map(row => row.map((value, index) => text(value, columns[index])))];
+
+    // The byte order mark lets Excel read the accents as UTF-8
+    download(new Blob(["﻿" + lines.map(line => line.join(separator)).join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" }), "csv");
 }
 
 function xmlText(value) {
@@ -1540,6 +1577,8 @@ element("filter-reset").addEventListener("click", () => {
     render();
 });
 element("add").append(icon(ICONS.add));
+element("export-csv").append(icon(ICONS.csv));
+element("export-csv").addEventListener("click", exportToCsv);
 element("export").append(icon(ICONS.export));
 element("export").addEventListener("click", exportToExcel);
 element("logout").append(icon(ICONS.logout));

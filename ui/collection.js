@@ -500,7 +500,7 @@ function visibleEntries() {
         .filter(entry => !region || regionOf(entry) === region)
         .filter(entry => !date || dateMatches(entry, date))
         .filter(entry => !quantity || (quantity === "one" ? entry.values.quantity === 1 : entry.values.quantity > 1))
-        .filter(entry => !attribute || entry.values[attribute] === true)
+        .filter(entry => !attribute || tagMatches(entry, attribute))
         .sort(compare);
 }
 
@@ -562,6 +562,21 @@ function differenceCell(amount) {
 function setSign(node, amount) {
     node.classList.toggle("gain", amount > 0.005);
     node.classList.toggle("loss", amount < -0.005);
+}
+
+// Yes: at least one tag; No: none; otherwise, that one tag
+function tagMatches(entry, wanted) {
+    const tagged = TAGS.some(key => entry.values[key] === true);
+
+    if (wanted === "any") {
+        return tagged;
+    }
+
+    if (wanted === "none") {
+        return !tagged;
+    }
+
+    return entry.values[wanted] === true;
 }
 
 function icon(paths) {
@@ -785,7 +800,7 @@ function fillFilters() {
     fillSelect("filter-quantity", [["one", t("filter.one")], ["more", t("filter.more")]]);
     PRICES.forEach(key => fillSelect(`filter-${key}`, [["owned", t("filter.owned")], ["missing", t("filter.missing")]]));
     fillSelect("filter-date", [["owned", t("filter.owned")], ["missing", t("filter.missing")], ...Object.keys(DATE_AGES).map(age => [age, t(`filter.${age}`)])]);
-    fillSelect("filter-attribute", sortedTags(TAGS).map(key => [key, t(`flag.${key}`)]));
+    fillSelect("filter-attribute", [["any", t("filter.owned")], ["none", t("filter.missing")], ...sortedTags(TAGS).map(key => [key, t(`flag.${key}`)])]);
 }
 
 // The stored name, not the display name, is what the crawler uses: pick the one most used for that console

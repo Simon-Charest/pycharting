@@ -172,10 +172,25 @@ def _product_page(url: str | None, title: str, slug: str | None, stored_slugs: s
     """The stored link, unless it is for another system or standard; otherwise the search result with that title,
     for that system and standard."""
 
-    if url and url.lower().startswith(("http://", "https://")) and (_matches(url, stored_slugs) or not _matches(url, KNOWN_SLUGS)):
-        response: Response = _get(url)
+    if url and url.lower().startswith(("http://", "https://")):
+        if _matches(url, stored_slugs) or not _matches(url, KNOWN_SLUGS):
+            response: Response = _get(url)
 
-        return BeautifulSoup(response.text, "html.parser"), response.url
+            return BeautifulSoup(response.text, "html.parser"), response.url
+
+        # A link for another standard or system: PriceCharting usually names the product the same way there
+        # (/game/nes/duck-tales -> /game/pal-nes/duck-tales); an unknown product leads to its search page instead
+        if slug is not None:
+            try:
+                response = _get(re.sub(r"/game/[^/]+/", f"/game/{slug}/", url, count=1))
+            except ProductNotFound:
+                response = None
+
+            if response is not None and _matches(response.url, {slug}):
+                soup: BeautifulSoup = BeautifulSoup(response.text, "html.parser")
+
+                if soup.find(id="full-prices") is not None:
+                    return soup, response.url
 
     response = _get(SEARCH_URL + quote(query))
     soup: BeautifulSoup = BeautifulSoup(response.text, "html.parser")

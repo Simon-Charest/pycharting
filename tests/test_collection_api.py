@@ -583,13 +583,34 @@ class TestPrices:
         # Arrange
         import src.prices as prices
         search: str = """<table id="games_table"><tr><td class="title"><a href="https://p/game/nes/castlevania">Castlevania</a></td></tr></table>"""
-        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE if "/game/" in url else search))
+
+        def answer(url: str, **_) -> FakeResponse:
+            # PriceCharting has no NES "Castlevania Adventure": that link leads to its search page
+            if url.endswith("/game/nes/castlevania-adventure"):
+                return FakeResponse(prices.SEARCH_URL + "castlevania+adventure", search)
+
+            return FakeResponse(url, PRODUCT_PAGE if "/game/" in url else search)
+
+        monkeypatch.setattr(prices, "get", answer)
 
         # Act
         actual: dict = prices.fetch_prices("https://p/game/gameboy/castlevania-adventure", "Castlevania", "NES", None)
 
         # Assert
         assert actual["url"] == "https://p/game/nes/castlevania"
+
+    def test_a_stored_link_for_another_standard_is_tried_in_the_right_one_first(self, monkeypatch) -> None:
+        # Arrange: the PAL title is in French, so a search would not find it
+        import src.prices as prices
+        requested: list = []
+        monkeypatch.setattr(prices, "get", lambda url, **_: requested.append(url) or FakeResponse(url, PRODUCT_PAGE))
+
+        # Act
+        actual: dict = prices.fetch_prices("https://p/game/nes/duck-tales", "Duck Tales: La Bande à Picsou", "NES", "PAL")
+
+        # Assert
+        assert actual["url"] == "https://p/game/pal-nes/duck-tales"
+        assert requested == ["https://p/game/pal-nes/duck-tales"]
 
     def test_a_stored_link_to_another_kind_of_product_is_kept(self, monkeypatch) -> None:
         # Arrange

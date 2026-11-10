@@ -53,6 +53,7 @@ const TRANSLATIONS = {
         "action.edit": "Modifier",
         "action.delete": "Supprimer",
         "action.add": "Ajouter",
+        "action.export": "Exporter vers Excel",
         "action.priceCharting": "PriceCharting",
         "action.updatePrices": "Mettre à jour les prix et la date depuis PriceCharting",
         "editor.heading": "Modifier l'entrée",
@@ -143,6 +144,7 @@ const TRANSLATIONS = {
         "action.edit": "Edit",
         "action.delete": "Delete",
         "action.add": "Add",
+        "action.export": "Export to Excel",
         "action.priceCharting": "PriceCharting",
         "action.updatePrices": "Update prices and date from PriceCharting",
         "editor.heading": "Edit entry",
@@ -211,6 +213,8 @@ const ICONS = {
     edit: ["M12 20h9", "M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"],
     delete: ["M3 6h18", "M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2", "M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6", "M10 11v6", "M14 11v6"],
     add: ["M12 5v14", "M5 12h14"],
+    // A spreadsheet: a page with its corner folded, and a grid of cells
+    export: ["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z", "M14 2v6h6", "M8 13h2", "M14 13h2", "M8 17h2", "M14 17h2"],
     reset: ["M18 6 6 18", "M6 6l12 12"],
     logout: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"],
     help: ["M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z", "M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3", "M12 17h.01"]
@@ -796,6 +800,165 @@ function renderTotals(visible) {
     }
 }
 
+// The visible columns and rows, as shown on screen, in a real .xlsx; no totals
+function exportCells(entry) {
+    // A number stays a number, rounded as shown; an X stays as it is
+    const amount = value => value === null ? "" : Math.round(value * 100) / 100;
+    const price = key => amountOf(entry, key) === null ? (isOwned(entry, key) ? String(entry.values[key]) : "") : amount(amountOf(entry, key));
+
+    return {
+        console: consoleName(entry),
+        title: entry.title,
+        region: regionOf(entry) ?? "",
+        quantity: entry.values.quantity,
+        game: price("game"),
+        manual: price("manual"),
+        box: price("box"),
+        date: entry.values.date ?? "",
+        subtotal: amount(subtotalOf(entry)),
+        paid: price("paid"),
+        total: amount(totalOf(entry)),
+        details: sortedTags(TAGS).filter(key => entry.values[key]).map(key => t(`flag.${key}`)).join(", "),
+        owner: entry.owner
+    };
+}
+
+function exportToExcel() {
+    if (entries === null) {
+        return;
+    }
+
+    // The columns on screen: no actions, and neither Paid nor Difference for a buyer
+    const hidePaid = document.body.classList.contains("hide-paid");
+    const columns = COLUMNS.filter(column => column.key !== "actions" && !(hidePaid && PAID_COLUMNS.includes(column.key)));
+    const rows = visibleEntries().map(entry => {
+        const cells = exportCells(entry);
+
+        return columns.map(column => cells[column.key]);
+    });
+    const blob = xlsx(columns, rows);
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `pycharting-${today()}.xlsx`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 0);
+}
+
+function xmlText(value) {
+    return String(value).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function columnLetter(index) {
+    let letters = "";
+
+    for (index++; index > 0; index = Math.floor((index - 1) / 26)) {
+        letters = String.fromCharCode(65 + (index - 1) % 26) + letters;
+    }
+
+    return letters;
+}
+
+// One sheet: the headers in bold and frozen, the prices with two decimals
+function xlsx(columns, rows) {
+    const cell = (reference, value, style) => {
+        if (value === "" || value === null || value === undefined) {
+            return "";
+        }
+
+        if (typeof value === "number") {
+            return `<c r="${reference}" s="${style}"><v>${value}</v></c>`;
+        }
+
+        return `<c r="${reference}" t="inlineStr" s="${style}"><is><t xml:space="preserve">${xmlText(value)}</t></is></c>`;
+    };
+    const headerRow = `<row r="1">${columns.map((column, index) => cell(`${columnLetter(index)}1`, t(`column.${column.key}`), 1)).join("")}</row>`;
+    const bodyRows = rows.map((row, rowIndex) => {
+        const cells = row.map((value, index) => cell(`${columnLetter(index)}${rowIndex + 2}`, value, columns[index].numeric && columns[index].key !== "quantity" ? 2 : 0));
+
+        return `<row r="${rowIndex + 2}">${cells.join("")}</row>`;
+    });
+    const cols = columns.map((column, index) => {
+        const width = column.numeric ? 12 : column.key === "title" ? 50 : 22;
+
+        return `<col min="${index + 1}" max="${index + 1}" width="${width}" customWidth="1"/>`;
+    }).join("");
+    const header = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+    const files = {
+        "[Content_Types].xml": `${header}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`,
+        "_rels/.rels": `${header}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
+        "xl/workbook.xml": `${header}<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="PyCharting" sheetId="1" r:id="rId1"/></sheets></workbook>`,
+        "xl/_rels/workbook.xml.rels": `${header}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`,
+        "xl/styles.xml": `${header}<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`,
+        "xl/worksheets/sheet1.xml": `${header}<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${cols}</cols><sheetData>${headerRow}${bodyRows.join("")}</sheetData></worksheet>`
+    };
+
+    return new Blob([zip(files)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+}
+
+let crcTable;
+
+function crc32(bytes) {
+    crcTable ??= Array.from({ length: 256 }, (_, n) => {
+        for (let k = 0; k < 8; k++) {
+            n = n & 1 ? 0xEDB88320 ^ (n >>> 1) : n >>> 1;
+        }
+
+        return n >>> 0;
+    });
+    let crc = 0xFFFFFFFF;
+
+    for (const byte of bytes) {
+        crc = crcTable[(crc ^ byte) & 0xFF] ^ (crc >>> 8);
+    }
+
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+// A ZIP archive without compression, which is all an .xlsx needs
+function zip(files) {
+    const encoder = new TextEncoder();
+    const parts = [];
+    const directory = [];
+    let offset = 0;
+
+    for (const [name, content] of Object.entries(files)) {
+        const nameBytes = encoder.encode(name);
+        const data = encoder.encode(content);
+        const crc = crc32(data);
+        const local = new DataView(new ArrayBuffer(30));
+        local.setUint32(0, 0x04034B50, true);
+        local.setUint16(4, 20, true);
+        local.setUint16(6, 0x0800, true);  // UTF-8 names
+        local.setUint32(14, crc, true);
+        local.setUint32(18, data.length, true);
+        local.setUint32(22, data.length, true);
+        local.setUint16(26, nameBytes.length, true);
+        const central = new DataView(new ArrayBuffer(46));
+        central.setUint32(0, 0x02014B50, true);
+        central.setUint16(4, 20, true);
+        central.setUint16(6, 20, true);
+        central.setUint16(8, 0x0800, true);
+        central.setUint32(16, crc, true);
+        central.setUint32(20, data.length, true);
+        central.setUint32(24, data.length, true);
+        central.setUint16(28, nameBytes.length, true);
+        central.setUint32(42, offset, true);
+        parts.push(new Uint8Array(local.buffer), nameBytes, data);
+        directory.push(new Uint8Array(central.buffer), nameBytes);
+        offset += 30 + nameBytes.length + data.length;
+    }
+
+    const size = directory.reduce((sum, part) => sum + part.length, 0);
+    const end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054B50, true);
+    end.setUint16(8, Object.keys(files).length, true);
+    end.setUint16(10, Object.keys(files).length, true);
+    end.setUint32(12, size, true);
+    end.setUint32(16, offset, true);
+
+    return new Blob([...parts, ...directory, new Uint8Array(end.buffer)]);
+}
+
 function fillSelect(id, values) {
     const select = element(id);
     const selected = select.value;
@@ -1377,6 +1540,8 @@ element("filter-reset").addEventListener("click", () => {
     render();
 });
 element("add").append(icon(ICONS.add));
+element("export").append(icon(ICONS.export));
+element("export").addEventListener("click", exportToExcel);
 element("logout").append(icon(ICONS.logout));
 element("help").append(icon(ICONS.help));
 element("legend").addEventListener("beforetoggle", placeLegend);

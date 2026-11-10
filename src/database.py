@@ -4,9 +4,9 @@ from sqlcipher3.dbapi2 import Connection, Cursor, connect
 from src.constant import DATABASE_FILE, DATABASE_PASSWORD, SQL_PATH
 
 
-BOOLEAN_KEYS: set[str] = {"accessory", "amiibo", "console", "damaged", "selling", "gamepad", "previously_owned", "reproduction", "virtual", "wishlist"}
-ADDED_ITEM_COLUMNS: tuple[str, ...] = ("game", "manual", "box", "paid", "pricecharting", "amiibo", "wishlist", "accessory", "damaged", "selling")  # Columns that older databases lack.
-ADDED_ROW_COLUMNS: tuple[str, ...] = ("accessory", "damaged", "selling", "gamepad", "previously_owned", "reproduction", "virtual", "wishlist")  # Same, for spreadsheet rows.
+BOOLEAN_KEYS: set[str] = {"accessory", "amiibo", "console", "damaged", "selling", "buying", "gamepad", "previously_owned", "reproduction", "virtual", "wishlist"}
+ADDED_ITEM_COLUMNS: tuple[str, ...] = ("game", "manual", "box", "paid", "pricecharting", "amiibo", "wishlist", "accessory", "damaged", "selling", "buying")  # Columns that older databases lack.
+ADDED_ROW_COLUMNS: tuple[str, ...] = ("accessory", "damaged", "selling", "buying", "gamepad", "previously_owned", "reproduction", "virtual", "wishlist")  # Same, for spreadsheet rows.
 ADDED_ROW_PRICE_COLUMNS: tuple[str, ...] = ("paid",)  # Same, for spreadsheet rows, without a type: a price can be a number or an X.
 ADDED_USER_COLUMNS: tuple[str, ...] = ("first_name", "last_name")  # Same, for accounts.
 RENAMED_COLUMNS: dict[str, str] = {"duplicate": "selling"}  # Old name: new name, in both tables.

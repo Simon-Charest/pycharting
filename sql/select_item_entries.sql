@@ -11,6 +11,7 @@ SELECT i.id
     , i.accessory
     , i.damaged
     , i.selling
+    , i.buying
     , i.wishlist
     , i.previously_owned
     , i.quantity

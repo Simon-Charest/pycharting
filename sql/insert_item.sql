@@ -11,6 +11,7 @@ INTO collection_items
     , accessory
     , damaged
     , selling
+    , buying
     , wishlist
     , previously_owned
     , quantity
@@ -35,6 +36,7 @@ SELECT f.id
     , :accessory
     , :damaged
     , :selling
+    , :buying
     , :wishlist
     , :previously_owned
     , :quantity

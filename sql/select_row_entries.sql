@@ -10,6 +10,7 @@ SELECT r.id
     , r.accessory
     , r.damaged
     , r.selling
+    , r.buying
     , r.game
     , r.box
     , r.manual

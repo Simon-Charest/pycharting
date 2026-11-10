@@ -655,3 +655,32 @@ class TestSelling:
         assert "selling" in item_columns and "duplicate" not in item_columns
         assert "selling" in row_columns and "duplicate" not in row_columns
         assert selling == [1]
+
+
+class TestBuying:
+    @mark.asyncio
+    async def test_buying_is_saved_on_items_and_rows(self, connection: Connection) -> None:
+        # Act
+        await api.update_collection_item(1, api.CollectionItem(group_name="Wii", name="Zelda", buying=True))
+        await api.update_collection_row(1, api.SpreadsheetRow(system="3DS", title="Kid Icarus", buying=True))
+
+        # Assert
+        assert [entry["values"]["buying"] for entry in get_collection_entries(connection)] == [True, True]
+
+    def test_older_databases_gain_the_buying_column(self, tmp_path: Path) -> None:
+        # Arrange
+        database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
+        ensure_collection_schema(database)
+        database.execute("ALTER TABLE collection_items DROP COLUMN buying")
+        database.execute("ALTER TABLE spreadsheet_rows DROP COLUMN buying")
+        database.commit()
+
+        # Act
+        ensure_collection_schema(database)
+        item_columns: list = [row[1] for row in database.execute("PRAGMA table_info(collection_items)")]
+        row_columns: list = [row[1] for row in database.execute("PRAGMA table_info(spreadsheet_rows)")]
+        database.close()
+
+        # Assert
+        assert "buying" in item_columns
+        assert "buying" in row_columns

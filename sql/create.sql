@@ -31,6 +31,7 @@ TABLE IF NOT EXISTS collection_items
     , accessory INTEGER
     , damaged INTEGER
     , selling INTEGER
+    , buying INTEGER
     , wishlist INTEGER
     , previously_owned INTEGER
     , quantity INTEGER DEFAULT 1
@@ -63,6 +64,7 @@ TABLE IF NOT EXISTS spreadsheet_rows
     , accessory INTEGER
     , damaged INTEGER
     , selling INTEGER
+    , buying INTEGER
     , game
     , box
     , "date" TEXT

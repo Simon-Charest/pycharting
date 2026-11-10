@@ -5,8 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>PyCharting</title>
         <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-        <link rel="stylesheet" href="/static/collection.css?v=34">
-        <script src="/static/collection.js?v=52" defer></script>
+        <link rel="stylesheet" href="/static/collection.css?v=35">
+        <script src="/static/collection.js?v=54" defer></script>
     </head>
     <body>
         <header>
@@ -57,10 +57,10 @@
                             <select id="filter-date" data-i18n-label="column.date"><option value="" data-i18n="filter.all"></option></select>
                         </td>
                         <td></td>
-                        <td>
+                        <td class="paid-column">
                             <select id="filter-paid" data-i18n-label="column.paid"><option value="" data-i18n="filter.all"></option></select>
                         </td>
-                        <td></td>
+                        <td class="paid-column"></td>
                         <td>
                             <select id="filter-attribute" data-i18n-label="tags"><option value="" data-i18n="filter.all"></option></select>
                         </td>
@@ -84,8 +84,8 @@
                         <td id="total-box" class="number"></td>
                         <td></td>
                         <td id="total-subtotal" class="number"></td>
-                        <td id="total-paid" class="number"></td>
-                        <td id="total-total" class="number"></td>
+                        <td id="total-paid" class="number paid-column"></td>
+                        <td id="total-total" class="number paid-column"></td>
                         <td colspan="2"></td>
                         <td class="add-cell">
                             <button id="add" class="icon-button accent" type="button" data-i18n-title="action.add"></button>

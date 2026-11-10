@@ -1,7 +1,11 @@
+import re
 from bs4 import BeautifulSoup, Tag
 from datetime import date
 from requests import RequestException, Response, get
-from urllib.parse import quote
+from threading import Lock
+from time import monotonic, sleep
+from unicodedata import normalize
+from urllib.parse import quote, unquote
 
 from src.constant import REQUEST_TIMEOUT
 
@@ -27,7 +31,20 @@ class ExchangeRateError(Exception):
     """The USD to CAD rate could not be found."""
 
 
+class RateLimited(Exception):
+    """PriceCharting refuses requests for now (HTTP 429): wait before asking again."""
+
+
 _rates: dict = {}  # Today's rate, so that updating many entries asks for it once
+
+# Going easy on PriceCharting, so as not to be banned: one request at a time, at least MIN_INTERVAL apart
+MIN_INTERVAL: float = 2.0  # Seconds between two PriceCharting requests, whoever asks
+DEFAULT_RETRY_WAIT: float = 30.0  # When a 429 does not say how long to wait
+MAX_RETRY_WAIT: float = 60.0  # Longer than that, give up instead of keeping a request waiting
+PAUSE_AFTER_REFUSAL: float = 600.0  # After a second 429, nothing is asked of PriceCharting for at least that long
+_lock: Lock = Lock()
+_last_request: float = float("-inf")
+_paused_until: float = float("-inf")
 
 
 def usd_cad_rate() -> float:
@@ -45,14 +62,90 @@ def usd_cad_rate() -> float:
     return _rates[today]
 
 
+# PriceCharting's console, as in its links (/game/<console>/<title>), for each system name the collection uses
+CONSOLE_SLUGS: dict = {
+    "3ds": "nintendo-3ds",
+    "nintendo 3ds": "nintendo-3ds",
+    "atari 2600": "atari-2600",
+    "atari 7800": "atari-7800",
+    "colecovision": "colecovision",
+    "commodore 64": "commodore-64",
+    "ds": "nintendo-ds",
+    "nintendo ds": "nintendo-ds",
+    "gba": "gameboy-advance",
+    "gameboy advance": "gameboy-advance",
+    "game boy advance": "gameboy-advance",
+    "gameboy": "gameboy",
+    "game boy": "gameboy",
+    "gameboy color": "gameboy-color",
+    "game boy color": "gameboy-color",
+    "nintendo game boy color": "gameboy-color",
+    "gamecube": "gamecube",
+    "intellivision": "intellivision",
+    "n64": "nintendo-64",
+    "nintendo 64": "nintendo-64",
+    "nes": "nes",
+    "nintendo game & watch": "game-&-watch",
+    "switch": "nintendo-switch",
+    "nintendo switch": "nintendo-switch",
+    "pc": "pc-games",
+    "playstation": "playstation",
+    "playstation 2": "playstation-2",
+    "playstation 3": "playstation-3",
+    "playstation 4": "playstation-4",
+    "playstation 5": "playstation-5",
+    "playstation vita": "playstation-vita",
+    "psp": "psp",
+    "snes": "super-nintendo",
+    "super nintendo": "super-nintendo",
+    "sega genesis": "sega-genesis",
+    "sega master system": "sega-master-system",
+    "ti-99": "ti-99",
+    "wii": "wii",
+    "wii u": "wii-u",
+    "xbox 360": "xbox-360",
+}
+# Systems whose name already says the standard, whatever the entry's: the Super Famicom is Japanese, and the
+# Mega Drive here is European (in North America, it is the Genesis)
+FIXED_SLUGS: dict = {"super famicom": "super-famicom", "sega mega drive": "pal-sega-mega-drive"}
+# PriceCharting files the European Genesis under its European name
+PAL_SLUGS: dict = {"sega-genesis": "pal-sega-mega-drive"}
+# Every console above, in every standard: a stored link to anything else (an amiibo, an Amiga game, a strategy guide)
+# is a deliberate choice, and is kept
+KNOWN_SLUGS: set = {prefix + slug for slug in [*CONSOLE_SLUGS.values(), *FIXED_SLUGS.values()] for prefix in ("", "pal-", "jp-")}
+
+
+def console_slug(console: str, region: str | None) -> str | None:
+    """PriceCharting's console for that system and standard (NTSC when unknown), or None for a system it does not know."""
+
+    name: str = console.strip().casefold()
+
+    if name in FIXED_SLUGS:
+        return FIXED_SLUGS[name]
+
+    if name not in CONSOLE_SLUGS:
+        return None
+
+    slug: str = CONSOLE_SLUGS[name]
+
+    return PAL_SLUGS.get(slug, "pal-" + slug) if region == "PAL" else slug
+
+
 def search_query(title: str, console: str, region: str | None) -> str:
-    return f"{title} {'PAL ' if region == 'PAL' else ''}{console}"
+    slug: str | None = console_slug(console, region)
+
+    # PriceCharting's own console name finds its products best; "pal-super-nintendo" reads "pal super nintendo"
+    return f"{title} {slug.replace('-', ' ') if slug else ('PAL ' if region == 'PAL' else '') + console}"
 
 
 def fetch_prices(url: str | None, title: str, console: str, region: str | None) -> dict:
     """Return the product's URL and its price for every part, in CAD; a part without a price is None."""
 
-    soup, url = _product_page(url, title, console, region)
+    slug: str | None = console_slug(console, region)
+    # An entry without a standard keeps a stored link for any standard of its system; a search looks for NTSC
+    stored_slugs: set | None = None if slug is None else {slug} if region in ("NTSC", "PAL") or console.strip().casefold() in FIXED_SLUGS else {slug, console_slug(console, "PAL"), "jp-" + slug}
+    soup, url = _product_page(url, title, slug, stored_slugs, search_query(title, console, region))
+    url = url.split("?")[0]  # A search that leads straight to the product leaves its query on the link
     table: Tag | None = soup.find(id="full-prices")
 
     if table is None:
@@ -75,35 +168,97 @@ def _cad(usd: float | None, rate: float) -> float | None:
     return None if usd is None else round(usd * rate, 2)
 
 
-def _product_page(url: str | None, title: str, console: str, region: str | None) -> tuple[BeautifulSoup, str]:
-    """The stored link when it is one, otherwise the search result with exactly that title."""
+def _product_page(url: str | None, title: str, slug: str | None, stored_slugs: set | None, query: str) -> tuple[BeautifulSoup, str]:
+    """The stored link, unless it is for another system or standard; otherwise the search result with that title,
+    for that system and standard."""
 
-    if url and url.lower().startswith(("http://", "https://")):
+    if url and url.lower().startswith(("http://", "https://")) and (_matches(url, stored_slugs) or not _matches(url, KNOWN_SLUGS)):
         response: Response = _get(url)
 
         return BeautifulSoup(response.text, "html.parser"), response.url
 
-    response = _get(SEARCH_URL + quote(search_query(title, console, region)))
+    response = _get(SEARCH_URL + quote(query))
     soup: BeautifulSoup = BeautifulSoup(response.text, "html.parser")
 
     # A single match sends the search straight to the product
     if soup.find(id="full-prices") is not None:
+        if not _matches(response.url, None if slug is None else {slug}):
+            raise ProductNotFound()
+
         return soup, response.url
 
-    for link in soup.select("table#games_table td.title a"):
-        if link.get_text(strip=True).casefold() == title.strip().casefold() and link.get("href"):
-            response = _get(link["href"])
+    # Same title, ignoring case, accents and punctuation; then the same without a variant in brackets ("[Yellow Box]")
+    links: list = [link for link in soup.select("table#games_table td.title a") if link.get("href") and _matches(link["href"], None if slug is None else {slug})]
+    wanted: str = _comparable(title)
 
-            return BeautifulSoup(response.text, "html.parser"), response.url
+    for comparable in (_comparable, lambda text: _comparable(re.sub(r"\[.*?\]", "", text))):
+        for link in links:
+            if comparable(link.get_text(strip=True)) == wanted:
+                response = _get(link["href"])
+
+                return BeautifulSoup(response.text, "html.parser"), response.url
 
     raise ProductNotFound()
 
 
+def _matches(url: str, slugs: set | None) -> bool:
+    """Whether a PriceCharting product link is for that console; any link will do for a system PriceCharting does not know."""
+
+    if slugs is None:
+        return True
+
+    match: re.Match | None = re.search(r"/game/([^/]+)/", url)
+
+    return match is not None and unquote(match.group(1)).casefold() in slugs
+
+
+def _comparable(title: str) -> str:
+    """'The Legend of Zelda: Link's Awakening' and 'Legend of Zelda Links Awakening' read the same; so do é and e, & and and."""
+
+    text: str = normalize("NFD", title).encode("ascii", "ignore").decode().casefold().replace("&", " and ")
+    text = re.sub(r"[^a-z0-9 ]+", "", text.replace("-", " "))
+    text = " ".join(text.split())
+
+    return text.removeprefix("the ")
+
+
 def _get(url: str) -> Response:
-    try:
-        response: Response = get(url, timeout=REQUEST_TIMEOUT, headers=HEADERS)
-    except RequestException as error:
-        raise PriceChartingError() from error
+    """A PriceCharting page, never sooner than MIN_INTERVAL after the previous one.
+
+    When PriceCharting says there are too many requests (429), wait as long as it asks, if that is reasonable, and
+    try once more; if it refuses again, ask it nothing more for a while, so that the site is never hammered.
+    """
+
+    global _paused_until
+
+    for attempt in range(2):
+        with _lock:
+            if monotonic() < _paused_until:
+                raise RateLimited()
+
+            wait: float = _last_request + MIN_INTERVAL - monotonic()
+
+            if wait > 0:
+                sleep(wait)
+
+            try:
+                response: Response = get(url, timeout=REQUEST_TIMEOUT, headers=HEADERS)
+            except RequestException as error:
+                raise PriceChartingError() from error
+            finally:
+                _mark_request()
+
+            if response.status_code != 429:
+                break
+
+            delay: float = _retry_after(response)
+
+            if attempt or delay > MAX_RETRY_WAIT:
+                _paused_until = monotonic() + max(delay, PAUSE_AFTER_REFUSAL)
+
+                raise RateLimited()
+
+            sleep(delay)
 
     if response.status_code == 404:
         raise ProductNotFound()
@@ -112,6 +267,20 @@ def _get(url: str) -> Response:
         raise PriceChartingError()
 
     return response
+
+
+def _mark_request() -> None:
+    global _last_request
+    _last_request = monotonic()
+
+
+def _retry_after(response: Response) -> float:
+    """PriceCharting's Retry-After, in seconds; a date or nothing counts as the default."""
+
+    try:
+        return max(float(response.headers.get("Retry-After", "")), 0.0)
+    except ValueError:
+        return DEFAULT_RETRY_WAIT
 
 
 def _price(text: str) -> float | None:

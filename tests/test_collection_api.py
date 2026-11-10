@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from pathlib import Path
 from pytest import fixture, mark, raises
 from fastapi import HTTPException
@@ -25,7 +26,7 @@ class TestCollectionApi:
     @mark.asyncio
     async def test_entries_expose_owner_and_common_shape(self, connection: Connection) -> None:
         # Act
-        actual: list = await api.collection_entries()
+        actual: list = await api.collection_entries(SimpleNamespace(state=SimpleNamespace(user={"role": "administrator"})))
 
         # Assert
         assert [(entry["kind"], entry["owner"], entry["console"], entry["title"]) for entry in actual] == [
@@ -416,15 +417,76 @@ PRODUCT_PAGE: str = """<h1 id="product_name">Zelda</h1><div id="full-prices"><ta
 
 
 class FakeResponse:
-    def __init__(self, url: str, text: str, status_code: int = 200) -> None:
+    def __init__(self, url: str, text: str, status_code: int = 200, headers: dict | None = None) -> None:
         self.url, self.text, self.status_code, self.ok = url, text, status_code, status_code < 400
+        self.headers = headers or {}
 
 
 class TestPrices:
     @fixture(autouse=True)
-    def rate(self, monkeypatch) -> None:
+    def rate(self, monkeypatch) -> list:
+        """A fixed rate, and no real waiting: the waits asked for are recorded instead."""
+
         import src.prices as prices
+        waits: list = []
         monkeypatch.setattr(prices, "usd_cad_rate", lambda: 1.5)
+        monkeypatch.setattr(prices, "sleep", waits.append)
+        monkeypatch.setattr(prices, "_last_request", float("-inf"))
+        monkeypatch.setattr(prices, "_paused_until", float("-inf"))
+
+        return waits
+
+    def test_requests_are_spaced(self, monkeypatch, rate: list) -> None:
+        # Arrange
+        import src.prices as prices
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE))
+
+        # Act
+        prices.fetch_prices("https://p/game/wii/zelda", "Zelda", "Wii", None)
+        prices.fetch_prices("https://p/game/wii/zelda", "Zelda", "Wii", None)
+
+        # Assert
+        assert len(rate) == 1 and prices.MIN_INTERVAL - 0.5 < rate[0] <= prices.MIN_INTERVAL
+
+    def test_a_429_waits_as_asked_then_tries_once_more(self, monkeypatch, rate: list) -> None:
+        # Arrange
+        import src.prices as prices
+        answers: list = [FakeResponse("", "", 429, {"Retry-After": "7"}), FakeResponse("https://p/game/wii/zelda", PRODUCT_PAGE)]
+        monkeypatch.setattr(prices, "get", lambda url, **_: answers.pop(0))
+
+        # Act
+        actual: dict = prices.fetch_prices("https://p/game/wii/zelda", "Zelda", "Wii", None)
+
+        # Assert
+        assert actual["game"] == 1565.25
+        assert 7.0 in rate
+
+    def test_a_second_429_stops_asking_for_a_while(self, monkeypatch) -> None:
+        # Arrange
+        import src.prices as prices
+        calls: list = []
+        monkeypatch.setattr(prices, "get", lambda url, **_: calls.append(url) or FakeResponse(url, "", 429, {"Retry-After": "5"}))
+
+        # Act and assert
+        with raises(prices.RateLimited):
+            prices.fetch_prices("https://p/game/wii/zelda", "Zelda", "Wii", None)
+
+        with raises(prices.RateLimited):
+            prices.fetch_prices("https://p/game/wii/metroid", "Metroid", "Wii", None)
+
+        assert len(calls) == 2
+
+    def test_a_429_asking_for_a_long_wait_is_not_retried(self, monkeypatch, rate: list) -> None:
+        # Arrange
+        import src.prices as prices
+        calls: list = []
+        monkeypatch.setattr(prices, "get", lambda url, **_: calls.append(url) or FakeResponse(url, "", 429, {"Retry-After": "3600"}))
+
+        # Act and assert
+        with raises(prices.RateLimited):
+            prices.fetch_prices("https://p/game/wii/zelda", "Zelda", "Wii", None)
+
+        assert len(calls) == 1 and 3600.0 not in rate
 
     def test_product_page_gives_a_price_for_each_part_in_cad(self, monkeypatch) -> None:
         # Arrange
@@ -440,15 +502,131 @@ class TestPrices:
     def test_search_picks_the_result_with_exactly_that_title(self, monkeypatch) -> None:
         # Arrange
         import src.prices as prices
-        search: str = """<table id="games_table"><tr><td class="title"><a href="https://p/zelda-ii">Zelda II</a></td></tr>
-        <tr><td class="title"><a href="https://p/zelda">Zelda</a></td></tr></table>"""
-        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE if url == "https://p/zelda" else search))
+        search: str = """<table id="games_table"><tr><td class="title"><a href="https://p/game/pal-wii/zelda-ii">Zelda II</a></td></tr>
+        <tr><td class="title"><a href="https://p/game/pal-wii/zelda">Zelda</a></td></tr></table>"""
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE if url == "https://p/game/pal-wii/zelda" else search))
 
         # Act
         actual: dict = prices.fetch_prices(None, "zelda", "Wii", "PAL")
 
         # Assert
-        assert actual["url"] == "https://p/zelda"
+        assert actual["url"] == "https://p/game/pal-wii/zelda"
+
+    def test_search_keeps_the_entrys_system_and_standard(self, monkeypatch) -> None:
+        # Arrange
+        import src.prices as prices
+        search: str = """<table id="games_table">
+        <tr><td class="title"><a href="https://p/game/nes/castlevania">Castlevania</a></td></tr>
+        <tr><td class="title"><a href="https://p/game/pal-gameboy-advance/castlevania">Castlevania</a></td></tr>
+        <tr><td class="title"><a href="https://p/game/pal-nes/castlevania">Castlevania</a></td></tr></table>"""
+        requested: list = []
+        monkeypatch.setattr(prices, "get", lambda url, **_: requested.append(url) or FakeResponse(url, PRODUCT_PAGE if "/game/" in url else search))
+
+        # Act
+        actual: dict = prices.fetch_prices(None, "Castlevania", "NES", "PAL")
+
+        # Assert
+        assert actual["url"] == "https://p/game/pal-nes/castlevania"
+        assert requested[0] == prices.SEARCH_URL + "Castlevania%20pal%20nes"
+
+    def test_titles_match_without_punctuation_accents_or_a_leading_the(self, monkeypatch) -> None:
+        # Arrange
+        import src.prices as prices
+        search: str = """<table id="games_table">
+        <tr><td class="title"><a href="https://p/game/super-nintendo/zelda-link-to-the-past">Zelda Link to the Past</a></td></tr>
+        <tr><td class="title"><a href="https://p/game/nes/castlevania-ii-simon%27s-quest">Castlevania II Simon's Quest</a></td></tr></table>"""
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE if "/game/" in url else search))
+
+        # Act
+        actual: dict = prices.fetch_prices(None, "Castlevania II: Simon’s Quest", "NES", "NTSC")
+
+        # Assert
+        assert actual["url"] == "https://p/game/nes/castlevania-ii-simon%27s-quest"
+
+    def test_a_variant_in_brackets_is_a_last_resort(self, monkeypatch) -> None:
+        # Arrange
+        import src.prices as prices
+        search: str = """<table id="games_table">
+        <tr><td class="title"><a href="https://p/game/pal-super-nintendo/super-mario-world-yellow-box">Super Mario World [Yellow Box]</a></td></tr></table>"""
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE if "/game/" in url else search))
+
+        # Act
+        actual: dict = prices.fetch_prices(None, "Super Mario World", "SNES", "PAL")
+
+        # Assert
+        assert actual["url"] == "https://p/game/pal-super-nintendo/super-mario-world-yellow-box"
+
+    def test_a_stored_link_for_another_standard_is_replaced(self, monkeypatch) -> None:
+        # Arrange
+        import src.prices as prices
+        search: str = """<table id="games_table"><tr><td class="title"><a href="https://p/game/pal-nes/metroid">Metroid</a></td></tr></table>"""
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE if "/game/" in url else search))
+
+        # Act
+        actual: dict = prices.fetch_prices("https://p/game/nes/metroid", "Metroid", "NES", "PAL")
+
+        # Assert
+        assert actual["url"] == "https://p/game/pal-nes/metroid"
+
+    def test_without_a_standard_a_stored_link_for_any_standard_is_kept(self, monkeypatch) -> None:
+        # Arrange
+        import src.prices as prices
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE))
+
+        # Act
+        actual: dict = prices.fetch_prices("https://p/game/pal-nes/castlevania", "Castlevania", "NES", None)
+
+        # Assert
+        assert actual["url"] == "https://p/game/pal-nes/castlevania"
+
+    def test_a_stored_link_for_another_system_is_replaced(self, monkeypatch) -> None:
+        # Arrange
+        import src.prices as prices
+        search: str = """<table id="games_table"><tr><td class="title"><a href="https://p/game/nes/castlevania">Castlevania</a></td></tr></table>"""
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE if "/game/" in url else search))
+
+        # Act
+        actual: dict = prices.fetch_prices("https://p/game/gameboy/castlevania-adventure", "Castlevania", "NES", None)
+
+        # Assert
+        assert actual["url"] == "https://p/game/nes/castlevania"
+
+    def test_a_stored_link_to_another_kind_of_product_is_kept(self, monkeypatch) -> None:
+        # Arrange
+        import src.prices as prices
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE))
+
+        # Act
+        actual: dict = prices.fetch_prices("https://p/game/amiibo/peach-wedding-outfit", "Peach (Wedding Outfit)", "Switch", None)
+
+        # Assert
+        assert actual["url"] == "https://p/game/amiibo/peach-wedding-outfit"
+
+    def test_a_european_genesis_is_a_pal_mega_drive(self) -> None:
+        # Arrange
+        import src.prices as prices
+
+        # Act and assert
+        assert prices.console_slug("Sega Genesis", "PAL") == "pal-sega-mega-drive"
+
+    def test_a_direct_hit_for_another_standard_is_not_taken(self, monkeypatch) -> None:
+        # Arrange
+        import src.prices as prices
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse("https://p/game/nes/metroid", PRODUCT_PAGE))
+
+        # Act and assert
+        with raises(prices.ProductNotFound):
+            prices.fetch_prices(None, "Metroid", "NES", "PAL")
+
+    def test_systems_that_name_their_standard(self) -> None:
+        # Arrange
+        import src.prices as prices
+
+        # Act
+        actual: list = [prices.console_slug("Super Famicom", "NTSC"), prices.console_slug("Sega Mega Drive", None), prices.console_slug("Nintendo Game Boy Color", "PAL"), prices.console_slug("Nintendo Power", None)]
+
+        # Assert
+        assert actual == ["super-famicom", "pal-sega-mega-drive", "pal-gameboy-color", None]
 
     def test_search_without_that_title_finds_nothing(self, monkeypatch) -> None:
         # Arrange
@@ -499,6 +677,22 @@ class TestUpdatePrices:
             await api.update_entry_prices("items", 1)
 
         assert error.value.detail == "nothing_owned"
+
+    @mark.asyncio
+    async def test_pricecharting_refusing_requests_is_a_429(self, connection: Connection, monkeypatch) -> None:
+        # Arrange
+        import src.prices as prices
+
+        def refuse(*_) -> dict:
+            raise prices.RateLimited()
+
+        monkeypatch.setattr(api, "fetch_prices", refuse)
+
+        # Act and assert
+        with raises(HTTPException) as error:
+            await api.update_entry_prices("items", 1)
+
+        assert (error.value.status_code, error.value.detail) == (429, "rate_limited")
 
     @mark.asyncio
     async def test_missing_entry_is_not_found(self, connection: Connection) -> None:

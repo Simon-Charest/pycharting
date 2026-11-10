@@ -9,10 +9,10 @@ from sqlcipher3.dbapi2 import Connection
 from typing import Annotated, Any, Literal
 from uvicorn import run
 
-from src.auth import ADMINISTRATOR, ROLES, SESSION_COOKIE, SESSION_DAYS, SelfChange, create_account, delete_account, is_locked, list_accounts, session_user, sign_in, sign_out, update_account
+from src.auth import ADMINISTRATOR, BUYER, ROLES, SESSION_COOKIE, SESSION_DAYS, SelfChange, create_account, delete_account, is_locked, list_accounts, session_user, sign_in, sign_out, update_account
 from src.constant import API_HOST, API_ORIGINS, API_PORT, API_RELOAD, UI_PATH
 from src.database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_entry_prices, get_owners, open_database
-from src.prices import ExchangeRateError, PriceChartingError, ProductNotFound, fetch_prices
+from src.prices import ExchangeRateError, PriceChartingError, ProductNotFound, RateLimited, fetch_prices
 
 
 class RevalidatedStaticFiles(StaticFiles):
@@ -200,8 +200,14 @@ async def me(request: Request) -> dict:
 
 
 @app.get("/collection/entries")
-async def collection_entries() -> list:
-    return get_collection_entries(connection)
+async def collection_entries(request: Request) -> list:
+    entries: list = get_collection_entries(connection)
+
+    # A buyer only sees what is for sale, and never what it was paid
+    if request.state.user["role"] == BUYER:
+        entries = [{**entry, "values": {**entry["values"], "paid": None}} for entry in entries if entry["values"].get("selling")]
+
+    return entries
 
 
 @app.get("/collection/owners")
@@ -271,6 +277,8 @@ async def update_entry_prices(kind: Literal["items", "rows"], id: int) -> dict:
         prices: dict = await run_in_threadpool(fetch_prices, entry["pricecharting"], entry["title"], entry["console"], entry["region"])
     except ProductNotFound:
         raise HTTPException(status_code=409, detail="product_not_found")
+    except RateLimited:
+        raise HTTPException(status_code=429, detail="rate_limited")
     except PriceChartingError:
         raise HTTPException(status_code=502, detail="pricecharting")
     except ExchangeRateError:
@@ -285,7 +293,7 @@ async def update_entry_prices(kind: Literal["items", "rows"], id: int) -> dict:
 
 
 Password = Annotated[str, StringConstraints(min_length=8, max_length=1024)]
-Role = Literal["administrator", "collaborator"]
+Role = Literal["administrator", "collaborator", "buyer"]
 
 
 PersonName = Annotated[str, StringConstraints(strip_whitespace=True, max_length=100)]

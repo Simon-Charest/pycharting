@@ -581,3 +581,8 @@ td.gain {
 td.loss {
     color: var(--loss);
 }
+
+/* A buyer sees neither what was paid nor the difference */
+.hide-paid .paid-column {
+    display: none;
+}

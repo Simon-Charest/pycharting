@@ -41,6 +41,16 @@ def backup_database(connection: Connection, file: Path, password: str = DATABASE
         connection.execute("DETACH DATABASE backup")
 
 
+def _migrate_user_roles(connection: Connection, columns: set) -> None:
+    """Give an older users table the buyer role, keeping its accounts; the name columns are added first if missing."""
+
+    for column in ADDED_USER_COLUMNS:
+        if column not in columns:
+            connection.execute(f'ALTER TABLE users ADD COLUMN "{column}" TEXT')
+
+    connection.executescript("BEGIN;" + SQL_PATH.joinpath("migrate_user_roles.sql").read_text() + "COMMIT;")
+
+
 def ensure_collection_schema(connection: Connection) -> None:
     """Create the collection tables, and add the columns that older databases lack."""
 
@@ -55,6 +65,11 @@ def ensure_collection_schema(connection: Connection) -> None:
                 connection.execute(f'ALTER TABLE {table} RENAME COLUMN "{old}" TO "{new}"')
 
     existing_users: set = {row[1] for row in connection.execute("PRAGMA table_info(users)")}
+
+    if "'buyer'" not in connection.execute("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'users'").fetchone()[0]:
+        _migrate_user_roles(connection, existing_users)
+
+        existing_users = {row[1] for row in connection.execute("PRAGMA table_info(users)")}
 
     for column in ADDED_USER_COLUMNS:
         if column not in existing_users:

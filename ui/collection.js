@@ -70,6 +70,7 @@ const TRANSLATIONS = {
         "legend.totals": "Les entrées « {reproduction} », « {virtual} », « {damaged} » et « {wishlist} » ne comptent pas dans les totaux.",
         "role.administrator": "Administrateur",
         "role.collaborator": "Collaborateur (lecture seule)",
+        "role.buyer": "Acheteur (articles à vendre)",
         "account": "{username} · {role}",
         "confirm.delete": "Supprimer « {title} » ({console}, {owner}) ?",
         "confirm.updateVisible": "Mettre à jour les prix et la date de {count} entrées visibles depuis PriceCharting, une après l'autre ?",
@@ -87,6 +88,7 @@ const TRANSLATIONS = {
         "error.nothing_owned": "« {title} » : aucune partie (Article, Manuel, Boîte) n'est remplie, il n'y a rien à mettre à jour.",
         "error.product_not_found": "« {title} » est introuvable sur PriceCharting. Ajoutez le lien PriceCharting de l'entrée, puis réessayez.",
         "error.pricecharting": "PriceCharting ne répond pas. Réessayez plus tard.",
+        "error.rate_limited": "PriceCharting refuse les requêtes pour le moment (trop de demandes). Réessayez dans une dizaine de minutes.",
         "error.exchange_rate": "Le taux de change USD → CAD de la Banque du Canada est introuvable. Réessayez plus tard."
     },
     en: {
@@ -158,6 +160,7 @@ const TRANSLATIONS = {
         "legend.totals": "“{reproduction}”, “{virtual}”, “{damaged}” and “{wishlist}” entries do not count in the totals.",
         "role.administrator": "Administrator",
         "role.collaborator": "Collaborator (read-only)",
+        "role.buyer": "Buyer (items for sale)",
         "account": "{username} · {role}",
         "confirm.delete": "Delete “{title}” ({console}, {owner})?",
         "confirm.updateVisible": "Update the prices and date of {count} visible entries from PriceCharting, one after the other?",
@@ -175,6 +178,7 @@ const TRANSLATIONS = {
         "error.nothing_owned": "“{title}”: no part (Item, Manual, Box) is filled in, so there is nothing to update.",
         "error.product_not_found": "“{title}” was not found on PriceCharting. Add the entry's PriceCharting link, then try again.",
         "error.pricecharting": "PriceCharting is not responding. Try again later.",
+        "error.rate_limited": "PriceCharting is refusing requests for now (too many requests). Try again in about ten minutes.",
         "error.exchange_rate": "The Bank of Canada's USD → CAD rate could not be found. Try again later."
     }
 };
@@ -553,6 +557,15 @@ function amountCell(amount) {
     return textCell(amount === null ? "" : numberFormat.format(amount), "number");
 }
 
+// Paid and Difference, which a buyer does not see
+const PAID_COLUMNS = ["paid", "total"];
+
+function paidColumn(cell) {
+    cell.classList.add("paid-column");
+
+    return cell;
+}
+
 // Green when the value is above what was paid, red when below
 function differenceCell(amount) {
     const cell = amountCell(amount);
@@ -679,6 +692,10 @@ function renderHeaders() {
         const label = t(`column.${column.key}`);
         header.scope = "col";
 
+        if (PAID_COLUMNS.includes(column.key)) {
+            paidColumn(header);
+        }
+
         if (column.sortable === false) {
             const span = document.createElement("span");
             span.textContent = label;
@@ -732,8 +749,8 @@ function renderRows(visible) {
             ...OWNERSHIP.map(key => ownershipCell(entry, key)),
             textCell(entry.values.date ?? "", "date"),
             amountCell(subtotalOf(entry)),
-            ownershipCell(entry, "paid"),
-            differenceCell(totalOf(entry)),
+            paidColumn(ownershipCell(entry, "paid")),
+            paidColumn(differenceCell(totalOf(entry))),
             detailsCell(entry),
             textCell(entry.owner),
             actions
@@ -862,7 +879,10 @@ async function request(url, options = {}, parameters = {}) {
         const code = await errorCode(response);
 
         if (code) {
-            throw new Error(t(code, parameters));
+            const error = new Error(t(code, parameters));
+            error.code = code;
+
+            throw error;
         }
 
         throw new Error(response.status === 422 ? t("error.invalid") : t("error.status", { status: response.status }));
@@ -879,6 +899,7 @@ function canEdit() {
 function renderAccount() {
     const name = account ? [account.first_name, account.last_name].filter(Boolean).join(" ") || account.username : "";
     element("account-name").textContent = account ? t("account", { username: name, role: t(`role.${account.role}`) }) : "";
+    document.body.classList.toggle("hide-paid", account?.role === "buyer");  // A buyer sees neither Paid nor Difference
     element("add").disabled = !canEdit();
     element("update-visible-prices").disabled = !canEdit();
     setLinkEnabled(element("nav-users"), canEdit());
@@ -1264,7 +1285,7 @@ async function saveEditor(event) {
     }
 }
 
-const BULK_PAUSE = 1000;  // Milliseconds between two entries, to go easy on PriceCharting
+const BULK_PAUSE = 2000;  // Milliseconds between two entries, to go easy on PriceCharting (the server spaces its requests too)
 
 // Updates every visible entry that owns a part, one after the other; a second click stops after the current one
 async function updateVisiblePrices() {
@@ -1306,7 +1327,14 @@ async function updateVisiblePrices() {
             await fetchPrices(entry);
             updated++;
         }
-        catch {
+        catch (error) {
+            // PriceCharting asks to slow down: every next entry would be refused too, so stop here
+            if (error.code === "error.rate_limited") {
+                bulkUpdate.stopped = true;
+                bulkUpdate.reason = error.message;
+                break;
+            }
+
             failed.push(entry.title);
         }
 
@@ -1315,13 +1343,14 @@ async function updateVisiblePrices() {
         }
     }
 
-    const summary = t(bulkUpdate.stopped ? "bulk.stopped" : "bulk.done", { updated, count: targets.length });
+    const summary = [bulkUpdate.reason, t(bulkUpdate.stopped ? "bulk.stopped" : "bulk.done", { updated, count: targets.length })].filter(Boolean).join(" ");
+    const refused = Boolean(bulkUpdate.reason);
     bulkUpdate = null;
     button.classList.remove("busy");
     button.title = t("action.priceCharting");
     button.setAttribute("aria-label", button.title);
 
-    showMessage(failed.length ? `${summary} ${t("bulk.failed", { titles: failed.join(", ") })}` : summary, !failed.length);
+    showMessage(failed.length ? `${summary} ${t("bulk.failed", { titles: failed.join(", ") })}` : summary, !failed.length && !refused);
 }
 
 async function removeEntry(entry) {

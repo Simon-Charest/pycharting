@@ -16,6 +16,7 @@ const TEXT = {
         "you": "{username} (vous)",
         "role.administrator": "Administrateur",
         "role.collaborator": "Collaborateur (lecture seule)",
+        "role.buyer": "Acheteur (articles à vendre)",
         "column.username": "Nom d'utilisateur",
         "column.firstName": "Prénom",
         "column.lastName": "Nom",
@@ -55,6 +56,7 @@ const TEXT = {
         "you": "{username} (you)",
         "role.administrator": "Administrator",
         "role.collaborator": "Collaborator (read-only)",
+        "role.buyer": "Buyer (items for sale)",
         "column.username": "Username",
         "column.firstName": "First name",
         "column.lastName": "Last name",
@@ -82,7 +84,7 @@ const TEXT = {
     }
 };
 const LANGUAGE_STORAGE_KEY = "pycharting.language";  // Shared with the other pages
-const ROLES = ["administrator", "collaborator"];
+const ROLES = ["administrator", "collaborator", "buyer"];
 const ICONS = {
     add: ["M12 5v14", "M5 12h14"],
     save: ["M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z", "M17 21v-8H7v8", "M7 3v5h8"],

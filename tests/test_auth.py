@@ -379,3 +379,81 @@ class TestUsers:
 
         # Assert
         assert {"first_name", "last_name"} <= set(columns)
+
+
+class TestBuyer:
+    BUYER: tuple = ("retro", "buyer password")
+
+    @fixture(autouse=True)
+    def stock(self, connection: Connection) -> None:
+        """Zelda is for sale, with what it was paid; Metroid is not for sale."""
+
+        connection.execute("UPDATE collection_items SET selling = 1, paid = 12.5 WHERE id = 1")
+        connection.execute("INSERT INTO collection_items (id, source_file_id, position, group_name, name, paid) VALUES (2, 1, 1, 'NES', 'Metroid', 30)")
+        connection.commit()
+        auth.create_account(connection, *self.BUYER, role=auth.BUYER)
+
+    def test_a_buyer_only_sees_what_is_for_sale_without_what_it_was_paid(self, client: TestClient) -> None:
+        # Arrange
+        sign_in(client, self.BUYER)
+
+        # Act
+        entries: list = client.get("/collection/entries").json()
+
+        # Assert
+        assert [(entry["title"], entry["values"]["paid"]) for entry in entries] == [("Zelda", None)]
+
+    def test_others_still_see_everything(self, client: TestClient) -> None:
+        # Arrange
+        sign_in(client, VIEWER)
+
+        # Act
+        entries: list = client.get("/collection/entries").json()
+
+        # Assert
+        assert sorted((entry["title"], entry["values"]["paid"]) for entry in entries) == [("Metroid", 30), ("Zelda", 12.5)]
+
+    def test_a_buyer_cannot_change_anything_nor_see_the_accounts(self, client: TestClient) -> None:
+        # Arrange
+        sign_in(client, self.BUYER)
+
+        # Act and assert
+        assert client.put("/collection/items/1", json={"group_name": "Wii", "name": "Changed"}).status_code == 403
+        assert client.post("/collection/items/1/prices").status_code == 403
+        assert client.get("/accounts").status_code == 403
+
+    def test_an_administrator_can_make_an_account_a_buyer(self, client: TestClient) -> None:
+        # Arrange
+        sign_in(client, ADMIN)
+        id: int = next(account["id"] for account in client.get("/accounts").json() if account["username"] == VIEWER[0])
+
+        # Act
+        response = client.put(f"/accounts/{id}", json={"role": "buyer"})
+
+        # Assert
+        assert response.status_code == 200
+        assert next(account["role"] for account in client.get("/accounts").json() if account["id"] == id) == "buyer"
+
+    def test_older_databases_accept_buyers_and_keep_their_accounts(self, tmp_path: Path) -> None:
+        # Arrange: a users table from before buyers, with an account and its session
+        database: Connection = open_database(tmp_path.joinpath("old.sqlite"), "secret")
+        ensure_collection_schema(database)
+        database.executescript("""
+            DROP TABLE users;
+            CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT NOT NULL UNIQUE COLLATE NOCASE, password_hash TEXT NOT NULL,
+                first_name TEXT, last_name TEXT, role TEXT NOT NULL DEFAULT 'collaborator' CHECK (role IN ('administrator', 'collaborator')));
+            INSERT INTO users (id, username, password_hash, role) VALUES (7, 'simon', 'hash', 'administrator');
+            INSERT INTO sessions (token_hash, user_id, expires) VALUES ('t', 7, '2999-01-01');
+        """)
+
+        # Act
+        ensure_collection_schema(database)
+        added: bool = auth.create_account(database, "retro", "buyer password", role=auth.BUYER)
+        accounts: list = database.execute("SELECT id, username, role FROM users ORDER BY id").fetchall()
+        sessions: list = database.execute("SELECT user_id FROM sessions").fetchall()
+        database.close()
+
+        # Assert
+        assert added
+        assert accounts[0] == (7, "simon", "administrator") and accounts[1][1:] == ("retro", "buyer")
+        assert sessions == [(7,)]

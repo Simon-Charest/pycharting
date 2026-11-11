@@ -138,8 +138,51 @@ def search_query(title: str, console: str, region: str | None) -> str:
     return f"{title} {slug.replace('-', ' ') if slug else ('PAL ' if region == 'PAL' else '') + console}"
 
 
-def fetch_prices(url: str | None, title: str, console: str, region: str | None) -> dict:
-    """Return the product's URL and its price for every part, in CAD; a part without a price is None."""
+def fetch_prices(url: str | None, title: str, console: str, region: str | None, owned: tuple = ()) -> dict:
+    """Return the product's URL and its price for every part, in CAD; a part without a price is None.
+
+    When the product is not found in the entry's standard, or has no price there for one of the owned parts,
+    the other standard (NTSC or PAL) is tried: what it has fills in what is missing. The link stays the one of
+    the entry's standard whenever that product exists.
+    """
+
+    try:
+        prices: dict | None = _fetch_standard(url, title, console, region)
+    except ProductNotFound:
+        prices = None
+
+    missing: list = list(owned) if prices is None else [part for part in owned if prices[part] is None]
+    other: str | None = other_standard(console, region)
+
+    if missing and other is not None:
+        try:
+            fallback: dict | None = _fetch_standard(url if prices is None else prices["url"], title, console, other)
+        except ProductNotFound:
+            fallback = None
+
+        if fallback is not None:
+            if prices is None:
+                prices = fallback
+            else:
+                prices.update({part: fallback[part] for part in missing if fallback[part] is not None})
+
+    if prices is None:
+        raise ProductNotFound()
+
+    return prices
+
+
+def other_standard(console: str, region: str | None) -> str | None:
+    """PAL for NTSC or an unknown standard, NTSC for PAL; None for a system that names its standard, or that PriceCharting does not know."""
+
+    if console.strip().casefold() in FIXED_SLUGS or console_slug(console, region) is None:
+        return None
+
+    return "NTSC" if region == "PAL" else "PAL"
+
+
+def _fetch_standard(url: str | None, title: str, console: str, region: str | None) -> dict:
+    """The product's URL and prices in that one standard."""
 
     slug: str | None = console_slug(console, region)
     # An entry without a standard keeps a stored link for any standard of its system; a search looks for NTSC

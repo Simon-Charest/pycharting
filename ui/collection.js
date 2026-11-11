@@ -1036,10 +1036,15 @@ function storedConsoleName(displayName) {
     return [...counts].sort((left, right) => right[1] - left[1])[0]?.[0] ?? "";
 }
 
-function showMessage(text, info = false) {
-    element("message").textContent = text;
-    element("message").hidden = !text;
-    element("message").classList.toggle("info", info);
+function showMessage(text, info = false, id = "message") {
+    element(id).textContent = text;
+    element(id).hidden = !text;
+    element(id).classList.toggle("info", info);
+}
+
+// The update of every visible entry reports under the grid, next to where its progress shows
+function showBulkMessage(text, info = false) {
+    showMessage(text, info, "bulk-message");
 }
 
 // The server explains some refusals with a code, which has its own message
@@ -1500,7 +1505,7 @@ async function updateVisiblePrices() {
     const targets = visibleEntries().filter(entry => OWNERSHIP.some(key => isOwned(entry, key)));
 
     if (!targets.length) {
-        showMessage(t("bulk.none"), true);
+        showBulkMessage(t("bulk.none"), true);
 
         return;
     }
@@ -1510,6 +1515,7 @@ async function updateVisiblePrices() {
     }
 
     bulkUpdate = { stopped: false };
+    showMessage("");
     button.classList.add("busy");
     button.title = t("action.stopUpdate");
     button.setAttribute("aria-label", button.title);
@@ -1521,7 +1527,7 @@ async function updateVisiblePrices() {
             break;
         }
 
-        showMessage(t("bulk.progress", { done: index, count: targets.length }), true);
+        showBulkMessage(t("bulk.progress", { done: index, count: targets.length }), true);
 
         try {
             await fetchPrices(entry);
@@ -1550,7 +1556,7 @@ async function updateVisiblePrices() {
     button.title = t("action.priceCharting");
     button.setAttribute("aria-label", button.title);
 
-    showMessage(failed.length ? `${summary} ${t("bulk.failed", { titles: failed.join(", ") })}` : summary, !failed.length && !refused);
+    showBulkMessage(failed.length ? `${summary} ${t("bulk.failed", { titles: failed.join(", ") })}` : summary, !failed.length && !refused);
 }
 
 async function removeEntry(entry) {

@@ -274,7 +274,8 @@ async def update_entry_prices(kind: Literal["items", "rows"], id: int) -> dict:
         raise HTTPException(status_code=409, detail="nothing_owned")
 
     try:
-        prices: dict = await run_in_threadpool(fetch_prices, entry["pricecharting"], entry["title"], entry["console"], entry["region"])
+        # An owned part without a price in the entry's standard takes the other standard's
+        prices: dict = await run_in_threadpool(fetch_prices, entry["pricecharting"], entry["title"], entry["console"], entry["region"], tuple(owned))
     except ProductNotFound:
         raise HTTPException(status_code=409, detail="product_not_found")
     except RateLimited:

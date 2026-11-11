@@ -649,6 +649,52 @@ class TestPrices:
         # Assert
         assert actual == ["super-famicom", "pal-sega-mega-drive", "pal-gameboy-color", None]
 
+    def test_an_owned_part_without_a_price_takes_the_other_standards(self, monkeypatch) -> None:
+        # Arrange: the NTSC page has no Manual price, the PAL one has
+        import src.prices as prices
+        pal_page: str = PRODUCT_PAGE.replace("<td>Manual Only</td><td>-</td>", "<td>Manual Only</td><td>$4.00</td>").replace("$1,043.50", "$900.00")
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, pal_page if "/pal-" in url else PRODUCT_PAGE))
+
+        # Act
+        actual: dict = prices.fetch_prices("https://p/game/wii/zelda", "Zelda", "Wii", "NTSC", ("game", "manual"))
+
+        # Assert: only the missing part comes from PAL, and the link stays NTSC
+        assert actual == {"url": "https://p/game/wii/zelda", "game": 1565.25, "manual": 6.0, "box": 18.0}
+
+    def test_a_product_missing_in_its_standard_is_taken_in_the_other(self, monkeypatch) -> None:
+        # Arrange: PriceCharting only has the NTSC Metroid
+        import src.prices as prices
+        search: str = """<table id="games_table"><tr><td class="title"><a href="https://p/game/nes/metroid">Metroid</a></td></tr></table>"""
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE if url == "https://p/game/nes/metroid" else search))
+
+        # Act
+        actual: dict = prices.fetch_prices(None, "Metroid", "NES", "PAL", ("game",))
+
+        # Assert
+        assert actual["url"] == "https://p/game/nes/metroid" and actual["game"] == 1565.25
+
+    def test_a_part_that_is_not_owned_does_not_ask_the_other_standard(self, monkeypatch) -> None:
+        # Arrange
+        import src.prices as prices
+        requested: list = []
+        monkeypatch.setattr(prices, "get", lambda url, **_: requested.append(url) or FakeResponse(url, PRODUCT_PAGE))
+
+        # Act: Manual has no price, but is not owned
+        prices.fetch_prices("https://p/game/wii/zelda", "Zelda", "Wii", "NTSC", ("game", "box"))
+
+        # Assert
+        assert requested == ["https://p/game/wii/zelda"]
+
+    def test_systems_that_name_their_standard_have_no_other(self) -> None:
+        # Arrange
+        import src.prices as prices
+
+        # Act
+        actual: list = [prices.other_standard("Super Famicom", "NTSC"), prices.other_standard("NES", "PAL"), prices.other_standard("NES", None), prices.other_standard("Nintendo Power", None)]
+
+        # Assert
+        assert actual == [None, "NTSC", "PAL", None]
+
     def test_search_without_that_title_finds_nothing(self, monkeypatch) -> None:
         # Arrange
         import src.prices as prices

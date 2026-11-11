@@ -685,6 +685,59 @@ class TestPrices:
         # Assert
         assert requested == ["https://p/game/wii/zelda"]
 
+    def test_without_a_loose_price_the_item_is_complete_less_manual_and_box(self, monkeypatch) -> None:
+        # Arrange: no Loose price, in either standard
+        import src.prices as prices
+        page: str = """<div id="full-prices"><table><tr><td>Loose</td><td>-</td></tr><tr><td>Complete</td><td>$100.00</td></tr>
+        <tr><td>Box Only</td><td>$12.00</td></tr><tr><td>Manual Only</td><td>$8.00</td></tr></table></div>"""
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, page))
+
+        # Act
+        actual: dict = prices.fetch_prices("https://p/game/nes/zelda", "Zelda", "NES", "NTSC", ("game", "manual", "box"))
+
+        # Assert: (100 - 8 - 12) USD at 1.5
+        assert actual == {"url": "https://p/game/nes/zelda", "game": 120.0, "manual": 12.0, "box": 18.0}
+
+    def test_without_part_prices_the_entrys_own_manual_and_box_are_deducted(self, monkeypatch) -> None:
+        # Arrange: like the Arcade1Up cabinet, PriceCharting only has a Complete price
+        import src.prices as prices
+        page: str = """<div id="full-prices"><table><tr><td>Loose</td><td>-</td></tr><tr><td>Complete</td><td>$100.00</td></tr>
+        <tr><td>Box Only</td><td>-</td></tr><tr><td>Manual Only</td><td>-</td></tr></table></div>"""
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, page))
+
+        # Act
+        with_values: dict = prices.fetch_prices("https://p/game/mini-arcade/sf2", "SF2", "Mini Arcade", "NTSC", ("game", "manual", "box"), {"manual": 10, "box": 5})
+        with_x: dict = prices.fetch_prices("https://p/game/mini-arcade/sf2", "SF2", "Mini Arcade", "NTSC", ("game", "manual", "box"), {"manual": "X", "box": 5})
+
+        # Assert: 150 CAD less 10 and 5; an X takes nothing off
+        assert (with_values["game"], with_x["game"]) == (135.0, 145.0)
+
+    def test_an_entry_that_is_not_complete_does_not_use_the_complete_price(self, monkeypatch) -> None:
+        # Arrange: PriceCharting has every part but Loose; the entry has no manual
+        import src.prices as prices
+        page: str = """<div id="full-prices"><table><tr><td>Loose</td><td>-</td></tr><tr><td>Complete</td><td>$100.00</td></tr>
+        <tr><td>Box Only</td><td>$12.00</td></tr><tr><td>Manual Only</td><td>$8.00</td></tr></table></div>"""
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, page))
+
+        # Act
+        actual: dict = prices.fetch_prices("https://p/game/nes/zelda", "Zelda", "NES", "NTSC", ("game", "box"), {"manual": None, "box": "X"})
+
+        # Assert
+        assert actual["game"] is None
+
+    def test_without_a_manual_price_the_complete_one_is_not_used(self, monkeypatch) -> None:
+        # Arrange
+        import src.prices as prices
+        page: str = """<div id="full-prices"><table><tr><td>Loose</td><td>-</td></tr><tr><td>Complete</td><td>$100.00</td></tr>
+        <tr><td>Box Only</td><td>$12.00</td></tr><tr><td>Manual Only</td><td>-</td></tr></table></div>"""
+        monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, page))
+
+        # Act
+        actual: dict = prices.fetch_prices("https://p/game/nes/zelda", "Zelda", "NES", "NTSC", ("game", "box"))
+
+        # Assert
+        assert actual["game"] is None
+
     def test_systems_that_name_their_standard_have_no_other(self) -> None:
         # Arrange
         import src.prices as prices

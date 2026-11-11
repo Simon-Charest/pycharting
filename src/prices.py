@@ -17,6 +17,7 @@ RATE_URL: str = "https://www.bankofcanada.ca/valet/observations/FXUSDCAD/json?re
 HEADERS: dict = {"User-Agent": "PyCharting"}
 # PriceCharting's price for each part of an entry
 PART_LABELS: dict = {"game": "Loose", "manual": "Manual Only", "box": "Box Only"}
+COMPLETE_LABEL: str = "Complete"  # Item, manual and box together: gives the item's price when PriceCharting has no Loose one
 
 
 class PriceChartingError(Exception):
@@ -138,12 +139,15 @@ def search_query(title: str, console: str, region: str | None) -> str:
     return f"{title} {slug.replace('-', ' ') if slug else ('PAL ' if region == 'PAL' else '') + console}"
 
 
-def fetch_prices(url: str | None, title: str, console: str, region: str | None, owned: tuple = ()) -> dict:
+def fetch_prices(url: str | None, title: str, console: str, region: str | None, owned: tuple = (), current: dict | None = None) -> dict:
     """Return the product's URL and its price for every part, in CAD; a part without a price is None.
 
     When the product is not found in the entry's standard, or has no price there for one of the owned parts,
     the other standard (NTSC or PAL) is tried: what it has fills in what is missing. The link stays the one of
     the entry's standard whenever that product exists.
+
+    Without a Loose price, and only when Item, Manual and Box are all owned, the item is the Complete price less the
+    manual and the box: their PriceCharting prices, otherwise their values in `current`, the entry's own (an X counts as 0).
     """
 
     try:
@@ -169,7 +173,32 @@ def fetch_prices(url: str | None, title: str, console: str, region: str | None, 
     if prices is None:
         raise ProductNotFound()
 
+    # No Loose price, in either standard, for an entry known to be complete (Item, Manual and Box all owned):
+    # the item is what a complete copy is worth, less its manual and box
+    complete: float | None = prices.pop("complete")
+    deductions: list = [_deduction(prices[part], (current or {}).get(part)) for part in ("manual", "box")]
+
+    if prices["game"] is None and complete is not None and set(PART_LABELS) <= set(owned) and None not in deductions:
+        item: float = round(complete - sum(deductions), 2)
+        prices["game"] = item if item > 0 else None
+
     return prices
+
+
+def _deduction(price: float | None, value: object) -> float | None:
+    """What a part takes off a complete copy: PriceCharting's price, otherwise the entry's own value (an X is 0);
+    None when neither is known."""
+
+    if price is not None:
+        return price
+
+    if value is None or value == "":
+        return None
+
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
 
 
 def other_standard(console: str, region: str | None) -> str | None:
@@ -204,7 +233,7 @@ def _fetch_standard(url: str | None, title: str, console: str, region: str | Non
 
     rate: float = usd_cad_rate()
 
-    return {"url": url, **{key: _cad(prices.get(label), rate) for key, label in PART_LABELS.items()}}
+    return {"url": url, **{key: _cad(prices.get(label), rate) for key, label in PART_LABELS.items()}, "complete": _cad(prices.get(COMPLETE_LABEL), rate)}
 
 
 def _cad(usd: float | None, rate: float) -> float | None:

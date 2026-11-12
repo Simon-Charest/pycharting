@@ -4,6 +4,7 @@ SELECT title
     , game
     , manual
     , box
+    , complete
     , pricecharting
 FROM spreadsheet_rows
 WHERE id = :id

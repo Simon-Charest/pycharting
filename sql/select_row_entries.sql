@@ -14,6 +14,7 @@ SELECT r.id
     , r.game
     , r.box
     , r.manual
+    , r.complete
     , r."date"
     , r.paid
     , r.pricecharting

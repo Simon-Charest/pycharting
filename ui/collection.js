@@ -20,6 +20,7 @@ const TRANSLATIONS = {
         "column.game": "Article",
         "column.manual": "Manuel",
         "column.box": "Boîte",
+        "column.complete": "Complet",
         "column.date": "Date",
         "column.paid": "Payé",
         "column.subtotal": "Valeur",
@@ -114,6 +115,7 @@ const TRANSLATIONS = {
         "column.game": "Item",
         "column.manual": "Manual",
         "column.box": "Box",
+        "column.complete": "Complete",
         "column.date": "Date",
         "column.paid": "Paid",
         "column.subtotal": "Value",
@@ -200,8 +202,9 @@ const COLUMNS = [
     { key: "region" },
     { key: "quantity", numeric: true },
     { key: "game", numeric: true },
-    { key: "manual", numeric: true },
     { key: "box", numeric: true },
+    { key: "manual", numeric: true },
+    { key: "complete", numeric: true },
     { key: "date" },
     { key: "subtotal", numeric: true },
     { key: "paid", numeric: true },
@@ -211,9 +214,11 @@ const COLUMNS = [
     { key: "actions", sortable: false }
 ];
 const TAGS = ["console", "gamepad", "accessory", "amiibo", "virtual", "reproduction", "previously_owned", "damaged", "selling", "buying", "wishlist"];
-const OWNERSHIP = ["game", "manual", "box"];
+const OWNERSHIP = ["game", "box", "manual"];
 // Every price column: the ownership ones, then what was paid, which says nothing about what is owned
 const PRICES = [...OWNERSHIP, "paid"];
+// Not an owned part: PriceCharting's price for a complete copy, brought back next to the three parts
+const COMPLETE = "complete";
 const ROUTES = { item: "items", row: "rows" };
 const ICONS = {
     edit: ["M12 20h9", "M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"],
@@ -424,8 +429,16 @@ function amountOf(entry, key) {
     return price === null ? null : price * entry.values.quantity;
 }
 
-// Item + Manual + Box, as shown
+// Item + Box + Manual, as shown; but when all three parts are present, the Complete price stands for the set
 function subtotalOf(entry) {
+    if (OWNERSHIP.every(key => isOwned(entry, key))) {
+        const complete = amountOf(entry, COMPLETE);
+
+        if (complete !== null) {
+            return complete;
+        }
+    }
+
     const parts = OWNERSHIP.map(key => amountOf(entry, key)).filter(amount => amount !== null);
 
     return parts.length ? parts.reduce((sum, amount) => sum + amount, 0) : null;
@@ -447,8 +460,8 @@ function sortValue(entry, key) {
         return COMPUTED[key](entry);
     }
 
-    // Sorted by what is shown: what was paid for every copy
-    if (PRICES.includes(key)) {
+    // Sorted by what is shown: the price of every copy (the parts, what was paid, and the complete price)
+    if (PRICES.includes(key) || key === COMPLETE) {
         return ownershipSortValue(entry, key);
     }
 
@@ -698,7 +711,7 @@ async function updatePrices(entry, button) {
 async function fetchPrices(entry) {
     const saved = await request(`/collection/${ROUTES[entry.kind]}/${entry.id}/prices`, { method: "POST" }, { title: entry.title });
 
-    for (const key of [...OWNERSHIP, "date", "pricecharting"]) {
+    for (const key of [...OWNERSHIP, COMPLETE, "date", "pricecharting"]) {
         entry.values[key] = saved[key];
     }
 
@@ -848,6 +861,7 @@ function renderRows(visible) {
             textCell(regionOf(entry) ?? ""),
             textCell(entry.values.quantity, "number"),
             ...OWNERSHIP.map(key => ownershipCell(entry, key)),
+            ownershipCell(entry, COMPLETE),
             textCell(entry.values.date ?? "", "date"),
             amountCell(subtotalOf(entry)),
             paidColumn(ownershipCell(entry, "paid")),
@@ -893,7 +907,7 @@ function renderTotals(visible) {
     element("total-quantity").textContent = visible.reduce((sum, entry) => sum + entry.values.quantity, 0);
 
     // Each total is the sum of its column as shown
-    const columns = [...PRICES.map(key => [key, entry => amountOf(entry, key)]), ...Object.entries(COMPUTED)];
+    const columns = [...PRICES.map(key => [key, entry => amountOf(entry, key)]), [COMPLETE, entry => amountOf(entry, COMPLETE)], ...Object.entries(COMPUTED)];
 
     for (const [key, amount] of columns) {
         const total = visible.reduce((sum, entry) => sum + (amount(entry) ?? 0), 0);
@@ -917,8 +931,9 @@ function exportCells(entry) {
         region: regionOf(entry) ?? "",
         quantity: entry.values.quantity,
         game: price("game"),
-        manual: price("manual"),
         box: price("box"),
+        manual: price("manual"),
+        complete: price("complete"),
         date: entry.values.date ?? "",
         subtotal: amount(subtotalOf(entry)),
         paid: price("paid"),

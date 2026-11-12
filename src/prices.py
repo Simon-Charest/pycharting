@@ -140,11 +140,11 @@ def search_query(title: str, console: str, region: str | None) -> str:
 
 
 def fetch_prices(url: str | None, title: str, console: str, region: str | None, owned: tuple = (), current: dict | None = None) -> dict:
-    """Return the product's URL and its price for every part, in CAD; a part without a price is None.
+    """Return the product's URL, its price for every part and its Complete price, in CAD; a price it lacks is None.
 
-    When the product is not found in the entry's standard, or has no price there for one of the owned parts,
-    the other standard (NTSC or PAL) is tried: what it has fills in what is missing. The link stays the one of
-    the entry's standard whenever that product exists.
+    When the product is not found in the entry's standard, or has no price there for one of the owned parts (or no
+    Complete price), the other standard (NTSC or PAL) is tried: what it has fills in what is missing. The link stays
+    the one of the entry's standard whenever that product exists.
 
     Without a Loose price, and only when Item, Manual and Box are all owned, the item is the Complete price less the
     manual and the box: their PriceCharting prices, otherwise their values in `current`, the entry's own (an X counts as 0).
@@ -170,12 +170,16 @@ def fetch_prices(url: str | None, title: str, console: str, region: str | None, 
             else:
                 prices.update({part: fallback[part] for part in missing if fallback[part] is not None})
 
+                # The other standard also fills in a missing Complete price, so one is brought back whenever it exists
+                if prices["complete"] is None and fallback["complete"] is not None:
+                    prices["complete"] = fallback["complete"]
+
     if prices is None:
         raise ProductNotFound()
 
     # No Loose price, in either standard, for an entry known to be complete (Item, Manual and Box all owned):
     # the item is what a complete copy is worth, less its manual and box
-    complete: float | None = prices.pop("complete")
+    complete: float | None = prices["complete"]
     deductions: list = [_deduction(prices[part], (current or {}).get(part)) for part in ("manual", "box")]
 
     if prices["game"] is None and complete is not None and set(PART_LABELS) <= set(owned) and None not in deductions:

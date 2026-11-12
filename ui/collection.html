@@ -6,7 +6,7 @@
         <title>PyCharting</title>
         <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
         <link rel="stylesheet" href="/static/collection.css?v=36">
-        <script src="/static/collection.js?v=57" defer></script>
+        <script src="/static/collection.js?v=58" defer></script>
     </head>
     <body>
         <header>
@@ -49,11 +49,12 @@
                             <select id="filter-game" data-i18n-label="column.game"><option value="" data-i18n="filter.all"></option></select>
                         </td>
                         <td>
-                            <select id="filter-manual" data-i18n-label="column.manual"><option value="" data-i18n="filter.all"></option></select>
-                        </td>
-                        <td>
                             <select id="filter-box" data-i18n-label="column.box"><option value="" data-i18n="filter.all"></option></select>
                         </td>
+                        <td>
+                            <select id="filter-manual" data-i18n-label="column.manual"><option value="" data-i18n="filter.all"></option></select>
+                        </td>
+                        <td></td>
                         <td>
                             <select id="filter-date" data-i18n-label="column.date"><option value="" data-i18n="filter.all"></option></select>
                         </td>
@@ -81,8 +82,9 @@
                         <td class="count-cell" colspan="4"><span id="count" role="status"></span></td>
                         <td id="total-quantity" class="number"></td>
                         <td id="total-game" class="number"></td>
-                        <td id="total-manual" class="number"></td>
                         <td id="total-box" class="number"></td>
+                        <td id="total-manual" class="number"></td>
+                        <td id="total-complete" class="number"></td>
                         <td></td>
                         <td id="total-subtotal" class="number"></td>
                         <td id="total-paid" class="number paid-column"></td>

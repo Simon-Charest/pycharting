@@ -497,7 +497,7 @@ class TestPrices:
         actual: dict = prices.fetch_prices("https://www.pricecharting.com/game/wii/zelda", "Zelda", "Wii", None)
 
         # Assert
-        assert actual == {"url": "https://www.pricecharting.com/game/wii/zelda", "game": 1565.25, "manual": None, "box": 18.0}
+        assert actual == {"url": "https://www.pricecharting.com/game/wii/zelda", "game": 1565.25, "manual": None, "box": 18.0, "complete": None}
 
     def test_search_picks_the_result_with_exactly_that_title(self, monkeypatch) -> None:
         # Arrange
@@ -659,7 +659,7 @@ class TestPrices:
         actual: dict = prices.fetch_prices("https://p/game/wii/zelda", "Zelda", "Wii", "NTSC", ("game", "manual"))
 
         # Assert: only the missing part comes from PAL, and the link stays NTSC
-        assert actual == {"url": "https://p/game/wii/zelda", "game": 1565.25, "manual": 6.0, "box": 18.0}
+        assert actual == {"url": "https://p/game/wii/zelda", "game": 1565.25, "manual": 6.0, "box": 18.0, "complete": None}
 
     def test_a_product_missing_in_its_standard_is_taken_in_the_other(self, monkeypatch) -> None:
         # Arrange: PriceCharting only has the NTSC Metroid
@@ -695,8 +695,8 @@ class TestPrices:
         # Act
         actual: dict = prices.fetch_prices("https://p/game/nes/zelda", "Zelda", "NES", "NTSC", ("game", "manual", "box"))
 
-        # Assert: (100 - 8 - 12) USD at 1.5
-        assert actual == {"url": "https://p/game/nes/zelda", "game": 120.0, "manual": 12.0, "box": 18.0}
+        # Assert: (100 - 8 - 12) USD at 1.5, and the Complete price is brought back too (100 at 1.5)
+        assert actual == {"url": "https://p/game/nes/zelda", "game": 120.0, "manual": 12.0, "box": 18.0, "complete": 150.0}
 
     def test_without_part_prices_the_entrys_own_manual_and_box_are_deducted(self, monkeypatch) -> None:
         # Arrange: like the Arcade1Up cabinet, PriceCharting only has a Complete price
@@ -764,7 +764,7 @@ class TestUpdatePrices:
         # Arrange
         connection.execute("UPDATE collection_items SET box = 'X' WHERE id = 1")
         connection.commit()
-        monkeypatch.setattr(api, "fetch_prices", lambda *_: {"url": "https://p/zelda", "game": 50.0, "manual": 9.0, "box": None})
+        monkeypatch.setattr(api, "fetch_prices", lambda *_: {"url": "https://p/zelda", "game": 50.0, "manual": 9.0, "box": None, "complete": 80.0})
 
         # Act
         await api.update_entry_prices("items", 1)
@@ -772,12 +772,12 @@ class TestUpdatePrices:
 
         # Assert
         assert (values["game"], values["manual"], values["box"], values["pricecharting"]) == (50.0, None, "X", "https://p/zelda")
-        assert values["date"] == api.date.today().isoformat()
+        assert (values["complete"], values["date"]) == (80.0, api.date.today().isoformat())
 
     @mark.asyncio
     async def test_a_row_is_refreshed_too(self, connection: Connection, monkeypatch) -> None:
         # Arrange
-        monkeypatch.setattr(api, "fetch_prices", lambda *_: {"url": "https://p/kid-icarus", "game": 1.0, "manual": 2.0, "box": 3.0})
+        monkeypatch.setattr(api, "fetch_prices", lambda *_: {"url": "https://p/kid-icarus", "game": 1.0, "manual": 2.0, "box": 3.0, "complete": None})
 
         # Act
         await api.update_entry_prices("rows", 1)

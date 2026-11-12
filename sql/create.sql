@@ -40,6 +40,7 @@ TABLE IF NOT EXISTS collection_items
     , game
     , manual
     , box
+    , complete
     , "date" TEXT
     , paid
     , pricecharting
@@ -69,6 +70,7 @@ TABLE IF NOT EXISTS spreadsheet_rows
     , box
     , "date" TEXT
     , manual
+    , complete
     , paid
     , pricecharting
     , quantity INTEGER DEFAULT 1

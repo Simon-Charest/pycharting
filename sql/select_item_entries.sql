@@ -20,6 +20,7 @@ SELECT i.id
     , i.game
     , i.manual
     , i.box
+    , i.complete
     , i."date"
     , i.paid
     , i.pricecharting

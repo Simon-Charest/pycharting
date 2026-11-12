@@ -285,8 +285,9 @@ async def update_entry_prices(kind: Literal["items", "rows"], id: int) -> dict:
     except ExchangeRateError:
         raise HTTPException(status_code=502, detail="exchange_rate")
 
-    # A part PriceCharting has no price for keeps the value it had
+    # A part PriceCharting has no price for keeps the value it had; the Complete price is brought back the same way
     values: dict = {part: prices[part] if part in owned and prices[part] is not None else entry[part] for part in ("game", "manual", "box")}
+    values["complete"] = prices["complete"] if prices["complete"] is not None else entry["complete"]
     values.update({"date": date.today().isoformat(), "pricecharting": prices["url"], "id": id})
     change_collection_entry(connection, f"update_{singular}_prices", values)
 

@@ -4,6 +4,7 @@ SELECT name AS title
     , game
     , manual
     , box
+    , complete
     , pricecharting
 FROM collection_items
 WHERE id = :id

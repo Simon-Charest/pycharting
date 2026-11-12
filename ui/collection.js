@@ -1593,7 +1593,7 @@ function editorPayload() {
             payload[key] = form[key].checked ? true : null;
         }
 
-        for (const key of PRICES) {
+        for (const key of [...PRICES, COMPLETE]) {
             payload[key] = cellValue(form[key], values[key]);
         }
 

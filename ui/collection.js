@@ -1709,7 +1709,12 @@ async function removeEntry(entry) {
 }
 
 document.querySelectorAll("[data-language]").forEach(button => button.addEventListener("click", () => setLanguage(button.dataset.language, true)));
-element("filters").addEventListener("input", render);
+// The Select-all checkbox shares the filters row, but it drives the selection, not the filtering
+element("filters").addEventListener("input", event => {
+    if (event.target.id !== "select-all") {
+        render();
+    }
+});
 element("select-all").addEventListener("change", toggleAll);
 element("filter-reset").append(icon(ICONS.reset));
 element("update-visible-prices").addEventListener("click", updateVisiblePrices);

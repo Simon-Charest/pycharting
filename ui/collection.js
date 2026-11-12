@@ -201,10 +201,10 @@ const COLUMNS = [
     { key: "title" },
     { key: "region" },
     { key: "quantity", numeric: true },
+    { key: "complete", numeric: true },
     { key: "game", numeric: true },
     { key: "box", numeric: true },
     { key: "manual", numeric: true },
-    { key: "complete", numeric: true },
     { key: "date" },
     { key: "subtotal", numeric: true },
     { key: "paid", numeric: true },
@@ -431,14 +431,24 @@ function amountOf(entry, key) {
     return price === null ? null : price * entry.values.quantity;
 }
 
-// Item + Box + Manual, as shown; but when all three parts are present, the Complete price stands for the set
-function subtotalOf(entry) {
-    if (OWNERSHIP.every(key => isOwned(entry, key))) {
-        const complete = amountOf(entry, COMPLETE);
+// A complete game whose Complete price is known: that one price stands in for the three parts, which then show nothing
+function usesComplete(entry) {
+    return OWNERSHIP.every(key => isOwned(entry, key)) && amountOf(entry, COMPLETE) !== null;
+}
 
-        if (complete !== null) {
-            return complete;
-        }
+// The amount a price column shows for every copy: a part is blank when the Complete value stands in for it
+function shownAmount(entry, key) {
+    if (OWNERSHIP.includes(key) && usesComplete(entry)) {
+        return null;
+    }
+
+    return amountOf(entry, key);
+}
+
+// Complete when it stands in for the set, otherwise Item + Box + Manual, as shown
+function subtotalOf(entry) {
+    if (usesComplete(entry)) {
+        return amountOf(entry, COMPLETE);
     }
 
     const parts = OWNERSHIP.map(key => amountOf(entry, key)).filter(amount => amount !== null);
@@ -592,6 +602,11 @@ function ownershipCell(entry, key) {
 
 function amountCell(amount) {
     return textCell(amount === null ? "" : numberFormat.format(amount), "number");
+}
+
+// An Item, Box or Manual cell, shown empty when the Complete price stands in for the three parts
+function partCell(entry, key) {
+    return usesComplete(entry) ? textCell("", "number") : ownershipCell(entry, key);
 }
 
 // Paid and Difference, which a buyer does not see
@@ -858,8 +873,8 @@ function renderRows(visible) {
             titleCell(entry),
             textCell(regionOf(entry) ?? ""),
             textCell(entry.values.quantity, "number"),
-            ...OWNERSHIP.map(key => ownershipCell(entry, key)),
             ownershipCell(entry, COMPLETE),
+            ...OWNERSHIP.map(key => partCell(entry, key)),
             textCell(entry.values.date ?? "", "date"),
             amountCell(subtotalOf(entry)),
             paidColumn(ownershipCell(entry, "paid")),
@@ -904,8 +919,8 @@ function renderTotals(visible) {
     visible = countedEntries(visible);
     element("total-quantity").textContent = visible.reduce((sum, entry) => sum + entry.values.quantity, 0);
 
-    // Each total is the sum of its column as shown
-    const columns = [...PRICES.map(key => [key, entry => amountOf(entry, key)]), [COMPLETE, entry => amountOf(entry, COMPLETE)], ...Object.entries(COMPUTED)];
+    // Each total is the sum of its column as shown: a part that the Complete price replaces does not add in
+    const columns = [...PRICES.map(key => [key, entry => shownAmount(entry, key)]), [COMPLETE, entry => amountOf(entry, COMPLETE)], ...Object.entries(COMPUTED)];
 
     for (const [key, amount] of columns) {
         const total = visible.reduce((sum, entry) => sum + (amount(entry) ?? 0), 0);
@@ -922,16 +937,18 @@ function exportCells(entry) {
     // A number stays a number, rounded as shown; an X stays as it is
     const amount = value => value === null ? "" : Math.round(value * 100) / 100;
     const price = key => amountOf(entry, key) === null ? (isOwned(entry, key) ? String(entry.values[key]) : "") : amount(amountOf(entry, key));
+    // A part is blank when the Complete price stands in for the three parts, as on screen
+    const part = key => usesComplete(entry) ? "" : price(key);
 
     return {
         console: consoleName(entry),
         title: entry.title,
         region: regionOf(entry) ?? "",
         quantity: entry.values.quantity,
-        game: price("game"),
-        box: price("box"),
-        manual: price("manual"),
         complete: price("complete"),
+        game: part("game"),
+        box: part("box"),
+        manual: part("manual"),
         date: entry.values.date ?? "",
         subtotal: amount(subtotalOf(entry)),
         paid: price("paid"),
@@ -1484,11 +1501,13 @@ function openAddForm() {
 // Item, Manual and Box, the date of those prices, then what was paid
 // Changing Item, Manual or Box dates the prices today; the date can still be changed afterwards
 function priceFields(values) {
-    const fields = PRICES.map(key => field(key, t(`column.${key}`), priceText(values[key])));
+    // Complete, then the three parts: all four are dated when changed; what was paid, last, is not
+    const dated = [COMPLETE, ...OWNERSHIP];
+    const fields = [...dated, "paid"].map(key => field(key, t(`column.${key}`), priceText(values[key])));
     const date = field("date", t("column.date"), values.date, { type: "date" });
-    fields.splice(OWNERSHIP.length, 0, date);
+    fields.splice(dated.length, 0, date);
 
-    for (const wrapper of fields.slice(0, OWNERSHIP.length)) {
+    for (const wrapper of fields.slice(0, dated.length)) {
         wrapper.querySelector("input").addEventListener("input", () => date.querySelector("input").value = today());
     }
 
@@ -1574,7 +1593,7 @@ function editorPayload() {
         payload[key] = form[key].checked ? true : null;
     }
 
-    for (const key of PRICES) {
+    for (const key of [...PRICES, COMPLETE]) {
         payload[key] = cellValue(form[key], values[key]);
     }
 

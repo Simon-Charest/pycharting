@@ -304,6 +304,15 @@ class TestCollectionApi:
         assert [entry["values"]["paid"] for entry in get_collection_entries(connection)] == [20, "5.50"]
 
     @mark.asyncio
+    async def test_complete_is_saved_on_items_and_rows(self, connection: Connection) -> None:
+        # Act: the Complete price is an editable field on both kinds of entry
+        await api.update_collection_item(1, api.CollectionItem(group_name="Wii", name="Zelda", complete=150))
+        await api.update_collection_row(1, api.SpreadsheetRow(system="3DS", title="Kid Icarus", complete="42.50"))
+
+        # Assert
+        assert [entry["values"]["complete"] for entry in get_collection_entries(connection)] == [150, "42.50"]
+
+    @mark.asyncio
     async def test_date_is_saved_on_items_and_rows(self, connection: Connection) -> None:
         # Act
         await api.update_collection_item(1, api.CollectionItem(group_name="Wii", name="Zelda", date="2026-11-08"))

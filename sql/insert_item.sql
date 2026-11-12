@@ -20,6 +20,7 @@ INTO collection_items
     , game
     , manual
     , box
+    , complete
     , "date"
     , paid
     , pricecharting
@@ -45,6 +46,7 @@ SELECT f.id
     , :game
     , :manual
     , :box
+    , :complete
     , :date
     , :paid
     , :pricecharting

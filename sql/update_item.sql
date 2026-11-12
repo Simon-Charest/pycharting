@@ -16,6 +16,7 @@ SET group_name = :group_name
     , game = :game
     , manual = :manual
     , box = :box
+    , complete = :complete
     , "date" = :date
     , paid = :paid
     , pricecharting = :pricecharting

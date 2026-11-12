@@ -10,6 +10,7 @@ SET system = :system
     , game = :game
     , box = :box
     , manual = :manual
+    , complete = :complete
     , "date" = :date
     , paid = :paid
     , pricecharting = :pricecharting

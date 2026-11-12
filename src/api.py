@@ -100,6 +100,7 @@ class CollectionItem(BaseModel):
     game: Cell = None
     manual: Cell = None
     box: Cell = None
+    complete: Cell = None
     date: IsoDate | None = None
     paid: Cell = None
     pricecharting: str | None = None
@@ -131,6 +132,7 @@ class SpreadsheetRow(BaseModel):
     game: Cell = None
     box: Cell = None
     manual: Cell = None
+    complete: Cell = None
     date: IsoDate | None = None
     paid: Cell = None
     pricecharting: str | None = None

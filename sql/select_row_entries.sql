@@ -11,6 +11,7 @@ SELECT r.id
     , r.damaged
     , r.selling
     , r.buying
+    , r.reserved
     , r.game
     , r.box
     , r.manual

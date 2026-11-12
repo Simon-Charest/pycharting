@@ -92,6 +92,7 @@ class CollectionItem(BaseModel):
     damaged: bool | None = None
     selling: bool | None = None
     buying: bool | None = None
+    reserved: bool | None = None
     wishlist: bool | None = None
     previously_owned: bool | None = None
     quantity: int = Field(default=1, ge=0)
@@ -124,6 +125,7 @@ class SpreadsheetRow(BaseModel):
     damaged: bool | None = None
     selling: bool | None = None
     buying: bool | None = None
+    reserved: bool | None = None
     wishlist: bool | None = None
     gamepad: bool | None = None
     previously_owned: bool | None = None

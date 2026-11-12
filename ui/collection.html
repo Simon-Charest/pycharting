@@ -6,7 +6,7 @@
         <title>PyCharting</title>
         <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
         <link rel="stylesheet" href="/static/collection.css?v=37">
-        <script src="/static/collection.js?v=62" defer></script>
+        <script src="/static/collection.js?v=63" defer></script>
     </head>
     <body>
         <header>
@@ -32,7 +32,9 @@
                 <thead>
                     <tr id="headers"></tr>
                     <tr id="filters" class="filters">
-                        <td class="select-column"><input id="select-all" type="checkbox" data-i18n-title="action.selectAll"></td>
+                        <td class="select-column">
+                            <select id="filter-selected" data-i18n-label="column.selected"><option value="" data-i18n="filter.all"></option></select>
+                        </td>
                         <td>
                             <select id="filter-console" data-i18n-label="column.console"><option value="" data-i18n="filter.all"></option></select>
                         </td>

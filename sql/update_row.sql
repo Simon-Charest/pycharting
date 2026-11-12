@@ -7,6 +7,7 @@ SET system = :system
     , damaged = :damaged
     , selling = :selling
     , buying = :buying
+    , reserved = :reserved
     , game = :game
     , box = :box
     , manual = :manual

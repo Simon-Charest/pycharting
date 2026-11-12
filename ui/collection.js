@@ -27,6 +27,7 @@ const TRANSLATIONS = {
         "column.total": "Différence",
         "column.details": "Étiquettes",
         "column.actions": "Actions",
+        "column.selected": "Sélection",
         "filter.search": "Rechercher un titre",
         "filter.all": "Tous",
         "filter.owned": "Oui",
@@ -50,6 +51,7 @@ const TRANSLATIONS = {
         "flag.damaged": "Endommagé",
         "flag.selling": "À vendre",
         "flag.buying": "À acheter",
+        "flag.reserved": "Réservé",
         "priceChartingLink": "PriceCharting",
         "action.selectAll": "Tout sélectionner",
         "action.selectRow": "Sélectionner",
@@ -122,6 +124,7 @@ const TRANSLATIONS = {
         "column.total": "Difference",
         "column.details": "Tags",
         "column.actions": "Actions",
+        "column.selected": "Selection",
         "filter.search": "Search for a title",
         "filter.all": "All",
         "filter.owned": "Yes",
@@ -145,6 +148,7 @@ const TRANSLATIONS = {
         "flag.damaged": "Damaged",
         "flag.selling": "Selling",
         "flag.buying": "Buying",
+        "flag.reserved": "Reserved",
         "priceChartingLink": "PriceCharting",
         "action.selectAll": "Select all",
         "action.selectRow": "Select",
@@ -213,7 +217,7 @@ const COLUMNS = [
     { key: "owner" },
     { key: "actions", sortable: false }
 ];
-const TAGS = ["console", "gamepad", "accessory", "amiibo", "virtual", "reproduction", "previously_owned", "damaged", "selling", "buying", "wishlist"];
+const TAGS = ["console", "gamepad", "accessory", "amiibo", "virtual", "reproduction", "previously_owned", "damaged", "selling", "buying", "reserved", "wishlist"];
 const OWNERSHIP = ["game", "box", "manual"];
 // Every price column: the ownership ones, then what was paid, which says nothing about what is owned
 const PRICES = [...OWNERSHIP, "paid"];
@@ -234,7 +238,7 @@ const ICONS = {
     logout: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"],
     help: ["M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z", "M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3", "M12 17h.01"]
 };
-const FILTER_IDS = ["filter-console", "filter-title", "filter-owner", "filter-region", "filter-quantity", "filter-game", "filter-box", "filter-manual", "filter-complete", "filter-date", "filter-paid", "filter-attribute"];
+const FILTER_IDS = ["filter-selected", "filter-console", "filter-title", "filter-owner", "filter-region", "filter-quantity", "filter-game", "filter-box", "filter-manual", "filter-complete", "filter-date", "filter-paid", "filter-attribute"];
 // Full display names; the stored names stay as they are, because PriceCharting's URLs rely on them
 const CONSOLE_NAMES = {
     "3DS": "Nintendo 3DS",
@@ -542,11 +546,13 @@ function visibleEntries() {
     const quantity = element("filter-quantity").value;
     const date = element("filter-date").value;
     const attribute = element("filter-attribute").value;
+    const checked = element("filter-selected").value;
 
     const ownership = FILTER_PRICES.map(key => [key, element(`filter-${key}`).value]).filter(([, wanted]) => wanted);
 
     return entries
         .filter(entry => ownership.every(([key, wanted]) => isOwned(entry, key) === (wanted === "owned")))
+        .filter(entry => !checked || isSelected(entry) === (checked === "owned"))
         .filter(entry => !title || normalize(entry.title).includes(title))
         .filter(entry => !owner || entry.owner === owner)
         .filter(entry => !console_ || consoleName(entry) === console_)
@@ -735,11 +741,19 @@ async function fetchPrices(entry) {
     render();
 }
 
-// The first column's header is empty: the select-all checkbox lives with the controls, in the filters row
+// The first column's header: a checkbox that selects or clears every row in the current filtered view
 function selectAllHeader() {
     const header = document.createElement("th");
     header.scope = "col";
     header.className = "select-column";
+    const check = document.createElement("input");
+    check.type = "checkbox";
+    check.id = "select-all";
+    check.title = t("action.selectAll");
+    check.setAttribute("aria-label", check.title);
+    check.disabled = entries === null;
+    check.addEventListener("change", toggleAll);
+    header.append(check);
 
     return header;
 }
@@ -829,7 +843,14 @@ function selectCell(entry, row) {
         }
 
         row.classList.toggle("selected", check.checked);
-        refreshSelection();
+
+        // While filtering by selection, a toggled row may leave the view, so rebuild it; otherwise just refresh the totals
+        if (element("filter-selected").value) {
+            render();
+        }
+        else {
+            refreshSelection();
+        }
     });
     cell.append(check);
 
@@ -1146,6 +1167,7 @@ function fillFilters() {
     const unique = values => [...new Set(values)].sort(collator.compare).map(value => [value, value]);
     fillSelect("filter-owner", unique(all.map(entry => entry.owner)));
     fillSelect("filter-console", unique(all.map(consoleName)));
+    fillSelect("filter-selected", [["owned", t("filter.owned")], ["missing", t("filter.missing")]]);
     fillSelect("filter-region", REGIONS.map(region => [region, region]));
     fillSelect("filter-quantity", [["one", t("filter.one")], ["more", t("filter.more")]]);
     FILTER_PRICES.forEach(key => fillSelect(`filter-${key}`, [["owned", t("filter.owned")], ["missing", t("filter.missing")]]));
@@ -1709,13 +1731,7 @@ async function removeEntry(entry) {
 }
 
 document.querySelectorAll("[data-language]").forEach(button => button.addEventListener("click", () => setLanguage(button.dataset.language, true)));
-// The Select-all checkbox shares the filters row, but it drives the selection, not the filtering
-element("filters").addEventListener("input", event => {
-    if (event.target.id !== "select-all") {
-        render();
-    }
-});
-element("select-all").addEventListener("change", toggleAll);
+element("filters").addEventListener("input", render);
 element("filter-reset").append(icon(ICONS.reset));
 element("update-visible-prices").addEventListener("click", updateVisiblePrices);
 element("filter-reset").addEventListener("click", () => {

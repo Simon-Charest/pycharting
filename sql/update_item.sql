@@ -8,6 +8,7 @@ SET group_name = :group_name
     , damaged = :damaged
     , selling = :selling
     , buying = :buying
+    , reserved = :reserved
     , wishlist = :wishlist
     , previously_owned = :previously_owned
     , quantity = :quantity

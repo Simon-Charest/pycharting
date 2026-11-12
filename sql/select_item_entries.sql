@@ -12,6 +12,7 @@ SELECT i.id
     , i.damaged
     , i.selling
     , i.buying
+    , i.reserved
     , i.wishlist
     , i.previously_owned
     , i.quantity

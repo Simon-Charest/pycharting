@@ -41,7 +41,7 @@ const TRANSLATIONS = {
         "filter.reset": "Réinitialiser",
         "flag.console": "Console",
         "flag.gamepad": "Manette",
-        "flag.virtual": "Digital",
+        "flag.virtual": "Numérique",
         "flag.reproduction": "Reproduction",
         "flag.previously_owned": "Anciennement possédé",
         "flag.wishlist": "Liste de souhaits",
@@ -720,24 +720,20 @@ async function fetchPrices(entry) {
     render();
 }
 
-// The first column's header: a checkbox that selects or clears every visible row
+// The first column's header is empty: the select-all checkbox lives with the controls, in the filters row
 function selectAllHeader() {
     const header = document.createElement("th");
     header.scope = "col";
     header.className = "select-column";
-    const check = document.createElement("input");
-    check.type = "checkbox";
-    check.id = "select-all";
-    check.title = t("action.selectAll");
-    check.setAttribute("aria-label", check.title);
-    check.disabled = entries === null;
-    check.addEventListener("change", toggleAll);
-    header.append(check);
 
     return header;
 }
 
 function toggleAll(event) {
+    if (entries === null) {
+        return;
+    }
+
     const checked = event.target.checked;
 
     for (const entry of visibleEntries()) {
@@ -1695,6 +1691,7 @@ async function removeEntry(entry) {
 
 document.querySelectorAll("[data-language]").forEach(button => button.addEventListener("click", () => setLanguage(button.dataset.language, true)));
 element("filters").addEventListener("input", render);
+element("select-all").addEventListener("change", toggleAll);
 element("filter-reset").append(icon(ICONS.reset));
 element("update-visible-prices").addEventListener("click", updateVisiblePrices);
 element("filter-reset").addEventListener("click", () => {

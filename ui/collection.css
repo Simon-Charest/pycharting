@@ -11,6 +11,8 @@
     --danger: #b3261e;
     --gain: #1a7f37;
     --loss: #b3261e;
+    --stripe: #f4f5f8;   /* Every other table row, to follow a line across the table */
+    --selected: #dce9fd; /* A checked row */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -26,6 +28,8 @@
         --danger: #ff9d94;
         --gain: #6fdc8c;
         --loss: #ff9d94;
+        --stripe: #23272e;
+        --selected: #2d3c59;
     }
 }
 
@@ -247,7 +251,7 @@ td {
     padding: 8px 6px;
     border-bottom: 1px solid var(--border);
     text-align: left;
-    vertical-align: top;
+    vertical-align: middle;
 }
 
 thead {
@@ -600,11 +604,20 @@ td.select-column {
 }
 
 .select-column input {
+    width: auto;
+    min-width: 0;
+    min-height: 0;
     margin: 0;
+    padding: 0;
     cursor: pointer;
 }
 
-/* A checked row stands out from the rest */
-tr.selected td {
-    background: var(--surface-alt);
+/* Alternating row shades make a line easier to follow across the table */
+tbody tr:nth-child(even) td {
+    background: var(--stripe);
+}
+
+/* A checked row stands out from the rest, striped or not */
+tbody tr.selected td {
+    background: var(--selected);
 }

@@ -43,8 +43,8 @@ body {
     box-sizing: border-box;
     min-height: 100vh;  /* So that the footer stays at the bottom of a short page */
     margin: 0 auto;
-    max-width: 1800px;
-    padding: 24px 16px;
+    max-width: none;  /* Use the full width, so the wide table fits without a horizontal scrollbar */
+    padding: 24px 12px;
     background: var(--background);
     color: var(--text);
     font: 15px/1.45 system-ui, "Segoe UI", sans-serif;
@@ -248,7 +248,7 @@ table {
 
 th,
 td {
-    padding: 8px 6px;
+    padding: 8px 5px;
     border-bottom: 1px solid var(--border);
     text-align: left;
     vertical-align: middle;
@@ -295,7 +295,7 @@ td.date {
 }
 
 td.title {
-    min-width: 170px;
+    min-width: 120px;
     font-weight: 500;
 }
 

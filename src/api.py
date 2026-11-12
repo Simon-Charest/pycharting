@@ -261,9 +261,10 @@ async def health() -> dict:
 
 @app.post("/collection/{kind}/{id}/prices")
 async def update_entry_prices(kind: Literal["items", "rows"], id: int) -> dict:
-    """Refresh Item, Manual and Box from PriceCharting, in CAD, and date them today.
+    """Refresh Complete, Item, Box and Manual from PriceCharting, in CAD, and date them today.
 
-    Only the parts that are owned, that is that have a value, are refreshed: an empty part stays empty.
+    Only the cells that already have a value are refreshed: an empty cell is never filled in. There must be at
+    least one price to refresh.
     """
 
     singular: str = kind[:-1]
@@ -273,8 +274,9 @@ async def update_entry_prices(kind: Literal["items", "rows"], id: int) -> dict:
         raise HTTPException(status_code=404, detail="Entry not found.")
 
     owned: list = [part for part in ("game", "manual", "box") if entry[part] is not None and entry[part] != ""]
+    has_complete: bool = entry["complete"] is not None and entry["complete"] != ""
 
-    if not owned:
+    if not owned and not has_complete:
         raise HTTPException(status_code=409, detail="nothing_owned")
 
     try:
@@ -289,9 +291,10 @@ async def update_entry_prices(kind: Literal["items", "rows"], id: int) -> dict:
     except ExchangeRateError:
         raise HTTPException(status_code=502, detail="exchange_rate")
 
-    # A part PriceCharting has no price for keeps the value it had; the Complete price is brought back the same way
+    # Only a cell that already has a value is refreshed; an empty cell is never filled in. This holds for Complete too:
+    # it is refreshed when the entry already has one, but a PriceCharting update never adds a Complete price on its own.
     values: dict = {part: prices[part] if part in owned and prices[part] is not None else entry[part] for part in ("game", "manual", "box")}
-    values["complete"] = prices["complete"] if prices["complete"] is not None else entry["complete"]
+    values["complete"] = prices["complete"] if has_complete and prices["complete"] is not None else entry["complete"]
     values.update({"date": date.today().isoformat(), "pricecharting": prices["url"], "id": id})
     change_collection_entry(connection, f"update_{singular}_prices", values)
 

@@ -1658,7 +1658,7 @@ async function updateVisiblePrices() {
         return;
     }
 
-    const targets = visibleEntries().filter(entry => OWNERSHIP.some(key => isOwned(entry, key)));
+    const targets = visibleEntries().filter(entry => [...OWNERSHIP, COMPLETE].some(key => isOwned(entry, key)));
 
     if (!targets.length) {
         showBulkMessage(t("bulk.none"), true);

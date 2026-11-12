@@ -770,8 +770,8 @@ class TestPrices:
 class TestUpdatePrices:
     @mark.asyncio
     async def test_only_owned_parts_are_refreshed_and_dated(self, connection: Connection, monkeypatch) -> None:
-        # Arrange
-        connection.execute("UPDATE collection_items SET box = 'X' WHERE id = 1")
+        # Arrange: the entry already has a Complete value, so it is refreshed like the parts that are present
+        connection.execute("UPDATE collection_items SET box = 'X', complete = 70 WHERE id = 1")
         connection.commit()
         monkeypatch.setattr(api, "fetch_prices", lambda *_: {"url": "https://p/zelda", "game": 50.0, "manual": 9.0, "box": None, "complete": 80.0})
 
@@ -782,6 +782,32 @@ class TestUpdatePrices:
         # Assert
         assert (values["game"], values["manual"], values["box"], values["pricecharting"]) == (50.0, None, "X", "https://p/zelda")
         assert (values["complete"], values["date"]) == (80.0, api.date.today().isoformat())
+
+    @mark.asyncio
+    async def test_an_empty_complete_cell_is_never_filled_in(self, connection: Connection, monkeypatch) -> None:
+        # Arrange: the entry has no Complete value, and PriceCharting has one
+        monkeypatch.setattr(api, "fetch_prices", lambda *_: {"url": "https://p/zelda", "game": 50.0, "manual": None, "box": None, "complete": 80.0})
+
+        # Act
+        await api.update_entry_prices("items", 1)
+        values: dict = get_collection_entries(connection)[0]["values"]
+
+        # Assert: the empty Complete cell stays empty; a price is never added where there was none
+        assert values["complete"] is None
+
+    @mark.asyncio
+    async def test_an_entry_with_only_a_complete_value_is_refreshed(self, connection: Connection, monkeypatch) -> None:
+        # Arrange: only the Complete cell has a value; the three parts are empty
+        connection.execute("UPDATE collection_items SET game = NULL, manual = NULL, box = NULL, complete = 90 WHERE id = 1")
+        connection.commit()
+        monkeypatch.setattr(api, "fetch_prices", lambda *_: {"url": "https://p/zelda", "game": 5.0, "manual": 6.0, "box": 7.0, "complete": 120.0})
+
+        # Act
+        await api.update_entry_prices("items", 1)
+        values: dict = get_collection_entries(connection)[0]["values"]
+
+        # Assert: Complete is refreshed, and the empty parts stay empty even though PriceCharting has their prices
+        assert (values["complete"], values["game"], values["manual"], values["box"]) == (120.0, None, None, None)
 
     @mark.asyncio
     async def test_a_row_is_refreshed_too(self, connection: Connection, monkeypatch) -> None:

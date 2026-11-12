@@ -219,6 +219,8 @@ const OWNERSHIP = ["game", "box", "manual"];
 const PRICES = [...OWNERSHIP, "paid"];
 // Not an owned part: PriceCharting's price for a complete copy, brought back next to the three parts
 const COMPLETE = "complete";
+// The price columns that carry a Yes/No (owned/missing) filter: the ones above, plus Complete
+const FILTER_PRICES = [...PRICES, COMPLETE];
 const ROUTES = { item: "items", row: "rows" };
 const ICONS = {
     edit: ["M12 20h9", "M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"],
@@ -232,7 +234,7 @@ const ICONS = {
     logout: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"],
     help: ["M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z", "M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3", "M12 17h.01"]
 };
-const FILTER_IDS = ["filter-console", "filter-title", "filter-owner", "filter-region", "filter-quantity", "filter-game", "filter-manual", "filter-box", "filter-date", "filter-paid", "filter-attribute"];
+const FILTER_IDS = ["filter-console", "filter-title", "filter-owner", "filter-region", "filter-quantity", "filter-game", "filter-box", "filter-manual", "filter-complete", "filter-date", "filter-paid", "filter-attribute"];
 // Full display names; the stored names stay as they are, because PriceCharting's URLs rely on them
 const CONSOLE_NAMES = {
     "3DS": "Nintendo 3DS",
@@ -531,7 +533,7 @@ function visibleEntries() {
     const date = element("filter-date").value;
     const attribute = element("filter-attribute").value;
 
-    const ownership = PRICES.map(key => [key, element(`filter-${key}`).value]).filter(([, wanted]) => wanted);
+    const ownership = FILTER_PRICES.map(key => [key, element(`filter-${key}`).value]).filter(([, wanted]) => wanted);
 
     return entries
         .filter(entry => ownership.every(([key, wanted]) => isOwned(entry, key) === (wanted === "owned")))
@@ -1133,7 +1135,7 @@ function fillFilters() {
     fillSelect("filter-console", unique(all.map(consoleName)));
     fillSelect("filter-region", REGIONS.map(region => [region, region]));
     fillSelect("filter-quantity", [["one", t("filter.one")], ["more", t("filter.more")]]);
-    PRICES.forEach(key => fillSelect(`filter-${key}`, [["owned", t("filter.owned")], ["missing", t("filter.missing")]]));
+    FILTER_PRICES.forEach(key => fillSelect(`filter-${key}`, [["owned", t("filter.owned")], ["missing", t("filter.missing")]]));
     fillSelect("filter-date", [["owned", t("filter.owned")], ["missing", t("filter.missing")], ...Object.keys(DATE_AGES).map(age => [age, t(`filter.${age}`)])]);
     fillSelect("filter-attribute", [["any", t("filter.owned")], ["none", t("filter.missing")], ...sortedTags(TAGS).map(key => [key, t(`flag.${key}`)])]);
 }

@@ -586,3 +586,25 @@ td.loss {
 .hide-paid .paid-column {
     display: none;
 }
+
+/* The selection column, at the far left: a narrow, centred checkbox in every section */
+.select-column {
+    width: 36px;
+    text-align: center;
+}
+
+th.select-column,
+td.select-column {
+    padding: 8px 6px;
+    vertical-align: middle;
+}
+
+.select-column input {
+    margin: 0;
+    cursor: pointer;
+}
+
+/* A checked row stands out from the rest */
+tr.selected td {
+    background: var(--surface-alt);
+}

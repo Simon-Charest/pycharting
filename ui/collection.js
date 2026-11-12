@@ -40,7 +40,7 @@ const TRANSLATIONS = {
         "filter.reset": "Réinitialiser",
         "flag.console": "Console",
         "flag.gamepad": "Manette",
-        "flag.virtual": "Virtuel",
+        "flag.virtual": "Digital",
         "flag.reproduction": "Reproduction",
         "flag.previously_owned": "Anciennement possédé",
         "flag.wishlist": "Liste de souhaits",
@@ -50,6 +50,8 @@ const TRANSLATIONS = {
         "flag.selling": "À vendre",
         "flag.buying": "À acheter",
         "priceChartingLink": "PriceCharting",
+        "action.selectAll": "Tout sélectionner",
+        "action.selectRow": "Sélectionner",
         "action.edit": "Modifier",
         "action.delete": "Supprimer",
         "action.add": "Ajouter",
@@ -132,7 +134,7 @@ const TRANSLATIONS = {
         "filter.reset": "Reset",
         "flag.console": "Console",
         "flag.gamepad": "Controller",
-        "flag.virtual": "Virtual",
+        "flag.virtual": "Digital",
         "flag.reproduction": "Reproduction",
         "flag.previously_owned": "Previously owned",
         "flag.wishlist": "Wishlist",
@@ -142,6 +144,8 @@ const TRANSLATIONS = {
         "flag.selling": "Selling",
         "flag.buying": "Buying",
         "priceChartingLink": "PriceCharting",
+        "action.selectAll": "Select all",
+        "action.selectRow": "Select",
         "action.edit": "Edit",
         "action.delete": "Delete",
         "action.add": "Add",
@@ -280,6 +284,7 @@ let editing = null;
 let viewRestored = false;
 let account = null;  // The signed-in account: { username, role }
 let bulkUpdate = null;  // The update of every visible entry, while it runs
+let selected = new Set();  // The checked rows, by "kind:id"; when any is checked, only they count in the totals
 
 function t(key, parameters = {}) {
     return TRANSLATIONS[language][key].replace(/\{(\w+)\}/g, (_, name) => parameters[name]);
@@ -374,6 +379,15 @@ function priceChartingLink(entry) {
     }
 
     return PRICECHARTING_SEARCH + encodeURIComponent(`${entry.title} ${entry.values.region === "PAL" ? "PAL " : ""}${entry.console}`);
+}
+
+// A stable identity across kinds, so a checked row stays checked through sorts and reloads
+function entryKey(entry) {
+    return `${entry.kind}:${entry.id}`;
+}
+
+function isSelected(entry) {
+    return selected.has(entryKey(entry));
 }
 
 // A value in Game, Manual or Box means that part is owned, even at 0 or with only an X
@@ -691,9 +705,55 @@ async function fetchPrices(entry) {
     render();
 }
 
+// The first column's header: a checkbox that selects or clears every visible row
+function selectAllHeader() {
+    const header = document.createElement("th");
+    header.scope = "col";
+    header.className = "select-column";
+    const check = document.createElement("input");
+    check.type = "checkbox";
+    check.id = "select-all";
+    check.title = t("action.selectAll");
+    check.setAttribute("aria-label", check.title);
+    check.disabled = entries === null;
+    check.addEventListener("change", toggleAll);
+    header.append(check);
+
+    return header;
+}
+
+function toggleAll(event) {
+    const checked = event.target.checked;
+
+    for (const entry of visibleEntries()) {
+        if (checked) {
+            selected.add(entryKey(entry));
+        }
+        else {
+            selected.delete(entryKey(entry));
+        }
+    }
+
+    render();
+}
+
+// Checked when every visible row is selected, a dash when only some are
+function updateSelectAll(visible) {
+    const box = element("select-all");
+
+    if (!box) {
+        return;
+    }
+
+    const chosen = visible.filter(isSelected).length;
+    box.checked = chosen > 0 && chosen === visible.length;
+    box.indeterminate = chosen > 0 && chosen < visible.length;
+    box.disabled = visible.length === 0;
+}
+
 function renderHeaders() {
     const headers = element("headers");
-    headers.replaceChildren();
+    headers.replaceChildren(selectAllHeader());
 
     for (const column of COLUMNS) {
         const header = document.createElement("th");
@@ -726,6 +786,37 @@ function renderHeaders() {
     }
 }
 
+// The first column's cell: a checkbox that adds this row to, or removes it from, the totals
+function selectCell(entry, row) {
+    const cell = document.createElement("td");
+    cell.className = "select-column";
+    const check = document.createElement("input");
+    check.type = "checkbox";
+    check.checked = isSelected(entry);
+    check.setAttribute("aria-label", `${t("action.selectRow")} ${entry.title}`);
+    check.addEventListener("change", () => {
+        if (check.checked) {
+            selected.add(entryKey(entry));
+        }
+        else {
+            selected.delete(entryKey(entry));
+        }
+
+        row.classList.toggle("selected", check.checked);
+        refreshSelection();
+    });
+    cell.append(check);
+
+    return cell;
+}
+
+// Updates the totals and the select-all box after a single row is checked, without rebuilding the grid
+function refreshSelection() {
+    const visible = visibleEntries();
+    renderTotals(visible);
+    updateSelectAll(visible);
+}
+
 function renderRows(visible) {
     const rows = element("rows");
     rows.replaceChildren();
@@ -733,7 +824,7 @@ function renderRows(visible) {
     if (!visible.length) {
         const row = document.createElement("tr");
         const cell = textCell(t("empty"), "empty");
-        cell.colSpan = COLUMNS.length;
+        cell.colSpan = COLUMNS.length + 1;
         row.append(cell);
         rows.append(row);
 
@@ -742,6 +833,7 @@ function renderRows(visible) {
 
     for (const entry of visible) {
         const row = document.createElement("tr");
+        row.classList.toggle("selected", isSelected(entry));
         const actions = document.createElement("td");
         actions.className = "actions";
         actions.append(
@@ -750,6 +842,7 @@ function renderRows(visible) {
             actionButton("delete", entry, "icon-button danger", () => removeEntry(entry))
         );
         row.append(
+            selectCell(entry, row),
             textCell(consoleName(entry)),
             titleCell(entry),
             textCell(regionOf(entry) ?? ""),
@@ -781,14 +874,22 @@ function render() {
     element("count").textContent = t(visible.length === 1 ? "count.one" : "count.other", { visible: visible.length });
     renderRows(visible);
     renderTotals(visible);
+    updateSelectAll(visible);
 }
 
 // Tags whose entries stay out of the totals: not owned, or with no (or little) collector value
 const UNCOUNTED_TAGS = ["wishlist", "reproduction", "virtual", "damaged"];
 
-// Totals of the visible entries, except those with an uncounted tag; an X means owned, but has no price to add
+// When rows are checked, only they count, tags and all; otherwise every visible row except the uncounted tags
+function countedEntries(visible) {
+    const chosen = visible.filter(isSelected);
+
+    return chosen.length ? chosen : visible.filter(entry => !UNCOUNTED_TAGS.some(key => entry.values[key]));
+}
+
+// Totals of the counted entries; an X means owned, but has no price to add
 function renderTotals(visible) {
-    visible = visible.filter(entry => !UNCOUNTED_TAGS.some(key => entry.values[key]));
+    visible = countedEntries(visible);
     element("total-quantity").textContent = visible.reduce((sum, entry) => sum + entry.values.quantity, 0);
 
     // Each total is the sum of its column as shown
@@ -1137,6 +1238,7 @@ async function loadEntries() {
     renderAccount();
     entries = await request("/collection/entries");
     owners = await request("/collection/owners");
+    selected = new Set([...selected].filter(key => entries.some(entry => entryKey(entry) === key)));
     fillFilters();
 
     // Only once the lists have their choices can the saved ones be selected again

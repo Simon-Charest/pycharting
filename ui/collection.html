@@ -5,8 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>PyCharting</title>
         <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-        <link rel="stylesheet" href="/static/collection.css?v=35">
-        <script src="/static/collection.js?v=56" defer></script>
+        <link rel="stylesheet" href="/static/collection.css?v=36">
+        <script src="/static/collection.js?v=57" defer></script>
     </head>
     <body>
         <header>
@@ -32,6 +32,7 @@
                 <thead>
                     <tr id="headers"></tr>
                     <tr id="filters" class="filters">
+                        <td class="select-column"></td>
                         <td>
                             <select id="filter-console" data-i18n-label="column.console"><option value="" data-i18n="filter.all"></option></select>
                         </td>
@@ -77,7 +78,7 @@
                 <tbody id="rows"></tbody>
                 <tfoot>
                     <tr>
-                        <td class="count-cell" colspan="3"><span id="count" role="status"></span></td>
+                        <td class="count-cell" colspan="4"><span id="count" role="status"></span></td>
                         <td id="total-quantity" class="number"></td>
                         <td id="total-game" class="number"></td>
                         <td id="total-manual" class="number"></td>

@@ -449,10 +449,12 @@ function shownAmount(entry, key) {
     return amountOf(entry, key);
 }
 
-// Complete when it stands in for the set, otherwise Item + Box + Manual, as shown
+// Always the Complete price when there is one; otherwise Item + Box + Manual, as shown
 function subtotalOf(entry) {
-    if (usesComplete(entry)) {
-        return amountOf(entry, COMPLETE);
+    const complete = amountOf(entry, COMPLETE);
+
+    if (complete !== null) {
+        return complete;
     }
 
     const parts = OWNERSHIP.map(key => amountOf(entry, key)).filter(amount => amount !== null);

@@ -70,6 +70,7 @@ const TRANSLATIONS = {
         "editor.cancel": "Annuler",
         "editor.save": "Enregistrer",
         "action.logout": "Se déconnecter",
+        "action.login": "Se connecter",
         "nav.home": "Accueil",
         "nav.users": "Utilisateurs",
         "help": "Aide",
@@ -80,6 +81,7 @@ const TRANSLATIONS = {
         "role.collaborator": "Collaborateur (lecture seule)",
         "role.buyer": "Acheteur (articles à vendre)",
         "account": "{username} · {role}",
+        "visitor": "Articles à vendre",
         "confirm.delete": "Supprimer « {title} » ({console}, {owner}) ?",
         "confirm.updateVisible": "Mettre à jour les prix et la date de {count} entrées visibles depuis PriceCharting, une après l'autre ?",
         "bulk.none": "Aucune entrée visible n'a d'Article, de Manuel ou de Boîte à mettre à jour.",
@@ -168,6 +170,7 @@ const TRANSLATIONS = {
         "editor.cancel": "Cancel",
         "editor.save": "Save",
         "action.logout": "Sign out",
+        "action.login": "Sign in",
         "nav.home": "Home",
         "nav.users": "Users",
         "help": "Help",
@@ -178,6 +181,7 @@ const TRANSLATIONS = {
         "role.collaborator": "Collaborator (read-only)",
         "role.buyer": "Buyer (items for sale)",
         "account": "{username} · {role}",
+        "visitor": "Items for sale",
         "confirm.delete": "Delete “{title}” ({console}, {owner})?",
         "confirm.updateVisible": "Update the prices and date of {count} visible entries from PriceCharting, one after the other?",
         "bulk.none": "No visible entry has an Item, Manual or Box to update.",
@@ -238,6 +242,7 @@ const ICONS = {
     csv: ["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z", "M14 2v6h6", "M8 9h2", "M8 13h8", "M8 17h8"],
     reset: ["M18 6 6 18", "M6 6l12 12"],
     logout: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"],
+    login: ["M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4", "M10 17l5-5-5-5", "M15 12H3"],
     help: ["M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z", "M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3", "M12 17h.01"]
 };
 const FILTER_IDS = ["filter-selected", "filter-console", "filter-title", "filter-owner", "filter-region", "filter-quantity", "filter-game", "filter-box", "filter-manual", "filter-complete", "filter-date", "filter-paid", "filter-attribute"];
@@ -295,7 +300,7 @@ let loadFailed = false;
 let sort = { key: "console", direction: 1 };
 let editing = null;
 let viewRestored = false;
-let account = null;  // The signed-in account: { username, role }
+let account;  // The signed-in account, { username, role }; null for a visitor, undefined until known
 let bulkUpdate = null;  // The update of every visible entry, while it runs
 let selected = new Set();  // The checked rows, by "kind:id"; when any is checked, only they count in the totals
 
@@ -628,6 +633,13 @@ function paidColumn(cell) {
     return cell;
 }
 
+// Owner, which a visitor with no account does not see
+function ownerColumn(cell) {
+    cell.classList.add("owner-column");
+
+    return cell;
+}
+
 // Green when the value is above what was paid, red when below
 function differenceCell(amount) {
     const cell = amountCell(amount);
@@ -808,6 +820,10 @@ function renderHeaders() {
             paidColumn(header);
         }
 
+        if (column.key === "owner") {
+            ownerColumn(header);
+        }
+
         if (column.sortable === false) {
             const span = document.createElement("span");
             span.textContent = label;
@@ -905,7 +921,7 @@ function renderRows(visible) {
             paidColumn(ownershipCell(entry, "paid")),
             paidColumn(differenceCell(totalOf(entry))),
             detailsCell(entry),
-            textCell(entry.owner),
+            ownerColumn(textCell(entry.owner ?? "")),
             actions
         );
         rows.append(row);
@@ -979,14 +995,18 @@ function exportCells(entry) {
         paid: price("paid"),
         total: amount(totalOf(entry)),
         details: sortedTags(TAGS).filter(key => entry.values[key]).map(key => t(`flag.${key}`)).join(", "),
-        owner: entry.owner
+        owner: entry.owner ?? ""
     };
 }
 
-// The columns on screen: no actions, and neither Paid nor Difference for a buyer; then the visible rows, as sorted
+// The columns on screen: no actions, neither Paid nor Difference for a buyer, no Owner for a visitor;
+// then the visible rows, as sorted
 function exportTable() {
-    const hidePaid = document.body.classList.contains("hide-paid");
-    const columns = COLUMNS.filter(column => column.key !== "actions" && !(hidePaid && PAID_COLUMNS.includes(column.key)));
+    const hidden = [
+        ...(document.body.classList.contains("hide-paid") ? PAID_COLUMNS : []),
+        ...(document.body.classList.contains("hide-owner") ? ["owner"] : [])
+    ];
+    const columns = COLUMNS.filter(column => column.key !== "actions" && !hidden.includes(column.key));
     const rows = visibleEntries().map(entry => {
         const cells = exportCells(entry);
 
@@ -1169,7 +1189,7 @@ function fillSelect(id, values) {
 function fillFilters() {
     const all = entries ?? [];
     const unique = values => [...new Set(values)].sort(collator.compare).map(value => [value, value]);
-    fillSelect("filter-owner", unique(all.map(entry => entry.owner)));
+    fillSelect("filter-owner", unique(all.map(entry => entry.owner).filter(Boolean)));
     fillSelect("filter-console", unique(all.map(consoleName)));
     fillSelect("filter-selected", [["owned", t("filter.owned")], ["missing", t("filter.missing")]]);
     fillSelect("filter-region", REGIONS.map(region => [region, region]));
@@ -1259,9 +1279,17 @@ function canEdit() {
 }
 
 function renderAccount() {
-    const name = account ? [account.first_name, account.last_name].filter(Boolean).join(" ") || account.username : "";
-    element("account-name").textContent = account ? t("account", { username: name, role: t(`role.${account.role}`) }) : "";
-    document.body.classList.toggle("hide-paid", account?.role === "buyer");  // A buyer sees neither Paid nor Difference
+    const signedIn = Boolean(account);
+    const name = signedIn ? [account.first_name, account.last_name].filter(Boolean).join(" ") || account.username : "";
+    element("account-name").textContent = signedIn ? t("account", { username: name, role: t(`role.${account.role}`) }) : t("visitor");
+
+    // A visitor signs in instead of out, and the Users page is not theirs to see
+    element("logout").hidden = !signedIn;
+    element("login").hidden = signedIn;
+    element("nav-users").hidden = !signedIn;
+
+    document.body.classList.toggle("hide-paid", !signedIn || account.role === "buyer");  // A buyer sees neither Paid nor Difference
+    document.body.classList.toggle("hide-owner", !signedIn);  // A visitor is not told whose each item is
     element("add").disabled = !canEdit();
     element("update-visible-prices").disabled = !canEdit();
     setLinkEnabled(element("nav-users"), canEdit());
@@ -1285,15 +1313,32 @@ async function signOut() {
         await fetch("/auth/logout", { method: "POST" });
     }
     finally {
-        location.replace("/login");
+        location.replace("/");  // Back to the open collection, as a visitor
     }
 }
 
+// The signed-in account, or null for a visitor: no session is not an error here, so it never leads to /login
+async function currentAccount() {
+    let response;
+
+    try {
+        response = await fetch("/auth/me");
+    }
+    catch {
+        throw new Error(t("error.server"));
+    }
+
+    return response.ok ? response.json() : null;
+}
+
 async function loadEntries() {
-    account ??= await request("/auth/me");
+    if (account === undefined) {
+        account = await currentAccount();
+    }
+
     renderAccount();
     entries = await request("/collection/entries");
-    owners = await request("/collection/owners");
+    owners = account ? await request("/collection/owners") : [];
     selected = new Set([...selected].filter(key => entries.some(entry => entryKey(entry) === key)));
     fillFilters();
 
@@ -1748,6 +1793,7 @@ element("export-csv").addEventListener("click", exportToCsv);
 element("export").append(icon(ICONS.export));
 element("export").addEventListener("click", exportToExcel);
 element("logout").append(icon(ICONS.logout));
+element("login").append(icon(ICONS.login));
 element("help").append(icon(ICONS.help));
 element("legend").addEventListener("beforetoggle", placeLegend);
 element("add").addEventListener("click", openAddForm);

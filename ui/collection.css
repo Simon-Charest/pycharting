@@ -591,6 +591,11 @@ td.loss {
     display: none;
 }
 
+/* A visitor with no account is not told whose each item is */
+.hide-owner .owner-column {
+    display: none;
+}
+
 /* The selection column, at the far left: a narrow, centred checkbox in every section */
 .select-column {
     width: 36px;

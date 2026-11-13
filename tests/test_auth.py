@@ -67,19 +67,23 @@ class TestPasswords:
 
 
 class TestSignIn:
-    def test_without_session_the_page_leads_to_the_sign_in_form(self, client: TestClient) -> None:
+    def test_without_session_the_collection_page_still_opens(self, client: TestClient) -> None:
         # Act
         response = client.get("/")
 
         # Assert
-        assert (response.status_code, response.headers["location"]) == (303, "/login")
+        assert response.status_code == 200
         assert client.get("/login").status_code == 200
-        assert client.get("/docs").status_code == 303
+        assert client.get("/docs").status_code == 303  # Everything else still leads to the sign-in form
+        assert client.get("/users").headers["location"] == "/login"
 
-    def test_without_session_the_collection_is_refused(self, client: TestClient) -> None:
+    def test_without_session_only_what_is_for_sale_is_served(self, client: TestClient) -> None:
         # Act and assert
-        assert client.get("/collection/entries").status_code == 401
+        assert client.get("/collection/entries").status_code == 200  # Nothing for sale yet: an empty list
+        assert client.get("/collection/entries").json() == []
+        assert client.get("/collection/owners").status_code == 401
         assert client.delete("/collection/items/1").status_code == 401
+        assert client.post("/collection/items", json={"owner_id": 1, "group_name": "Wii", "name": "Mario"}).status_code == 401
 
     def test_the_sign_in_page_needs_no_session(self, client: TestClient) -> None:
         # Act and assert
@@ -138,7 +142,7 @@ class TestSignIn:
         client.cookies.set(auth.SESSION_COOKIE, token)  # Even a copy of the old cookie no longer works
 
         # Assert
-        assert client.get("/collection/entries").status_code == 401
+        assert client.get("/auth/me").status_code == 401
 
     def test_an_expired_session_is_refused(self, client: TestClient, connection: Connection) -> None:
         # Arrange
@@ -147,7 +151,7 @@ class TestSignIn:
         connection.commit()
 
         # Act and assert
-        assert client.get("/collection/entries").status_code == 401
+        assert client.get("/auth/me").status_code == 401
 
     def test_sessions_are_stored_by_hash(self, client: TestClient, connection: Connection) -> None:
         # Act
@@ -274,7 +278,7 @@ class TestUsers:
 
         # Assert
         assert response.status_code == 200
-        assert viewer.get("/collection/entries").status_code == 401
+        assert viewer.get("/auth/me").status_code == 401
         assert viewer.post("/auth/login", json={"username": VIEWER[0], "password": "a brand new one"}).status_code == 200
 
     def test_a_role_change_applies_at_once(self, client: TestClient) -> None:
@@ -313,7 +317,7 @@ class TestUsers:
 
         # Assert
         assert response.status_code == 200
-        assert viewer.get("/collection/entries").status_code == 401
+        assert viewer.get("/auth/me").status_code == 401
         assert VIEWER[0] not in self.ids(client)
 
     def test_unknown_accounts_are_not_found(self, client: TestClient) -> None:
@@ -388,7 +392,7 @@ class TestBuyer:
     def stock(self, connection: Connection) -> None:
         """Zelda is for sale, with what it was paid; Metroid is not for sale."""
 
-        connection.execute("UPDATE collection_items SET selling = 1, paid = 12.5 WHERE id = 1")
+        connection.execute("UPDATE collection_items SET selling = 1, paid = 12.5, owner_id = 1 WHERE id = 1")
         connection.execute("INSERT INTO collection_items (id, source_file_id, position, group_name, name, paid) VALUES (2, 1, 1, 'NES', 'Metroid', 30)")
         connection.commit()
         auth.create_account(connection, *self.BUYER, role=auth.BUYER)
@@ -402,6 +406,24 @@ class TestBuyer:
 
         # Assert
         assert [(entry["title"], entry["values"]["paid"]) for entry in entries] == [("Zelda", None)]
+
+    def test_a_visitor_with_no_account_sees_the_same_without_the_owner(self, client: TestClient) -> None:
+        # Act: no sign-in at all
+        entries: list = client.get("/collection/entries").json()
+
+        # Assert
+        assert [(entry["title"], entry["values"]["paid"]) for entry in entries] == [("Zelda", None)]
+        assert [(entry["owner"], entry["source"], entry["values"]["owner_id"]) for entry in entries] == [(None, None, None)]
+
+    def test_a_signed_in_account_is_told_who_owns_it(self, client: TestClient) -> None:
+        # Arrange
+        sign_in(client, VIEWER)
+
+        # Act
+        entries: list = client.get("/collection/entries").json()
+
+        # Assert
+        assert [entry["owner"] for entry in entries if entry["title"] == "Zelda"] == ["Owner One"]
 
     def test_others_still_see_everything(self, client: TestClient) -> None:
         # Arrange

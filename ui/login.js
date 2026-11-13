@@ -1,6 +1,6 @@
 "use strict";
 
-// The sign-in page: the front page for anyone who is not signed in
+// The sign-in page, reached from the collection, which anyone may look at without an account
 const TEXT = {
     fr: {
         "pageTitle": "PyCharting – Connexion",
@@ -10,6 +10,7 @@ const TEXT = {
         "login.username": "Nom d'utilisateur",
         "login.password": "Mot de passe",
         "login.submit": "Se connecter",
+        "login.back": "← Articles à vendre",
         "error.invalid_credentials": "Nom d'utilisateur ou mot de passe invalide.",
         "error.too_many_attempts": "Trop de tentatives. Réessayez dans 15 minutes.",
         "error.server": "Le serveur ne répond pas.",
@@ -25,6 +26,7 @@ const TEXT = {
         "login.username": "Username",
         "login.password": "Password",
         "login.submit": "Sign in",
+        "login.back": "← Items for sale",
         "error.invalid_credentials": "Invalid username or password.",
         "error.too_many_attempts": "Too many attempts. Try again in 15 minutes.",
         "error.server": "The server is not responding.",

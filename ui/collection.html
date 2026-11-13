@@ -5,8 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>PyCharting</title>
         <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-        <link rel="stylesheet" href="/static/collection.css?v=38">
-        <script src="/static/collection.js?v=66" defer></script>
+        <link rel="stylesheet" href="/static/collection.css?v=39">
+        <script src="/static/collection.js?v=67" defer></script>
     </head>
     <body>
         <header>
@@ -18,6 +18,7 @@
             <div class="account">
                 <span id="account-name"></span>
                 <button id="logout" class="icon-button" type="button" data-i18n-title="action.logout"></button>
+                <a id="login" class="icon-button" href="/login" data-i18n-title="action.login" hidden></a>
             </div>
             <div class="language" role="group" data-i18n-label="language">
                 <button class="icon-button flag" type="button" data-language="fr" lang="fr" title="Français" aria-label="Français"><img src="/static/flag-qc.svg" alt="" width="21" height="14"></button>
@@ -70,7 +71,7 @@
                         <td>
                             <select id="filter-attribute" data-i18n-label="tags"><option value="" data-i18n="filter.all"></option></select>
                         </td>
-                        <td>
+                        <td class="owner-column">
                             <select id="filter-owner" data-i18n-label="column.owner"><option value="" data-i18n="filter.all"></option></select>
                         </td>
                         <td class="actions">
@@ -93,7 +94,8 @@
                         <td id="total-subtotal" class="number"></td>
                         <td id="total-paid" class="number paid-column"></td>
                         <td id="total-total" class="number paid-column"></td>
-                        <td colspan="2"></td>
+                        <td></td>
+                        <td class="owner-column"></td>
                         <td class="add-cell">
                             <button id="add" class="icon-button accent" type="button" data-i18n-title="action.add"></button><!-- No space between the buttons, as in the rows above
                          --><button id="export-csv" class="icon-button" type="button" data-i18n-title="action.exportCsv"></button><!--

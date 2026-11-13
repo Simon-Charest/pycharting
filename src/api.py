@@ -38,8 +38,9 @@ app.mount("/static", RevalidatedStaticFiles(directory=UI_PATH), name="static")
 connection: Connection = open_database()
 ensure_collection_schema(connection)
 
-# Everything else needs a signed-in account: the collection, its Web API and the API's documentation
+# Everything else needs a signed-in account: the rest of the collection, its Web API and the API's documentation
 PUBLIC_PATHS: tuple = ("/login", "/auth/", "/static/", "/health")
+VISITOR_PATHS: tuple = ("/", "/collection/entries")  # Matched whole: what anyone may read without an account
 READ_METHODS: tuple = ("GET", "HEAD", "OPTIONS")
 API_PATHS: tuple = ("/collection/", "/accounts")  # Answer with an error the page can read, rather than a redirect
 ADMINISTRATOR_PATHS: tuple = ("/users", "/accounts")  # The Users page and its Web API
@@ -53,6 +54,12 @@ async def require_sign_in(request: Request, call_next: Any) -> Response:
     user: dict | None = session_user(connection, request.cookies.get(SESSION_COOKIE))
 
     if user is None:
+        # The collection page is open to all, showing only what is for sale; a visitor is no one, hence None
+        if request.method in READ_METHODS and request.url.path in VISITOR_PATHS:
+            request.state.user = None
+
+            return await call_next(request)
+
         # The page goes to the sign-in form; the Web API answers, so that the page can send it there too
         if request.url.path.startswith(API_PATHS):
             return JSONResponse({"detail": "not_signed_in"}, status_code=401)
@@ -154,7 +161,7 @@ async def root() -> FileResponse:
 
 @app.get("/login", response_model=None)
 async def login_page(request: Request) -> FileResponse | RedirectResponse:
-    """The front page for anyone who is not signed in."""
+    """The sign-in page, reached from the collection; someone already signed in is sent back to it."""
 
     if session_user(connection, request.cookies.get(SESSION_COOKIE)):
         return RedirectResponse("/", status_code=303)
@@ -208,9 +215,18 @@ async def me(request: Request) -> dict:
 @app.get("/collection/entries")
 async def collection_entries(request: Request) -> list:
     entries: list = get_collection_entries(connection)
+    user: dict | None = request.state.user
+
+    # A visitor with no account sees what is for sale, and nothing else: not what it was paid, and not whose
+    # it is either. Those names are left out of the answer, not merely hidden on the page.
+    if user is None:
+        return [
+            {**entry, "owner": None, "source": None, "values": {**entry["values"], "paid": None, "owner_id": None}}
+            for entry in entries if entry["values"].get("selling")
+        ]
 
     # A buyer only sees what is for sale, and never what it was paid
-    if request.state.user["role"] == BUYER:
+    if user["role"] == BUYER:
         entries = [{**entry, "values": {**entry["values"], "paid": None}} for entry in entries if entry["values"].get("selling")]
 
     return entries

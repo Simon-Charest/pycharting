@@ -208,6 +208,16 @@ class TestCollectionApi:
         assert [entry["values"]["wishlist"] for entry in get_collection_entries(connection)] == [True, True, True]
 
     @mark.asyncio
+    async def test_sold_is_a_tag_on_every_kind_of_entry(self, connection: Connection) -> None:
+        # Act
+        await api.update_collection_item(1, api.CollectionItem(group_name="Wii", name="Zelda", sold=True))
+        await api.update_collection_row(1, api.SpreadsheetRow(system="3DS", title="Kid Icarus", sold=True))
+        await api.add_collection_item(api.NewCollectionItem(owner_id=1, group_name="Wii", name="Mario", sold=True))
+
+        # Assert
+        assert [entry["values"]["sold"] for entry in get_collection_entries(connection)] == [True, True, True]
+
+    @mark.asyncio
     async def test_region_owner_and_source_can_be_edited_on_every_kind_of_entry(self, connection: Connection) -> None:
         # Act
         await api.update_collection_item(1, api.CollectionItem(group_name="Wii", name="Zelda", region="PAL", owner_id=2, source="my list"))

@@ -13,6 +13,7 @@ SELECT i.id
     , i.selling
     , i.buying
     , i.reserved
+    , i.sold
     , i.wishlist
     , i.previously_owned
     , i.quantity

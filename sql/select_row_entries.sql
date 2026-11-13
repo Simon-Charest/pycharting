@@ -12,6 +12,7 @@ SELECT r.id
     , r.selling
     , r.buying
     , r.reserved
+    , r.sold
     , r.game
     , r.box
     , r.manual

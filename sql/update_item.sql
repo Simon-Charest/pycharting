@@ -9,6 +9,7 @@ SET group_name = :group_name
     , selling = :selling
     , buying = :buying
     , reserved = :reserved
+    , sold = :sold
     , wishlist = :wishlist
     , previously_owned = :previously_owned
     , quantity = :quantity

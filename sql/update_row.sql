@@ -8,6 +8,7 @@ SET system = :system
     , selling = :selling
     , buying = :buying
     , reserved = :reserved
+    , sold = :sold
     , game = :game
     , box = :box
     , manual = :manual

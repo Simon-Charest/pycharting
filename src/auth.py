@@ -12,8 +12,8 @@ from src.database import add_session, add_user, delete_session, delete_user, del
 
 ADMINISTRATOR: str = "administrator"  # Can change the collection
 COLLABORATOR: str = "collaborator"  # Can only look at it
-BUYER: str = "buyer"  # Can only look at what is for sale, without what it was paid
-ROLES: tuple = (ADMINISTRATOR, COLLABORATOR, BUYER)
+# What is for sale needs no account at all: the collection page shows it to anyone, so there is no buyer role
+ROLES: tuple = (ADMINISTRATOR, COLLABORATOR)
 SESSION_COOKIE: str = "pycharting_session"
 SESSION_DAYS: int = 30
 MAX_FAILURES: int = 5  # Failed sign-ins allowed for one account...

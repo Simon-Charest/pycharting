@@ -526,7 +526,7 @@ button.primary:disabled:hover {
 
 /* The Users page */
 .users {
-    max-width: 900px;
+    max-width: 1200px;
     min-height: 0;
     margin-top: 16px;
 }
@@ -539,10 +539,35 @@ button.primary:disabled:hover {
     vertical-align: middle;
 }
 
+/* Each field fills the width its column is given, rather than the browser's default twenty characters */
 .users input,
 .users select {
+    width: 100%;
+    min-width: 0;
     min-height: 32px;
     padding: 4px 8px;
+}
+
+/* Shared out by what each column holds: an email address is the longest of them, a pair of buttons the shortest */
+.users th:nth-child(1) {
+    width: 28%;
+}
+
+.users th:nth-child(2),
+.users th:nth-child(3) {
+    width: 16%;
+}
+
+.users th:nth-child(4) {
+    width: 14%;
+}
+
+.users th:nth-child(5) {
+    width: 18%;
+}
+
+.users th:nth-child(6) {
+    width: 8%;
 }
 
 .users tfoot td {
@@ -581,7 +606,7 @@ td.loss {
     color: var(--loss);
 }
 
-/* A buyer sees neither what was paid nor the difference */
+/* A visitor with no account sees neither what was paid nor the difference */
 .hide-paid .paid-column {
     display: none;
 }

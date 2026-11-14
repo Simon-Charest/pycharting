@@ -79,8 +79,7 @@ const TRANSLATIONS = {
         "legend.totals": "Les entrées « {reproduction} », « {virtual} », « {damaged} », « {sold} » et « {wishlist} » ne comptent pas dans les totaux.",
         "legend.standards": "« NTSC » et « PAL » sont les standards vidéo d'origine : NTSC pour les produits nord-américains et japonais, PAL pour les produits européens.",
         "role.administrator": "Administrateur",
-        "role.collaborator": "Collaborateur (lecture seule)",
-        "role.buyer": "Acheteur (articles à vendre)",
+        "role.collaborator": "Collaborateur",
         "account": "{username} · {role}",
         "confirm.delete": "Supprimer « {title} » ({console}, {owner}) ?",
         "confirm.updateVisible": "Mettre à jour les prix et la date de {count} entrées visibles depuis PriceCharting, une après l'autre ?",
@@ -179,8 +178,7 @@ const TRANSLATIONS = {
         "legend.totals": "“{reproduction}”, “{virtual}”, “{damaged}”, “{sold}” and “{wishlist}” entries do not count in the totals.",
         "legend.standards": "“NTSC” and “PAL” are the original video standards: NTSC for North American and Japanese products, PAL for European ones.",
         "role.administrator": "Administrator",
-        "role.collaborator": "Collaborator (read-only)",
-        "role.buyer": "Buyer (items for sale)",
+        "role.collaborator": "Collaborator",
         "account": "{username} · {role}",
         "confirm.delete": "Delete “{title}” ({console}, {owner})?",
         "confirm.updateVisible": "Update the prices and date of {count} visible entries from PriceCharting, one after the other?",
@@ -626,7 +624,7 @@ function partCell(entry, key) {
     return usesComplete(entry) ? textCell("", "number") : ownershipCell(entry, key);
 }
 
-// Paid and Difference, which a buyer does not see
+// Paid and Difference, which a visitor does not see
 const PAID_COLUMNS = ["paid", "total"];
 
 function paidColumn(cell) {
@@ -1001,7 +999,7 @@ function exportCells(entry) {
     };
 }
 
-// The columns on screen: no actions, neither Paid nor Difference for a buyer, no Owner for a visitor;
+// The columns on screen: no actions, and for a visitor neither Paid, Difference nor Owner;
 // then the visible rows, as sorted
 function exportTable() {
     const hidden = [
@@ -1290,7 +1288,7 @@ function renderAccount() {
     element("login").hidden = signedIn;
     element("nav-users").hidden = !signedIn;
 
-    document.body.classList.toggle("hide-paid", !signedIn || account.role === "buyer");  // A buyer sees neither Paid nor Difference
+    document.body.classList.toggle("hide-paid", !signedIn);  // A visitor sees neither Paid nor Difference
     document.body.classList.toggle("hide-owner", !signedIn);  // A visitor is not told whose each item is
     element("add").disabled = !canEdit();
     element("update-visible-prices").disabled = !canEdit();

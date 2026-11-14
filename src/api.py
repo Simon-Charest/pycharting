@@ -9,7 +9,7 @@ from sqlcipher3.dbapi2 import Connection
 from typing import Annotated, Any, Literal
 from uvicorn import run
 
-from src.auth import ADMINISTRATOR, BUYER, ROLES, SESSION_COOKIE, SESSION_DAYS, NameTaken, SelfChange, create_account, delete_account, is_locked, list_accounts, session_user, sign_in, sign_out, update_account
+from src.auth import ADMINISTRATOR, ROLES, SESSION_COOKIE, SESSION_DAYS, NameTaken, SelfChange, create_account, delete_account, is_locked, list_accounts, session_user, sign_in, sign_out, update_account
 from src.constant import API_HOST, API_ORIGINS, API_PORT, API_RELOAD, UI_PATH
 from src.database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_entry_prices, get_owners, open_database
 from src.prices import ExchangeRateError, PriceChartingError, ProductNotFound, RateLimited, fetch_prices
@@ -225,10 +225,6 @@ async def collection_entries(request: Request) -> list:
             for entry in entries if entry["values"].get("selling")
         ]
 
-    # A buyer only sees what is for sale, and never what it was paid
-    if user["role"] == BUYER:
-        entries = [{**entry, "values": {**entry["values"], "paid": None}} for entry in entries if entry["values"].get("selling")]
-
     return entries
 
 
@@ -320,7 +316,7 @@ async def update_entry_prices(kind: Literal["items", "rows"], id: int) -> dict:
 
 
 Password = Annotated[str, StringConstraints(min_length=8, max_length=1024)]
-Role = Literal["administrator", "collaborator", "buyer"]
+Role = Literal["administrator", "collaborator"]
 
 
 PersonName = Annotated[str, StringConstraints(strip_whitespace=True, max_length=100)]

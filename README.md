@@ -84,7 +84,7 @@ pytest
 13. Consult [OpenAPI Specification](http://localhost/docs).
 
 ## Accounts
-The collection page is open to all, showing only the entries tagged Selling, without what they cost or who owns them; everything else asks for an account, reached from the Sign in button. An administrator can change the collection; a collaborator can only look at it, and a buyer only at what is for sale. Manage accounts from the project folder (on the server: `DEPLOY_DIR`, with `.venv/bin/python`); passwords are typed in, never written on the command line:
+The collection page is open to all, showing only the entries tagged Selling, without what they cost or who owns them; everything else asks for an account, reached from the Sign in button. An administrator can change the collection; a collaborator can only look at it. There are only those two roles: the open page replaced the buyer, whose accounts become collaborators when the database is opened. Manage accounts from the project folder (on the server: `DEPLOY_DIR`, with `.venv/bin/python`); passwords are typed in, never written on the command line:
 ```
 python . add-user NAME --role administrator
 python . add-user NAME --role collaborator

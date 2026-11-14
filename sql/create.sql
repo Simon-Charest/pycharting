@@ -91,7 +91,7 @@ TABLE IF NOT EXISTS spreadsheet_rows
 ;
 
 -- Accounts that may sign in; the password is only kept as a scrypt hash.
--- An administrator can change the collection; a collaborator can only look at it; a buyer only sees what is for sale.
+-- An administrator can change the collection; a collaborator can only look at it. What is for sale needs no account.
 CREATE
 TABLE IF NOT EXISTS users
 (
@@ -100,7 +100,7 @@ TABLE IF NOT EXISTS users
     , password_hash TEXT NOT NULL
     , first_name TEXT
     , last_name TEXT
-    , role TEXT NOT NULL DEFAULT 'collaborator' CHECK (role IN ('administrator', 'collaborator', 'buyer'))
+    , role TEXT NOT NULL DEFAULT 'collaborator' CHECK (role IN ('administrator', 'collaborator'))
 )
 ;
 

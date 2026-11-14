@@ -21,9 +21,9 @@ const TRANSLATIONS = {
         "column.manual": "Manuel",
         "column.box": "Boîte",
         "column.complete": "Complet",
+        "column.subtotal": "Total",
         "column.date": "Date",
         "column.paid": "Payé",
-        "column.subtotal": "Valeur",
         "column.total": "Différence",
         "column.details": "Étiquettes",
         "column.actions": "Actions",
@@ -120,9 +120,9 @@ const TRANSLATIONS = {
         "column.manual": "Manual",
         "column.box": "Box",
         "column.complete": "Complete",
+        "column.subtotal": "Total",
         "column.date": "Date",
         "column.paid": "Paid",
-        "column.subtotal": "Value",
         "column.total": "Difference",
         "column.details": "Tags",
         "column.actions": "Actions",
@@ -213,8 +213,8 @@ const COLUMNS = [
     { key: "game", numeric: true },
     { key: "box", numeric: true },
     { key: "manual", numeric: true },
-    { key: "date" },
     { key: "subtotal", numeric: true },
+    { key: "date" },
     { key: "paid", numeric: true },
     { key: "total", numeric: true },
     { key: "details", sortable: false },
@@ -469,7 +469,7 @@ function subtotalOf(entry) {
     return parts.length ? parts.reduce((sum, amount) => sum + amount, 0) : null;
 }
 
-// Always Valeur less Payé, as both are shown; an empty value counts as 0
+// Always Total less Payé, as both are shown; an empty value counts as 0
 function totalOf(entry) {
     return (subtotalOf(entry) ?? 0) - (amountOf(entry, "paid") ?? 0);
 }
@@ -916,8 +916,8 @@ function renderRows(visible) {
             textCell(entry.values.quantity, "number"),
             ownershipCell(entry, COMPLETE),
             ...OWNERSHIP.map(key => partCell(entry, key)),
-            textCell(entry.values.date ?? "", "date"),
             amountCell(subtotalOf(entry)),
+            textCell(entry.values.date ?? "", "date"),
             paidColumn(ownershipCell(entry, "paid")),
             paidColumn(differenceCell(totalOf(entry))),
             detailsCell(entry),
@@ -990,8 +990,8 @@ function exportCells(entry) {
         game: part("game"),
         box: part("box"),
         manual: part("manual"),
-        date: entry.values.date ?? "",
         subtotal: amount(subtotalOf(entry)),
+        date: entry.values.date ?? "",
         paid: price("paid"),
         total: amount(totalOf(entry)),
         details: sortedTags(TAGS).filter(key => entry.values[key]).map(key => t(`flag.${key}`)).join(", "),

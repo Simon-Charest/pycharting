@@ -37,6 +37,11 @@
     box-sizing: border-box;
 }
 
+/* Wins over any display below, so that a hidden button is gone rather than laid out anyway */
+[hidden] {
+    display: none !important;
+}
+
 body {
     display: flex;
     flex-direction: column;
@@ -54,7 +59,7 @@ header {
     display: flex;
     flex-wrap: wrap;
     align-items: center;  /* The buttons have no text to line up on: centre everything */
-    gap: 4px 16px;
+    gap: 4px 8px;  /* The spacing between the buttons at the end, all the way across */
 }
 
 h1 {
@@ -120,6 +125,7 @@ button.danger {
 .language {
     display: flex;
     align-items: center;
+    gap: 8px;
     margin-left: auto;
 }
 
@@ -213,6 +219,11 @@ tfoot .add-cell {
 }
 
 .icon-button:last-child {
+    margin-right: 0;
+}
+
+/* In the header the gap does the spacing, evenly, so the buttons add none of their own */
+header .icon-button {
     margin-right: 0;
 }
 
@@ -342,6 +353,18 @@ a.icon-button {
 
 a.icon-button:hover {
     background: var(--surface-alt);
+}
+
+/* The page one is already on, as the text links in the nav show it */
+a.icon-button[aria-current="page"] {
+    background: var(--surface-alt);
+    color: var(--text);
+}
+
+/* A page a collaborator cannot open: visible, but clearly unavailable */
+a.icon-button[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.4;
 }
 
 .icon-button svg {
@@ -500,10 +523,11 @@ button.primary:disabled:hover {
     grid-column: 1;
 }
 
-/* Home and Users, next to the title */
+/* The text link back to the collection, on the sign-in page, next to the title */
 .pages {
     display: flex;
     gap: 4px;
+    margin-left: 8px;
 }
 
 .pages a {
@@ -518,15 +542,13 @@ button.primary:disabled:hover {
     color: var(--text);
 }
 
-.pages a[aria-current="page"] {
-    background: var(--surface-alt);
-    color: var(--text);
-    font-weight: 600;
-}
 
-.pages a[aria-disabled="true"] {
-    cursor: not-allowed;
-    opacity: 0.4;
+/* Which account is one's own, beside its name */
+.users .self {
+    margin-left: 6px;
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
 }
 
 /* The Users page */

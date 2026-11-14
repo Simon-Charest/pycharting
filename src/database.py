@@ -195,11 +195,11 @@ def get_users(connection: Connection) -> list:
     return execute(connection, SQL_PATH.joinpath("select_users.sql").read_text())
 
 
-def update_user(connection: Connection, id: int, role: str | None, password_hash: str | None, names: tuple | None = None) -> bool:
-    """Change an account's role, password and/or (first name, last name); return False if there is no such account."""
+def update_user(connection: Connection, id: int, role: str | None, password_hash: str | None, names: tuple | None = None, username: str | None = None) -> bool:
+    """Change an account's name, role, password and/or (first name, last name); return False if there is no such account."""
 
     first_name, last_name = names or (None, None)
-    parameters: dict = {"id": id, "role": role, "password_hash": password_hash, "set_names": names is not None, "first_name": first_name, "last_name": last_name}
+    parameters: dict = {"id": id, "username": username, "role": role, "password_hash": password_hash, "set_names": names is not None, "first_name": first_name, "last_name": last_name}
     count: int = connection.execute(SQL_PATH.joinpath("update_user.sql").read_text(), parameters).rowcount
     connection.commit()
 

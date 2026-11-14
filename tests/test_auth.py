@@ -221,6 +221,37 @@ class TestUsers:
     def ids(self, client: TestClient) -> dict:
         return {user["username"]: user["id"] for user in client.get("/accounts").json()}
 
+    def test_a_name_can_change_and_the_account_keeps_its_session(self, client: TestClient, connection: Connection) -> None:
+        # Arrange: the account to rename is signed in elsewhere
+        viewer: TestClient = TestClient(api.app, follow_redirects=False)
+        sign_in(viewer, VIEWER)
+        sign_in(client, ADMIN)
+
+        # Act
+        response = client.put(f"/accounts/{self.ids(client)[VIEWER[0]]}", json={"username": "  renamed  "})
+
+        # Assert
+        assert response.status_code == 200
+        assert "renamed" in self.ids(client)  # Stored trimmed
+        assert VIEWER[0] not in self.ids(client)
+        assert viewer.get("/auth/me").json()["username"] == "renamed"  # A new name is not a reason to sign out
+        assert client.post("/auth/login", json={"username": "renamed", "password": VIEWER[1]}).status_code == 200
+        assert client.post("/auth/login", json={"username": VIEWER[0], "password": VIEWER[1]}).status_code == 401
+
+    def test_a_name_another_account_already_has_is_refused(self, client: TestClient) -> None:
+        # Arrange
+        sign_in(client, ADMIN)
+        id: int = self.ids(client)[VIEWER[0]]
+
+        # Act: the administrator's own name, in another case
+        response = client.put(f"/accounts/{id}", json={"username": ADMIN[0].upper()})
+
+        # Assert
+        assert (response.status_code, response.json()["detail"]) == (409, "user_exists")
+        assert VIEWER[0] in self.ids(client)
+        assert client.put(f"/accounts/{id}", json={"username": VIEWER[0]}).status_code == 200  # Its own name is fine
+        assert client.put(f"/accounts/{id}", json={"username": "  "}).status_code == 422  # An empty one is not
+
     def test_an_administrator_sees_the_accounts_without_their_passwords(self, client: TestClient) -> None:
         # Arrange
         sign_in(client, ADMIN)

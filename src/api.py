@@ -9,7 +9,7 @@ from sqlcipher3.dbapi2 import Connection
 from typing import Annotated, Any, Literal
 from uvicorn import run
 
-from src.auth import ADMINISTRATOR, BUYER, ROLES, SESSION_COOKIE, SESSION_DAYS, SelfChange, create_account, delete_account, is_locked, list_accounts, session_user, sign_in, sign_out, update_account
+from src.auth import ADMINISTRATOR, BUYER, ROLES, SESSION_COOKIE, SESSION_DAYS, NameTaken, SelfChange, create_account, delete_account, is_locked, list_accounts, session_user, sign_in, sign_out, update_account
 from src.constant import API_HOST, API_ORIGINS, API_PORT, API_RELOAD, UI_PATH
 from src.database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_entry_prices, get_owners, open_database
 from src.prices import ExchangeRateError, PriceChartingError, ProductNotFound, RateLimited, fetch_prices
@@ -337,10 +337,11 @@ class NewAccount(BaseModel):
 
 
 class AccountChange(BaseModel):
-    """A missing role or password keeps the one the account has; names change only when both are given."""
+    """A missing name, role or password keeps the one the account has; names change only when both are given."""
 
     model_config = ConfigDict(extra="forbid")
 
+    username: RequiredText | None = None
     first_name: PersonName | None = None
     last_name: PersonName | None = None
     role: Role | None = None
@@ -371,9 +372,11 @@ async def add_user(account: NewAccount) -> dict:
 async def update_user(id: int, change: AccountChange, request: Request) -> dict:
     try:
         names: tuple | None = (change.first_name, change.last_name) if {"first_name", "last_name"} & change.model_fields_set else None
-        found: bool = update_account(connection, request.state.user["id"], id, change.role, change.password, names)
+        found: bool = update_account(connection, request.state.user["id"], id, change.role, change.password, names, change.username)
     except SelfChange:
         raise HTTPException(status_code=409, detail="self")
+    except NameTaken:
+        raise HTTPException(status_code=409, detail="user_exists")
 
     if not found:
         raise HTTPException(status_code=404, detail="Account not found.")

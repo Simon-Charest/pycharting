@@ -83,14 +83,19 @@ class SelfChange(Exception):
     """An administrator may not demote or delete their own account: the site could be left without one."""
 
 
+class NameTaken(Exception):
+    """Another account already goes by that name, whatever its case."""
+
+
 def list_accounts(connection: Connection) -> list:
     return get_users(connection)
 
 
-def update_account(connection: Connection, acting_id: int, id: int, role: str | None = None, password: str | None = None, names: tuple | None = None) -> bool:
-    """Change another account's role, or any account's password; return False if there is no such account.
+def update_account(connection: Connection, acting_id: int, id: int, role: str | None = None, password: str | None = None, names: tuple | None = None, username: str | None = None) -> bool:
+    """Change an account's name, its role (another's only) or its password; return False if there is no such account.
 
-    A new password signs that account out everywhere, except for administrators changing their own.
+    A new password signs that account out everywhere, except for administrators changing their own. A new name
+    does not: the session belongs to the person, not to the name they go by.
     """
 
     if role is not None:
@@ -99,9 +104,16 @@ def update_account(connection: Connection, acting_id: int, id: int, role: str | 
         if id == acting_id and role != ADMINISTRATOR:
             raise SelfChange()
 
+    if username is not None:
+        username = username.strip()
+        taken: dict | None = get_user(connection, username)
+
+        if taken is not None and taken["id"] != id:
+            raise NameTaken()
+
     names = (_name(names[0]), _name(names[1])) if names is not None else None
 
-    if not update_user(connection, id, role, hash_password(password) if password else None, names):
+    if not update_user(connection, id, role, hash_password(password) if password else None, names, username):
         return False
 
     if password and id != acting_id:

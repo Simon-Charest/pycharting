@@ -13,7 +13,7 @@ const TEXT = {
         "action.save": "Enregistrer",
         "action.delete": "Supprimer",
         "account": "{username} · {role}",
-        "you": "{username} (vous)",
+        "you": "(vous)",
         "role.administrator": "Administrateur",
         "role.collaborator": "Collaborateur (lecture seule)",
         "role.buyer": "Acheteur (articles à vendre)",
@@ -53,7 +53,7 @@ const TEXT = {
         "action.save": "Save",
         "action.delete": "Delete",
         "account": "{username} · {role}",
-        "you": "{username} (you)",
+        "you": "(you)",
         "role.administrator": "Administrator",
         "role.collaborator": "Collaborator (read-only)",
         "role.buyer": "Buyer (items for sale)",
@@ -89,6 +89,8 @@ const ICONS = {
     add: ["M12 5v14", "M5 12h14"],
     save: ["M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z", "M17 21v-8H7v8", "M7 3v5h8"],
     delete: ["M3 6h18", "M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2", "M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6", "M10 11v6", "M14 11v6"],
+    home: ["M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z", "M9 22V12h6v10"],
+    users: ["M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2", "M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"],
     logout: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"]
 };
 
@@ -245,6 +247,14 @@ function iconButton(action, label, className, onClick, disabled = false) {
     return button;
 }
 
+function selfMarker() {
+    const marker = document.createElement("span");
+    marker.className = "self";
+    marker.textContent = t("you");
+
+    return marker;
+}
+
 function cell(...children) {
     const td = document.createElement("td");
     td.append(...children);
@@ -259,6 +269,9 @@ function renderUsers() {
 
     for (const user of users) {
         const self = user.id === account?.id;
+        const username = textInput(user.username, `${t("column.username")} ${user.username}`);
+        username.autocapitalize = "none";
+        username.spellcheck = false;
         const firstName = textInput(user.first_name, `${t("column.firstName")} ${user.username}`);
         const lastName = textInput(user.last_name, `${t("column.lastName")} ${user.username}`);
         const role = roleSelect(user.role, self);
@@ -269,12 +282,18 @@ function renderUsers() {
         password.placeholder = t("unchanged");
         password.setAttribute("aria-label", `${t("column.password")} ${user.username}`);
         const actions = cell(
-            iconButton("save", user.username, "icon-button", () => saveUser(user, firstName, lastName, role, password)),
+            iconButton("save", user.username, "icon-button", () => saveUser(user, username, firstName, lastName, role, password)),
             iconButton("delete", user.username, "icon-button danger", () => deleteUser(user), self)
         );
         actions.className = "actions";
         const row = document.createElement("tr");
-        row.append(cell(self ? t("you", { username: user.username }) : user.username), cell(firstName), cell(lastName), cell(role), cell(password), actions);
+        const name = cell(username);
+
+        if (self) {
+            name.append(selfMarker());
+        }
+
+        row.append(name, cell(firstName), cell(lastName), cell(role), cell(password), actions);
         body.append(row);
     }
 }
@@ -284,8 +303,18 @@ async function loadUsers() {
     renderUsers();
 }
 
-async function saveUser(user, firstName, lastName, role, password) {
+async function saveUser(user, username, firstName, lastName, role, password) {
     const change = {};
+
+    if (!username.value.trim()) {
+        showMessage(t("error.invalid"));
+
+        return;
+    }
+
+    if (username.value.trim() !== user.username) {
+        change.username = username.value.trim();
+    }
 
     if (firstName.value.trim() !== (user.first_name ?? "") || lastName.value.trim() !== (user.last_name ?? "")) {
         change.first_name = firstName.value.trim();
@@ -316,7 +345,7 @@ async function saveUser(user, firstName, lastName, role, password) {
         }
 
         await loadUsers();
-        showMessage(t("saved", { username: user.username }), true);
+        showMessage(t("saved", { username: change.username ?? user.username }), true);
     }
     catch (error) {
         showMessage(error.message);
@@ -377,6 +406,8 @@ async function signOut() {
 }
 
 document.querySelectorAll("[data-language]").forEach(button => button.addEventListener("click", () => setLanguage(button.dataset.language, true)));
+element("nav-home").append(icon(ICONS.home));
+element("nav-users").append(icon(ICONS.users));
 element("logout").append(icon(ICONS.logout));
 element("logout").addEventListener("click", signOut);
 element("add-user").append(icon(ICONS.add));

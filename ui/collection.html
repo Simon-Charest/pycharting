@@ -11,12 +11,10 @@
     <body>
         <header>
             <h1 data-i18n="heading"></h1>
-            <nav class="pages">
-                <a href="/" aria-current="page" data-i18n="nav.home"></a>
-                <a id="nav-users" href="/users" data-i18n="nav.users"></a>
-            </nav>
             <div class="account">
                 <span id="account-name"></span>
+                <a id="nav-home" class="icon-button" href="/" aria-current="page" data-i18n-title="nav.home"></a>
+                <a id="nav-users" class="icon-button" href="/users" data-i18n-title="nav.users"></a>
                 <button id="logout" class="icon-button" type="button" data-i18n-title="action.logout"></button>
                 <a id="login" class="icon-button" href="/login" data-i18n-title="action.login" hidden></a>
             </div>
@@ -111,6 +109,7 @@
         <div id="legend" class="legend" popover>
             <h2 data-i18n="legend.heading"></h2>
             <ul>
+                <li id="legend-standards" data-i18n="legend.standards"></li>
                 <li id="legend-previously-owned"></li>
                 <li id="legend-totals"></li>
             </ul>

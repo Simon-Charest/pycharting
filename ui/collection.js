@@ -77,11 +77,11 @@ const TRANSLATIONS = {
         "legend.heading": "Légende",
         "legend.previouslyOwned": "« {tag} » : un article possédé pendant l'enfance, puis racheté.",
         "legend.totals": "Les entrées « {reproduction} », « {virtual} », « {damaged} », « {sold} » et « {wishlist} » ne comptent pas dans les totaux.",
+        "legend.standards": "« NTSC » et « PAL » sont les standards vidéo d'origine : NTSC pour les produits nord-américains et japonais, PAL pour les produits européens.",
         "role.administrator": "Administrateur",
         "role.collaborator": "Collaborateur (lecture seule)",
         "role.buyer": "Acheteur (articles à vendre)",
         "account": "{username} · {role}",
-        "visitor": "Articles à vendre",
         "confirm.delete": "Supprimer « {title} » ({console}, {owner}) ?",
         "confirm.updateVisible": "Mettre à jour les prix et la date de {count} entrées visibles depuis PriceCharting, une après l'autre ?",
         "bulk.none": "Aucune entrée visible n'a d'Article, de Manuel ou de Boîte à mettre à jour.",
@@ -177,11 +177,11 @@ const TRANSLATIONS = {
         "legend.heading": "Legend",
         "legend.previouslyOwned": "“{tag}”: an item owned as a child, then bought back.",
         "legend.totals": "“{reproduction}”, “{virtual}”, “{damaged}”, “{sold}” and “{wishlist}” entries do not count in the totals.",
+        "legend.standards": "“NTSC” and “PAL” are the original video standards: NTSC for North American and Japanese products, PAL for European ones.",
         "role.administrator": "Administrator",
         "role.collaborator": "Collaborator (read-only)",
         "role.buyer": "Buyer (items for sale)",
         "account": "{username} · {role}",
-        "visitor": "Items for sale",
         "confirm.delete": "Delete “{title}” ({console}, {owner})?",
         "confirm.updateVisible": "Update the prices and date of {count} visible entries from PriceCharting, one after the other?",
         "bulk.none": "No visible entry has an Item, Manual or Box to update.",
@@ -241,6 +241,8 @@ const ICONS = {
     // A text file: the same page, with lines of text
     csv: ["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z", "M14 2v6h6", "M8 9h2", "M8 13h8", "M8 17h8"],
     reset: ["M18 6 6 18", "M6 6l12 12"],
+    home: ["M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z", "M9 22V12h6v10"],
+    users: ["M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2", "M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"],
     logout: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"],
     login: ["M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4", "M10 17l5-5-5-5", "M15 12H3"],
     help: ["M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z", "M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3", "M12 17h.01"]
@@ -1281,7 +1283,7 @@ function canEdit() {
 function renderAccount() {
     const signedIn = Boolean(account);
     const name = signedIn ? [account.first_name, account.last_name].filter(Boolean).join(" ") || account.username : "";
-    element("account-name").textContent = signedIn ? t("account", { username: name, role: t(`role.${account.role}`) }) : t("visitor");
+    element("account-name").textContent = signedIn ? t("account", { username: name, role: t(`role.${account.role}`) }) : "";
 
     // A visitor signs in instead of out, and the Users page is not theirs to see
     element("logout").hidden = !signedIn;
@@ -1792,6 +1794,8 @@ element("export-csv").append(icon(ICONS.csv));
 element("export-csv").addEventListener("click", exportToCsv);
 element("export").append(icon(ICONS.export));
 element("export").addEventListener("click", exportToExcel);
+element("nav-home").append(icon(ICONS.home));
+element("nav-users").append(icon(ICONS.users));
 element("logout").append(icon(ICONS.logout));
 element("login").append(icon(ICONS.login));
 element("help").append(icon(ICONS.help));

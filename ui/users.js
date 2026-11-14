@@ -13,7 +13,6 @@ const TEXT = {
         "action.save": "Enregistrer",
         "action.delete": "Supprimer",
         "account": "{username} · {role}",
-        "you": "(vous)",
         "role.administrator": "Administrateur",
         "role.collaborator": "Collaborateur (lecture seule)",
         "role.buyer": "Acheteur (articles à vendre)",
@@ -53,7 +52,6 @@ const TEXT = {
         "action.save": "Save",
         "action.delete": "Delete",
         "account": "{username} · {role}",
-        "you": "(you)",
         "role.administrator": "Administrator",
         "role.collaborator": "Collaborator (read-only)",
         "role.buyer": "Buyer (items for sale)",
@@ -247,14 +245,6 @@ function iconButton(action, label, className, onClick, disabled = false) {
     return button;
 }
 
-function selfMarker() {
-    const marker = document.createElement("span");
-    marker.className = "self";
-    marker.textContent = t("you");
-
-    return marker;
-}
-
 function cell(...children) {
     const td = document.createElement("td");
     td.append(...children);
@@ -287,13 +277,7 @@ function renderUsers() {
         );
         actions.className = "actions";
         const row = document.createElement("tr");
-        const name = cell(username);
-
-        if (self) {
-            name.append(selfMarker());
-        }
-
-        row.append(name, cell(firstName), cell(lastName), cell(role), cell(password), actions);
+        row.append(cell(username), cell(firstName), cell(lastName), cell(role), cell(password), actions);
         body.append(row);
     }
 }

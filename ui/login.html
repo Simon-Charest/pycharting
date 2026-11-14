@@ -6,14 +6,15 @@
         <title>PyCharting</title>
         <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
         <link rel="stylesheet" href="/static/collection.css?v=39">
-        <script src="/static/login.js?v=3" defer></script>
+        <script src="/static/login.js?v=4" defer></script>
     </head>
     <body>
         <header>
             <h1 data-i18n="heading"></h1>
-            <nav class="pages">
-                <a href="/" data-i18n="login.back"></a>
-            </nav>
+            <div class="account">
+                <a id="nav-home" class="icon-button" href="/" data-i18n-title="nav.home"></a>
+                <a id="login" class="icon-button" href="/login" aria-current="page" data-i18n-title="action.login"></a>
+            </div>
             <div class="language" role="group" data-i18n-label="language">
                 <button class="icon-button flag" type="button" data-language="fr" lang="fr" title="Français" aria-label="Français"><img src="/static/flag-qc.svg" alt="" width="21" height="14"></button>
                 <button class="icon-button flag" type="button" data-language="en" lang="en" title="English" aria-label="English"><img src="/static/flag-ca.svg" alt="" width="28" height="14"></button>

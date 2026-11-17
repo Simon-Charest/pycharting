@@ -2,6 +2,7 @@ from types import SimpleNamespace
 from pathlib import Path
 from pytest import fixture, mark, raises
 from fastapi import HTTPException
+from pydantic import ValidationError
 from sqlcipher3.dbapi2 import Connection
 
 import src.api as api
@@ -1043,3 +1044,100 @@ class TestBuying:
         # Assert
         assert "buying" in item_columns
         assert "buying" in row_columns
+
+
+class TestSystems:
+    @mark.asyncio
+    async def test_every_system_name_is_listed_with_its_entries(self, connection: Connection) -> None:
+        # Arrange: a second name for the Wii's system, and two entries with no system name of their own
+        connection.execute("INSERT INTO collection_items (id, source_file_id, position, group_name, name) VALUES (2, 1, 1, 'wii', 'Mario'), (3, 1, 2, '  ', 'Blank')")
+        connection.execute("INSERT INTO spreadsheet_rows (id, source_file_id, sheet, row_index, system, title) VALUES (2, 2, 'Feuil1', 3, 'Wii', 'Wii Sports'), (3, 2, 'Feuil1', 4, NULL, 'None')")
+        connection.commit()
+
+        # Act
+        actual: list = await api.collection_systems()
+
+        # Assert: names that differ only in case stay apart, and a name PriceCharting does not know is said to be unknown
+        assert actual == [
+            {"name": "3DS", "items": 0, "rows": 1, "pricecharting": True},
+            {"name": "Wii", "items": 1, "rows": 1, "pricecharting": True},
+            {"name": "wii", "items": 1, "rows": 0, "pricecharting": True}
+        ]
+
+    @mark.asyncio
+    async def test_an_unknown_system_name_is_told_apart(self, connection: Connection) -> None:
+        # Arrange
+        connection.execute("UPDATE collection_items SET group_name = 'Amiga' WHERE id = 1")
+        connection.commit()
+
+        # Act
+        actual: list = await api.collection_systems()
+
+        # Assert
+        assert [(system["name"], system["pricecharting"]) for system in actual] == [("3DS", True), ("Amiga", False)]
+
+    @mark.asyncio
+    async def test_renaming_a_system_renames_its_items_and_rows(self, connection: Connection) -> None:
+        # Arrange
+        connection.execute("INSERT INTO spreadsheet_rows (id, source_file_id, sheet, row_index, system, title) VALUES (2, 2, 'Feuil1', 3, 'Wii', 'Wii Sports')")
+        connection.commit()
+
+        # Act
+        actual: dict = await api.rename_collection_system(api.SystemRename(current="Wii", name="Nintendo Wii"))
+
+        # Assert: only the entries under that name change
+        assert actual == {"message": "OK", "entries": 2}
+        assert [(entry["console"], entry["title"]) for entry in get_collection_entries(connection)] == [
+            ("Nintendo Wii", "Zelda"),
+            ("3DS", "Kid Icarus"),
+            ("Nintendo Wii", "Wii Sports")
+        ]
+
+    @mark.asyncio
+    async def test_a_name_the_collection_already_uses_brings_the_two_together(self, connection: Connection) -> None:
+        # Arrange
+        connection.execute("INSERT INTO collection_items (id, source_file_id, position, group_name, name) VALUES (2, 1, 1, 'wii', 'Mario')")
+        connection.commit()
+
+        # Act
+        actual: dict = await api.rename_collection_system(api.SystemRename(current="wii", name="Wii"))
+
+        # Assert
+        assert actual["entries"] == 1
+        assert [(system["name"], system["items"]) for system in await api.collection_systems()] == [("3DS", 0), ("Wii", 2)]
+
+    @mark.asyncio
+    async def test_the_name_an_entry_keeps_is_matched_whole_and_case_included(self, connection: Connection) -> None:
+        # Act and assert
+        with raises(HTTPException) as refused:
+            await api.rename_collection_system(api.SystemRename(current="wii", name="Nintendo Wii"))
+
+        assert refused.value.status_code == 404
+        assert [entry["console"] for entry in get_collection_entries(connection)] == ["Wii", "3DS"]
+
+    @mark.asyncio
+    async def test_a_system_no_entry_carries_is_not_found(self, connection: Connection) -> None:
+        # Act and assert
+        with raises(HTTPException) as refused:
+            await api.rename_collection_system(api.SystemRename(current="Amiga", name="Commodore Amiga"))
+
+        assert refused.value.status_code == 404
+
+    @mark.asyncio
+    async def test_the_name_the_system_already_has_changes_nothing(self, connection: Connection) -> None:
+        # Act and assert
+        with raises(HTTPException) as refused:
+            await api.rename_collection_system(api.SystemRename(current="Wii", name="Wii"))
+
+        assert (refused.value.status_code, refused.value.detail) == (409, "unchanged")
+
+    @mark.asyncio
+    async def test_a_name_is_trimmed_and_an_empty_one_is_refused(self, connection: Connection) -> None:
+        # Act
+        actual: dict = await api.rename_collection_system(api.SystemRename(current="Wii", name="  Nintendo Wii  "))
+
+        # Assert
+        assert actual["entries"] == 1
+        assert [entry["console"] for entry in get_collection_entries(connection)] == ["Nintendo Wii", "3DS"]
+        with raises(ValidationError):
+            api.SystemRename(current="Wii", name="   ")

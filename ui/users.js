@@ -7,6 +7,7 @@ const TEXT = {
         "heading": "PyCharting",
         "language": "Langue",
         "nav.home": "Accueil",
+        "nav.systems": "Systèmes",
         "nav.users": "Utilisateurs",
         "action.logout": "Se déconnecter",
         "action.add": "Ajouter",
@@ -45,6 +46,7 @@ const TEXT = {
         "heading": "PyCharting",
         "language": "Language",
         "nav.home": "Home",
+        "nav.systems": "Systems",
         "nav.users": "Users",
         "action.logout": "Sign out",
         "action.add": "Add",
@@ -86,6 +88,8 @@ const ICONS = {
     save: ["M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z", "M17 21v-8H7v8", "M7 3v5h8"],
     delete: ["M3 6h18", "M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2", "M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6", "M10 11v6", "M14 11v6"],
     home: ["M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z", "M9 22V12h6v10"],
+    // A screen on its stand: the system an entry is played on
+    systems: ["M3 4h18a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z", "M12 16v4", "M8 20h8"],
     users: ["M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2", "M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"],
     logout: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"]
 };
@@ -389,6 +393,7 @@ async function signOut() {
 
 document.querySelectorAll("[data-language]").forEach(button => button.addEventListener("click", () => setLanguage(button.dataset.language, true)));
 element("nav-home").append(icon(ICONS.home));
+element("nav-systems").append(icon(ICONS.systems));
 element("nav-users").append(icon(ICONS.users));
 element("logout").append(icon(ICONS.logout));
 element("logout").addEventListener("click", signOut);

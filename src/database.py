@@ -135,6 +135,27 @@ def get_owners(connection: Connection) -> list:
     return execute(connection, SQL_PATH.joinpath("select_owners.sql").read_text())
 
 
+def get_systems(connection: Connection) -> list:
+    """Every system name the collection uses, with how many entries carry it."""
+
+    return execute(connection, SQL_PATH.joinpath("select_systems.sql").read_text())
+
+
+def rename_system(connection: Connection, current: str, name: str) -> int:
+    """Store another system name on every entry that carries this one; return how many entries changed.
+
+    Items and spreadsheet rows keep the name they are stored with, so the match is exact, case included.
+    Renaming a system to a name the collection already uses brings the two together.
+    """
+
+    parameters: dict = {"current": current, "name": name}
+    count: int = connection.execute(SQL_PATH.joinpath("update_item_system.sql").read_text(), parameters).rowcount
+    count += connection.execute(SQL_PATH.joinpath("update_row_system.sql").read_text(), parameters).rowcount
+    connection.commit()
+
+    return count
+
+
 def add_collection_item(connection: Connection, parameters: dict) -> bool:
     """Add an item for an owner; return False if that owner does not exist."""
 

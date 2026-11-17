@@ -11,8 +11,8 @@ from uvicorn import run
 
 from src.auth import ADMINISTRATOR, ROLES, SESSION_COOKIE, SESSION_DAYS, NameTaken, SelfChange, create_account, delete_account, is_locked, list_accounts, session_user, sign_in, sign_out, update_account
 from src.constant import API_HOST, API_ORIGINS, API_PORT, API_RELOAD, UI_PATH
-from src.database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_entry_prices, get_owners, open_database
-from src.prices import ExchangeRateError, PriceChartingError, ProductNotFound, RateLimited, fetch_prices
+from src.database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_entry_prices, get_owners, get_systems, open_database, rename_system
+from src.prices import ExchangeRateError, PriceChartingError, ProductNotFound, RateLimited, console_slug, fetch_prices
 
 
 class RevalidatedStaticFiles(StaticFiles):
@@ -43,7 +43,7 @@ PUBLIC_PATHS: tuple = ("/login", "/auth/", "/static/", "/health")
 VISITOR_PATHS: tuple = ("/", "/collection/entries")  # Matched whole: what anyone may read without an account
 READ_METHODS: tuple = ("GET", "HEAD", "OPTIONS")
 API_PATHS: tuple = ("/collection/", "/accounts")  # Answer with an error the page can read, rather than a redirect
-ADMINISTRATOR_PATHS: tuple = ("/users", "/accounts")  # The Users page and its Web API
+ADMINISTRATOR_PATHS: tuple = ("/users", "/accounts", "/systems", "/collection/systems")  # The Users and Systems pages, and their Web API
 
 
 @app.middleware("http")
@@ -266,6 +266,51 @@ def _change_entry(script: str, parameters: dict) -> dict:
         raise HTTPException(status_code=404, detail="Entry not found.")
 
     return {"message": "OK"}
+
+
+class SystemRename(BaseModel):
+    """Another name for a system, replacing the one the collection stores now."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    current: RequiredText
+    name: RequiredText
+
+
+@app.get("/systems")
+async def systems_page() -> FileResponse:
+    """The Systems page, for administrators."""
+
+    return FileResponse(UI_PATH.joinpath("systems.html"), media_type="text/html", headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/collection/systems")
+async def collection_systems() -> list:
+    """Every system name in the collection, with how many entries carry it and whether PriceCharting knows it."""
+
+    return [
+        {"name": str(system["name"]), "items": system["items"], "rows": system["rows"], "pricecharting": console_slug(str(system["name"]), None) is not None}
+        for system in get_systems(connection)
+    ]
+
+
+@app.put("/collection/systems")
+async def rename_collection_system(rename: SystemRename) -> dict:
+    """Rename a system on every entry that carries it; a name the collection already uses brings the two together.
+
+    The name is what PriceCharting is asked about, so renaming a system to one it does not know leaves its entries
+    to a plain search for their prices.
+    """
+
+    if rename.name == rename.current:
+        raise HTTPException(status_code=409, detail="unchanged")
+
+    entries: int = rename_system(connection, rename.current, rename.name)
+
+    if not entries:
+        raise HTTPException(status_code=404, detail="System not found.")
+
+    return {"message": "OK", "entries": entries}
 
 
 @app.get("/health")

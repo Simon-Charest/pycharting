@@ -72,6 +72,7 @@ const TRANSLATIONS = {
         "action.logout": "Se déconnecter",
         "action.login": "Se connecter",
         "nav.home": "Accueil",
+        "nav.systems": "Systèmes",
         "nav.users": "Utilisateurs",
         "help": "Aide",
         "legend.heading": "Légende",
@@ -171,6 +172,7 @@ const TRANSLATIONS = {
         "action.logout": "Sign out",
         "action.login": "Sign in",
         "nav.home": "Home",
+        "nav.systems": "Systems",
         "nav.users": "Users",
         "help": "Help",
         "legend.heading": "Legend",
@@ -240,51 +242,14 @@ const ICONS = {
     csv: ["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z", "M14 2v6h6", "M8 9h2", "M8 13h8", "M8 17h8"],
     reset: ["M18 6 6 18", "M6 6l12 12"],
     home: ["M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z", "M9 22V12h6v10"],
+    // A screen on its stand: the system an entry is played on
+    systems: ["M3 4h18a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z", "M12 16v4", "M8 20h8"],
     users: ["M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2", "M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"],
     logout: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"],
     login: ["M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4", "M10 17l5-5-5-5", "M15 12H3"],
     help: ["M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z", "M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3", "M12 17h.01"]
 };
 const FILTER_IDS = ["filter-selected", "filter-console", "filter-title", "filter-owner", "filter-region", "filter-quantity", "filter-game", "filter-box", "filter-manual", "filter-complete", "filter-date", "filter-paid", "filter-attribute"];
-// Full display names; the stored names stay as they are, because PriceCharting's URLs rely on them
-const CONSOLE_NAMES = {
-    "3DS": "Nintendo 3DS",
-    "Colecovision": "ColecoVision",
-    "DS": "Nintendo DS",
-    "GBA": "Nintendo Game Boy Advance",
-    "GameBoy": "Nintendo Game Boy",
-    "Gameboy": "Nintendo Game Boy",
-    "Game Boy": "Nintendo Game Boy",
-    "GameBoy Color": "Nintendo Game Boy Color",
-    "Gameboy Color": "Nintendo Game Boy Color",
-    "Game Boy Color": "Nintendo Game Boy Color",
-    "GameCube": "Nintendo GameCube",
-    "GameBoy Advance": "Nintendo Game Boy Advance",
-    "Gameboy Advance": "Nintendo Game Boy Advance",
-    "Game Boy Advance": "Nintendo Game Boy Advance",
-    "Intellivision": "Mattel Intellivision",
-    "Mini Arcade": "Arcade",
-    "N64": "Nintendo 64",
-    "NES": "Nintendo Entertainment System",
-    "PSP": "Sony PlayStation Portable",
-    "PlayStation": "Sony PlayStation",
-    "Playstation": "Sony PlayStation",
-    "PlayStation 2": "Sony PlayStation 2",
-    "PlayStation 3": "Sony PlayStation 3",
-    "PlayStation 4": "Sony PlayStation 4",
-    "PlayStation 5": "Sony PlayStation 5",
-    "PlayStation Vita": "Sony PlayStation Vita",
-    "SNES": "Nintendo Super Nintendo | Super Famicom",
-    "Super Famicom": "Nintendo Super Nintendo | Super Famicom",
-    "Super Nintendo": "Nintendo Super Nintendo | Super Famicom",
-    "Sega Genesis": "Sega Genesis | Mega Drive",
-    "Sega Mega Drive": "Sega Genesis | Mega Drive",
-    "Switch": "Nintendo Switch",
-    "TI-99": "Texas Instruments TI-99",
-    "Wii": "Nintendo Wii",
-    "Wii U": "Nintendo Wii U",
-    "Xbox 360": "Microsoft Xbox 360"
-};
 const PRICECHARTING_SEARCH = "https://www.pricecharting.com/search-products?type=prices&q=";
 const NEW_VALUE = "new-value";
 const REGIONS = ["NTSC", "PAL"];
@@ -381,7 +346,7 @@ function normalize(text) {
 }
 
 function consoleName(entry) {
-    return CONSOLE_NAMES[entry.console] ?? entry.console;
+    return consoleDisplayName(entry.console);  // From consoles.js, shared with the Systems page
 }
 
 function regionOf(entry) {
@@ -1283,15 +1248,17 @@ function renderAccount() {
     const name = signedIn ? [account.first_name, account.last_name].filter(Boolean).join(" ") || account.username : "";
     element("account-name").textContent = signedIn ? t("account", { username: name, role: t(`role.${account.role}`) }) : "";
 
-    // A visitor signs in instead of out, and the Users page is not theirs to see
+    // A visitor signs in instead of out, and neither the Systems nor the Users page is theirs to see
     element("logout").hidden = !signedIn;
     element("login").hidden = signedIn;
+    element("nav-systems").hidden = !signedIn;
     element("nav-users").hidden = !signedIn;
 
     document.body.classList.toggle("hide-paid", !signedIn);  // A visitor sees neither Paid nor Difference
     document.body.classList.toggle("hide-owner", !signedIn);  // A visitor is not told whose each item is
     element("add").disabled = !canEdit();
     element("update-visible-prices").disabled = !canEdit();
+    setLinkEnabled(element("nav-systems"), canEdit());
     setLinkEnabled(element("nav-users"), canEdit());
 }
 
@@ -1405,10 +1372,6 @@ function field(name, label, value, options = {}) {
     return wrapper;
 }
 
-function consoleLabel(stored) {
-    return consoleName({ console: stored });
-}
-
 // One choice per console shown in the table. Each saves its most used stored name,
 // except the entry's own console, which keeps the stored name it already has.
 function consoleChoices(current) {
@@ -1421,11 +1384,11 @@ function consoleChoices(current) {
     const choices = new Map();
 
     for (const [stored] of [...counts].sort((left, right) => left[1] - right[1])) {
-        choices.set(consoleLabel(stored), stored);
+        choices.set(consoleDisplayName(stored), stored);
     }
 
     if (current) {
-        choices.set(consoleLabel(current), current);
+        choices.set(consoleDisplayName(current), current);
     }
 
     return [...choices].sort(([left], [right]) => collator.compare(left, right));
@@ -1793,6 +1756,7 @@ element("export-csv").addEventListener("click", exportToCsv);
 element("export").append(icon(ICONS.export));
 element("export").addEventListener("click", exportToExcel);
 element("nav-home").append(icon(ICONS.home));
+element("nav-systems").append(icon(ICONS.systems));
 element("nav-users").append(icon(ICONS.users));
 element("logout").append(icon(ICONS.logout));
 element("login").append(icon(ICONS.login));

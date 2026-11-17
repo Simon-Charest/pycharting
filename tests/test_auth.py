@@ -76,6 +76,7 @@ class TestSignIn:
         assert client.get("/login").status_code == 200
         assert client.get("/docs").status_code == 303  # Everything else still leads to the sign-in form
         assert client.get("/users").headers["location"] == "/login"
+        assert client.get("/systems").headers["location"] == "/login"
 
     def test_without_session_only_what_is_for_sale_is_served(self, client: TestClient) -> None:
         # Act and assert
@@ -272,6 +273,33 @@ class TestUsers:
         assert (client.get("/users").status_code, client.get("/users").headers["location"]) == (303, "/")
         assert client.get("/accounts").status_code == 403
         assert client.post("/accounts", json={"username": "x", "role": "administrator", "password": "12345678"}).status_code == 403
+
+    def test_an_administrator_sees_and_renames_the_systems(self, client: TestClient) -> None:
+        # Arrange
+        sign_in(client, ADMIN)
+
+        # Act
+        response = client.put("/collection/systems", json={"current": "Wii", "name": "Nintendo Wii"})
+
+        # Assert
+        assert client.get("/systems").status_code == 200
+        assert response.status_code == 200
+        assert [system["name"] for system in client.get("/collection/systems").json()] == ["Nintendo Wii"]
+
+    def test_a_collaborator_cannot_see_the_systems(self, client: TestClient) -> None:
+        # Arrange
+        sign_in(client, VIEWER)
+
+        # Act and assert
+        assert (client.get("/systems").status_code, client.get("/systems").headers["location"]) == (303, "/")
+        assert client.get("/collection/systems").status_code == 403
+        assert client.put("/collection/systems", json={"current": "Wii", "name": "Nintendo Wii"}).status_code == 403
+
+    def test_without_session_the_systems_are_refused(self, client: TestClient) -> None:
+        # Act and assert
+        assert client.get("/collection/systems").status_code == 401
+        assert client.put("/collection/systems", json={"current": "Wii", "name": "Nintendo Wii"}).status_code == 401
+        assert client.get("/systems").headers["location"] == "/login"
 
     def test_without_session_the_accounts_are_refused(self, client: TestClient) -> None:
         # Act and assert

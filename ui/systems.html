@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PyCharting</title>
+        <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+        <link rel="stylesheet" href="/static/collection.css?v=41">
+        <script src="/static/consoles.js?v=1" defer></script>
+        <script src="/static/systems.js?v=1" defer></script>
+    </head>
+    <body>
+        <header>
+            <h1 data-i18n="heading"></h1>
+            <div class="account">
+                <span id="account-name"></span>
+                <a id="nav-home" class="icon-button" href="/" data-i18n-title="nav.home"></a>
+                <a id="nav-systems" class="icon-button" href="/systems" aria-current="page" data-i18n-title="nav.systems"></a>
+                <a id="nav-users" class="icon-button" href="/users" data-i18n-title="nav.users"></a>
+                <button id="logout" class="icon-button" type="button" data-i18n-title="action.logout"></button>
+            </div>
+            <div class="language" role="group" data-i18n-label="language">
+                <button class="icon-button flag" type="button" data-language="fr" lang="fr" title="Français" aria-label="Français"><img src="/static/flag-qc.svg" alt="" width="21" height="14"></button>
+                <button class="icon-button flag" type="button" data-language="en" lang="en" title="English" aria-label="English"><img src="/static/flag-ca.svg" alt="" width="28" height="14"></button>
+            </div>
+        </header>
+
+        <p id="message" class="message" role="alert" hidden></p>
+
+        <main class="systems table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col"><span data-i18n="column.system"></span></th>
+                        <th scope="col"><span data-i18n="column.displayed"></span></th>
+                        <th scope="col"><span data-i18n="column.entries"></span></th>
+                        <th scope="col"><span data-i18n="column.pricecharting"></span></th>
+                        <th scope="col"><span data-i18n="column.actions"></span></th>
+                    </tr>
+                </thead>
+                <tbody id="systems"></tbody>
+            </table>
+        </main>
+
+        <p id="hint" class="message info" data-i18n="hint"></p>
+
+        <footer class="site-footer">
+            <span data-i18n="footer.poweredBy"></span>
+            <span data-i18n="footer.privacy"></span>
+            <span data-i18n="footer.copyright"></span>
+        </footer>
+    </body>
+</html>

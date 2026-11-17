@@ -1057,24 +1057,12 @@ class TestSystems:
         # Act
         actual: list = await api.collection_systems()
 
-        # Assert: names that differ only in case stay apart, and a name PriceCharting does not know is said to be unknown
+        # Assert: names that differ only in case stay apart
         assert actual == [
-            {"name": "3DS", "items": 0, "rows": 1, "pricecharting": True},
-            {"name": "Wii", "items": 1, "rows": 1, "pricecharting": True},
-            {"name": "wii", "items": 1, "rows": 0, "pricecharting": True}
+            {"name": "3DS", "items": 0, "rows": 1},
+            {"name": "Wii", "items": 1, "rows": 1},
+            {"name": "wii", "items": 1, "rows": 0}
         ]
-
-    @mark.asyncio
-    async def test_an_unknown_system_name_is_told_apart(self, connection: Connection) -> None:
-        # Arrange
-        connection.execute("UPDATE collection_items SET group_name = 'Amiga' WHERE id = 1")
-        connection.commit()
-
-        # Act
-        actual: list = await api.collection_systems()
-
-        # Assert
-        assert [(system["name"], system["pricecharting"]) for system in actual] == [("3DS", True), ("Amiga", False)]
 
     @mark.asyncio
     async def test_renaming_a_system_renames_its_items_and_rows(self, connection: Connection) -> None:

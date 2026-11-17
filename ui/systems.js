@@ -15,15 +15,7 @@ const TEXT = {
         "role.administrator": "Administrateur",
         "role.collaborator": "Collaborateur",
         "column.system": "Système",
-        "column.displayed": "Affiché",
-        "column.entries": "Entrées",
-        "column.pricecharting": "PriceCharting",
         "column.actions": "Actions",
-        "entries": "{items} article(s), {rows} ligne(s)",
-        "known": "Connu",
-        "unknown": "Inconnu",
-        "known.title": "PriceCharting connaît ce nom : les prix de ses entrées viennent de sa page de console.",
-        "unknown.title": "PriceCharting ne connaît pas ce nom : les prix de ses entrées viennent d'une simple recherche.",
         "hint": "Renommer un système renomme toutes ses entrées. Lui donner un nom déjà utilisé réunit les deux. Le nom est ce qui est demandé à PriceCharting : un nom qu'il ne connaît pas laisse ses entrées à une simple recherche.",
         "confirm.rename": "Renommer « {current} » en « {name} » ? {count} entrée(s) changent.",
         "confirm.merge": "« {name} » existe déjà. Réunir « {current} » avec lui ? {count} entrée(s) changent.",
@@ -51,15 +43,7 @@ const TEXT = {
         "role.administrator": "Administrator",
         "role.collaborator": "Collaborator",
         "column.system": "System",
-        "column.displayed": "Shown as",
-        "column.entries": "Entries",
-        "column.pricecharting": "PriceCharting",
         "column.actions": "Actions",
-        "entries": "{items} item(s), {rows} row(s)",
-        "known": "Known",
-        "unknown": "Unknown",
-        "known.title": "PriceCharting knows this name: its entries are priced from its console page.",
-        "unknown.title": "PriceCharting does not know this name: its entries are priced from a plain search.",
         "hint": "Renaming a system renames every one of its entries. Giving it a name already in use brings the two together. The name is what PriceCharting is asked about: one it does not know leaves its entries to a plain search.",
         "confirm.rename": "Rename “{current}” to “{name}”? {count} entry/entries change.",
         "confirm.merge": "“{name}” already exists. Bring “{current}” together with it? {count} entry/entries change.",
@@ -209,10 +193,6 @@ function cell(...children) {
     return td;
 }
 
-function textCell(text) {
-    return cell(document.createTextNode(text));
-}
-
 function nameInput(system) {
     const input = document.createElement("input");
     input.value = system.name;
@@ -221,18 +201,14 @@ function nameInput(system) {
     input.autocapitalize = "none";
     input.spellcheck = false;
     input.setAttribute("aria-label", `${t("column.system")} ${system.name}`);
+    input.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            renameSystem(system, input);
+        }
+    });
 
     return input;
-}
-
-// Whether PriceCharting knows the name, which decides how the prices of its entries are found
-function pricechartingCell(system) {
-    const span = document.createElement("span");
-    span.className = system.pricecharting ? "known" : "unknown";
-    span.textContent = system.pricecharting ? t("known") : t("unknown");
-    span.title = system.pricecharting ? t("known.title") : t("unknown.title");
-
-    return cell(span);
 }
 
 function saveButton(system, input) {
@@ -247,7 +223,7 @@ function saveButton(system, input) {
     return button;
 }
 
-// One row per system name the collection stores, next to the name the collection shows for it
+// One row per system name the collection stores, each in the box that renames it
 function renderSystems() {
     const body = element("systems");
     body.replaceChildren();
@@ -257,13 +233,7 @@ function renderSystems() {
         const actions = cell(saveButton(system, input));
         actions.className = "actions";
         const row = document.createElement("tr");
-        row.append(
-            cell(input),
-            textCell(consoleDisplayName(system.name)),  // consoles.js, shared with the collection
-            textCell(t("entries", { items: system.items, rows: system.rows })),
-            pricechartingCell(system),
-            actions
-        );
+        row.append(cell(input), actions);
         body.append(row);
     }
 }

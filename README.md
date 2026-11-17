@@ -93,10 +93,9 @@ python . set-role NAME collaborator
 ```
 
 ## Systems
-Each entry is stored under a system name, which is also what PriceCharting is asked about. The same system often ends up under several spellings (`Gameboy`, `Game Boy`), and the collection shows them all under one full name (`Nintendo Game Boy`). An administrator tidies them from the Systems page, reached from the screen button in the header:
-- Each system the collection uses is listed with the name it is shown under, how many items and spreadsheet rows carry it, and whether PriceCharting knows it;
-- Renaming a system renames every one of its entries;
-- Giving it a name the collection already uses brings the two together;
+Each entry is stored under a system name, which is also what PriceCharting is asked about. The same system often ends up under several spellings (`Gameboy`, `Game Boy`), which the collection shows under one full name (`Nintendo Game Boy`), so the spellings are easy to miss. An administrator tidies them from the Systems page, reached from the screen button in the header: every name the collection uses is listed, in a box that renames it.
+- Renaming a system renames every one of its entries, and the page says how many change before it does;
+- Giving a system a name the collection already uses brings the two together;
 - A name PriceCharting does not know leaves its entries to a plain search for their prices, so prefer one of the names it knows (see `CONSOLE_SLUGS` in `src/prices.py`).
 
 ## Deployment

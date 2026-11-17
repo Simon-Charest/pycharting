@@ -576,7 +576,7 @@ button.primary:disabled:hover {
 
 /* The Systems page, laid out like the Users one */
 .systems {
-    max-width: 1000px;
+    max-width: 520px;
     min-height: 0;
     margin-top: 16px;
 }
@@ -596,35 +596,18 @@ button.primary:disabled:hover {
     padding: 4px 8px;
 }
 
-/* The name being edited gets the room; what is only read takes what it needs */
+/* The name being edited gets the room; its button takes what it needs */
 .systems th:nth-child(1) {
-    width: 30%;
+    width: 85%;
 }
 
 .systems th:nth-child(2) {
-    width: 30%;
-}
-
-.systems th:nth-child(3) {
-    width: 16%;
-}
-
-.systems th:nth-child(4) {
-    width: 14%;
-}
-
-.systems th:nth-child(5) {
-    width: 10%;
-}
-
-/* Whether PriceCharting knows the name: its entries are priced from its console page, or from a plain search */
-.systems .unknown {
-    color: var(--danger);
+    width: 15%;
 }
 
 /* What the page explains about renaming, under the table rather than over it */
 #hint {
-    max-width: 1000px;
+    max-width: 520px;
 }
 
 /* The legend, opened by the ? button and closed by clicking anywhere else or by Escape */

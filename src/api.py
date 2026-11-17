@@ -12,7 +12,7 @@ from uvicorn import run
 from src.auth import ADMINISTRATOR, ROLES, SESSION_COOKIE, SESSION_DAYS, NameTaken, SelfChange, create_account, delete_account, is_locked, list_accounts, session_user, sign_in, sign_out, update_account
 from src.constant import API_HOST, API_ORIGINS, API_PORT, API_RELOAD, UI_PATH
 from src.database import add_collection_item as add_item, change_collection_entry, ensure_collection_schema, get_collection_entries, get_entry_prices, get_owners, get_systems, open_database, rename_system
-from src.prices import ExchangeRateError, PriceChartingError, ProductNotFound, RateLimited, console_slug, fetch_prices
+from src.prices import ExchangeRateError, PriceChartingError, ProductNotFound, RateLimited, fetch_prices
 
 
 class RevalidatedStaticFiles(StaticFiles):
@@ -286,12 +286,9 @@ async def systems_page() -> FileResponse:
 
 @app.get("/collection/systems")
 async def collection_systems() -> list:
-    """Every system name in the collection, with how many entries carry it and whether PriceCharting knows it."""
+    """Every system name in the collection, with how many entries carry it."""
 
-    return [
-        {"name": str(system["name"]), "items": system["items"], "rows": system["rows"], "pricecharting": console_slug(str(system["name"]), None) is not None}
-        for system in get_systems(connection)
-    ]
+    return [{"name": str(system["name"]), "items": system["items"], "rows": system["rows"]} for system in get_systems(connection)]
 
 
 @app.put("/collection/systems")

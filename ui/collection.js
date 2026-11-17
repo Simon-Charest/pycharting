@@ -250,6 +250,45 @@ const ICONS = {
     help: ["M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z", "M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3", "M12 17h.01"]
 };
 const FILTER_IDS = ["filter-selected", "filter-console", "filter-title", "filter-owner", "filter-region", "filter-quantity", "filter-game", "filter-box", "filter-manual", "filter-complete", "filter-date", "filter-paid", "filter-attribute"];
+// Full display names; the stored names stay as they are, because PriceCharting's URLs rely on them
+const CONSOLE_NAMES = {
+    "3DS": "Nintendo 3DS",
+    "Colecovision": "ColecoVision",
+    "DS": "Nintendo DS",
+    "GBA": "Nintendo Game Boy Advance",
+    "GameBoy": "Nintendo Game Boy",
+    "Gameboy": "Nintendo Game Boy",
+    "Game Boy": "Nintendo Game Boy",
+    "GameBoy Color": "Nintendo Game Boy Color",
+    "Gameboy Color": "Nintendo Game Boy Color",
+    "Game Boy Color": "Nintendo Game Boy Color",
+    "GameCube": "Nintendo GameCube",
+    "GameBoy Advance": "Nintendo Game Boy Advance",
+    "Gameboy Advance": "Nintendo Game Boy Advance",
+    "Game Boy Advance": "Nintendo Game Boy Advance",
+    "Intellivision": "Mattel Intellivision",
+    "Mini Arcade": "Arcade",
+    "N64": "Nintendo 64",
+    "NES": "Nintendo Entertainment System",
+    "PSP": "Sony PlayStation Portable",
+    "PlayStation": "Sony PlayStation",
+    "Playstation": "Sony PlayStation",
+    "PlayStation 2": "Sony PlayStation 2",
+    "PlayStation 3": "Sony PlayStation 3",
+    "PlayStation 4": "Sony PlayStation 4",
+    "PlayStation 5": "Sony PlayStation 5",
+    "PlayStation Vita": "Sony PlayStation Vita",
+    "SNES": "Nintendo Super Nintendo | Super Famicom",
+    "Super Famicom": "Nintendo Super Nintendo | Super Famicom",
+    "Super Nintendo": "Nintendo Super Nintendo | Super Famicom",
+    "Sega Genesis": "Sega Genesis | Mega Drive",
+    "Sega Mega Drive": "Sega Genesis | Mega Drive",
+    "Switch": "Nintendo Switch",
+    "TI-99": "Texas Instruments TI-99",
+    "Wii": "Nintendo Wii",
+    "Wii U": "Nintendo Wii U",
+    "Xbox 360": "Microsoft Xbox 360"
+};
 const PRICECHARTING_SEARCH = "https://www.pricecharting.com/search-products?type=prices&q=";
 const NEW_VALUE = "new-value";
 const REGIONS = ["NTSC", "PAL"];
@@ -346,7 +385,7 @@ function normalize(text) {
 }
 
 function consoleName(entry) {
-    return consoleDisplayName(entry.console);  // From consoles.js, shared with the Systems page
+    return CONSOLE_NAMES[entry.console] ?? entry.console;
 }
 
 function regionOf(entry) {
@@ -1372,6 +1411,10 @@ function field(name, label, value, options = {}) {
     return wrapper;
 }
 
+function consoleLabel(stored) {
+    return consoleName({ console: stored });
+}
+
 // One choice per console shown in the table. Each saves its most used stored name,
 // except the entry's own console, which keeps the stored name it already has.
 function consoleChoices(current) {
@@ -1384,11 +1427,11 @@ function consoleChoices(current) {
     const choices = new Map();
 
     for (const [stored] of [...counts].sort((left, right) => left[1] - right[1])) {
-        choices.set(consoleDisplayName(stored), stored);
+        choices.set(consoleLabel(stored), stored);
     }
 
     if (current) {
-        choices.set(consoleDisplayName(current), current);
+        choices.set(consoleLabel(current), current);
     }
 
     return [...choices].sort(([left], [right]) => collator.compare(left, right));

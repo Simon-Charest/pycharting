@@ -605,11 +605,6 @@ button.primary:disabled:hover {
     width: 26%;
 }
 
-/* What the page explains about renaming, under the table rather than over it */
-#hint {
-    max-width: 520px;
-}
-
 /* The legend, opened by the ? button and closed by clicking anywhere else or by Escape */
 .legend {
     position: fixed;

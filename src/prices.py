@@ -111,13 +111,17 @@ CONSOLE_SLUGS: dict = {
 FIXED_SLUGS: dict = {"super famicom": "super-famicom", "sega mega drive": "pal-sega-mega-drive"}
 # PriceCharting files the European Genesis under its European name
 PAL_SLUGS: dict = {"sega-genesis": "pal-sega-mega-drive"}
+# The Japanese consoles it files under a name of their own, rather than under a "jp-" one
+JP_SLUGS: dict = {"nes": "famicom", "super-nintendo": "super-famicom", "sega-genesis": "jp-sega-mega-drive"}
 # Every console above, in every standard: a stored link to anything else (an amiibo, an Amiga game, a strategy guide)
 # is a deliberate choice, and is kept
-KNOWN_SLUGS: set = {prefix + slug for slug in [*CONSOLE_SLUGS.values(), *FIXED_SLUGS.values()] for prefix in ("", "pal-", "jp-")}
+KNOWN_SLUGS: set = {prefix + slug for slug in [*CONSOLE_SLUGS.values(), *FIXED_SLUGS.values()] for prefix in ("", "pal-", "jp-")} | set(PAL_SLUGS.values()) | set(JP_SLUGS.values())
+# What a search says about a standard, for a system PriceCharting has no console for
+SEARCH_PREFIXES: dict = {"PAL": "PAL ", "NTSC-J": "JP "}
 
 
 def console_slug(console: str, region: str | None) -> str | None:
-    """PriceCharting's console for that system and standard (NTSC when unknown), or None for a system it does not know."""
+    """PriceCharting's console for that system and standard (NTSC-U when unknown), or None for a system it does not know."""
 
     name: str = console.strip().casefold()
 
@@ -129,21 +133,27 @@ def console_slug(console: str, region: str | None) -> str | None:
 
     slug: str = CONSOLE_SLUGS[name]
 
-    return PAL_SLUGS.get(slug, "pal-" + slug) if region == "PAL" else slug
+    if region == "PAL":
+        return PAL_SLUGS.get(slug, "pal-" + slug)
+
+    if region == "NTSC-J":
+        return JP_SLUGS.get(slug, "jp-" + slug)
+
+    return slug
 
 
 def search_query(title: str, console: str, region: str | None) -> str:
     slug: str | None = console_slug(console, region)
 
     # PriceCharting's own console name finds its products best; "pal-super-nintendo" reads "pal super nintendo"
-    return f"{title} {slug.replace('-', ' ') if slug else ('PAL ' if region == 'PAL' else '') + console}"
+    return f"{title} {slug.replace('-', ' ') if slug else SEARCH_PREFIXES.get(region, '') + console}"
 
 
 def fetch_prices(url: str | None, title: str, console: str, region: str | None, owned: tuple = (), current: dict | None = None) -> dict:
     """Return the product's URL, its price for every part and its Complete price, in CAD; a price it lacks is None.
 
     When the product is not found in the entry's standard, or has no price there for one of the owned parts (or no
-    Complete price), the other standard (NTSC or PAL) is tried: what it has fills in what is missing. The link stays
+    Complete price), another standard is tried: what it has fills in what is missing. The link stays
     the one of the entry's standard whenever that product exists.
 
     Without a Loose price, and only when Item, Manual and Box are all owned, the item is the Complete price less the
@@ -206,20 +216,22 @@ def _deduction(price: float | None, value: object) -> float | None:
 
 
 def other_standard(console: str, region: str | None) -> str | None:
-    """PAL for NTSC or an unknown standard, NTSC for PAL; None for a system that names its standard, or that PriceCharting does not know."""
+    """The standard whose prices fill in what an entry's own lacks: PAL for NTSC-U or an unknown standard, NTSC-U for
+    PAL or NTSC-J (where the same title is likeliest to be found); None for a system that names its standard, or that
+    PriceCharting does not know."""
 
     if console.strip().casefold() in FIXED_SLUGS or console_slug(console, region) is None:
         return None
 
-    return "NTSC" if region == "PAL" else "PAL"
+    return "NTSC-U" if region in ("PAL", "NTSC-J") else "PAL"
 
 
 def _fetch_standard(url: str | None, title: str, console: str, region: str | None) -> dict:
     """The product's URL and prices in that one standard."""
 
     slug: str | None = console_slug(console, region)
-    # An entry without a standard keeps a stored link for any standard of its system; a search looks for NTSC
-    stored_slugs: set | None = None if slug is None else {slug} if region in ("NTSC", "PAL") or console.strip().casefold() in FIXED_SLUGS else {slug, console_slug(console, "PAL"), "jp-" + slug}
+    # An entry without a standard keeps a stored link for any standard of its system; a search looks for NTSC-U
+    stored_slugs: set | None = None if slug is None else {slug} if region is not None or console.strip().casefold() in FIXED_SLUGS else {slug, console_slug(console, "PAL"), console_slug(console, "NTSC-J")}
     soup, url = _product_page(url, title, slug, stored_slugs, search_query(title, console, region))
     url = url.split("?")[0]  # A search that leads straight to the product leaves its query on the link
     table: Tag | None = soup.find(id="full-prices")

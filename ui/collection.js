@@ -78,7 +78,7 @@ const TRANSLATIONS = {
         "legend.heading": "Légende",
         "legend.previouslyOwned": "« {tag} » : un article possédé pendant l'enfance, puis racheté.",
         "legend.totals": "Les entrées « {reproduction} », « {virtual} », « {damaged} », « {sold} » et « {wishlist} » ne comptent pas dans les totaux.",
-        "legend.standards": "« NTSC » et « PAL » sont les standards vidéo d'origine : NTSC pour les produits nord-américains et japonais, PAL pour les produits européens.",
+        "legend.standards": "« NTSC-U », « NTSC-J » et « PAL » sont les standards vidéo d'origine : NTSC-U pour les produits nord-américains, NTSC-J pour les japonais, PAL pour les européens.",
         "role.administrator": "Administrateur",
         "role.collaborator": "Collaborateur",
         "account": "{username} · {role}",
@@ -178,7 +178,7 @@ const TRANSLATIONS = {
         "legend.heading": "Legend",
         "legend.previouslyOwned": "“{tag}”: an item owned as a child, then bought back.",
         "legend.totals": "“{reproduction}”, “{virtual}”, “{damaged}”, “{sold}” and “{wishlist}” entries do not count in the totals.",
-        "legend.standards": "“NTSC” and “PAL” are the original video standards: NTSC for North American and Japanese products, PAL for European ones.",
+        "legend.standards": "“NTSC-U”, “NTSC-J” and “PAL” are the original video standards: NTSC-U for North American products, NTSC-J for Japanese ones, PAL for European ones.",
         "role.administrator": "Administrator",
         "role.collaborator": "Collaborator",
         "account": "{username} · {role}",
@@ -291,7 +291,9 @@ const CONSOLE_NAMES = {
 };
 const PRICECHARTING_SEARCH = "https://www.pricecharting.com/search-products?type=prices&q=";
 const NEW_VALUE = "new-value";
-const REGIONS = ["NTSC", "PAL"];
+const REGIONS = ["NTSC-U", "NTSC-J", "PAL"];
+// What a PriceCharting search says about a standard, when no link was verified
+const REGION_SEARCH = { "NTSC-J": "JP ", PAL: "PAL " };
 
 const element = id => document.getElementById(id);
 
@@ -400,7 +402,7 @@ function priceChartingLink(entry) {
         return url;
     }
 
-    return PRICECHARTING_SEARCH + encodeURIComponent(`${entry.title} ${entry.values.region === "PAL" ? "PAL " : ""}${entry.console}`);
+    return PRICECHARTING_SEARCH + encodeURIComponent(`${entry.title} ${REGION_SEARCH[entry.values.region] ?? ""}${entry.console}`);
 }
 
 // A stable identity across kinds, so a checked row stays checked through sorts and reloads

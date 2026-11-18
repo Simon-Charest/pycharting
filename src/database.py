@@ -107,6 +107,10 @@ def ensure_collection_schema(connection: Connection) -> None:
     if "region" not in existing:
         connection.executescript(SQL_PATH.joinpath("migrate_region_owner_source.sql").read_text())
 
+    # Standards stored as NTSC predate NTSC-J, so they are the North American one
+    elif connection.execute("SELECT EXISTS (SELECT 1 FROM collection_items WHERE region = 'NTSC') OR EXISTS (SELECT 1 FROM spreadsheet_rows WHERE region = 'NTSC')").fetchone()[0]:
+        connection.executescript(SQL_PATH.joinpath("migrate_ntsc_u.sql").read_text())
+
 
 def get_collection_entries(connection: Connection) -> list:
     """List every collection item and spreadsheet row in a common shape for the web page."""

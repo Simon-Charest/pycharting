@@ -13,7 +13,7 @@ UPDATE collection_items
 SET region = CASE
         WHEN group_name LIKE 'PAL %' THEN 'PAL'
         WHEN group_name IN ('Arcade', 'Mini Arcade', 'Nintendo Power', 'PC') THEN NULL
-        ELSE 'NTSC'
+        ELSE 'NTSC-U'
     END
     , group_name = CASE WHEN group_name LIKE 'PAL %' THEN SUBSTR(group_name, 5) ELSE group_name END
 ;
@@ -22,7 +22,7 @@ UPDATE spreadsheet_rows
 SET region = CASE
         WHEN system LIKE 'PAL %' THEN 'PAL'
         WHEN system IN ('Arcade', 'Mini Arcade', 'Nintendo Power', 'PC') THEN NULL
-        ELSE 'NTSC'
+        ELSE 'NTSC-U'
     END
     , system = CASE WHEN system LIKE 'PAL %' THEN SUBSTR(system, 5) ELSE system END
 ;

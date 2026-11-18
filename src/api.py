@@ -82,6 +82,8 @@ async def require_sign_in(request: Request, call_next: Any) -> Response:
 RequiredText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 Cell = float | int | str | None
 IsoDate = Annotated[str, StringConstraints(strip_whitespace=True, pattern=r"^\d{4}-\d{2}-\d{2}$")]  # yyyy-mm-dd
+# The original video standards an entry can carry: North American, Japanese, European
+Standard = Literal["NTSC-U", "NTSC-J", "PAL"]
 
 
 class CollectionItem(BaseModel):
@@ -89,7 +91,7 @@ class CollectionItem(BaseModel):
 
     group_name: RequiredText
     name: RequiredText
-    region: Literal["NTSC", "PAL"] | None = None
+    region: Standard | None = None
     owner_id: int | None = None
     source: RequiredText | None = None
     console: bool | None = None
@@ -124,7 +126,7 @@ class SpreadsheetRow(BaseModel):
 
     system: RequiredText
     title: RequiredText
-    region: Literal["NTSC", "PAL"] | None = None
+    region: Standard | None = None
     owner_id: int | None = None
     source: RequiredText | None = None
     console: bool | None = None
@@ -303,6 +305,28 @@ async def rename_collection_system(rename: SystemRename) -> dict:
         raise HTTPException(status_code=409, detail="unchanged")
 
     entries: int = rename_system(connection, rename.current, rename.name)
+
+    if not entries:
+        raise HTTPException(status_code=404, detail="System not found.")
+
+    return {"message": "OK", "entries": entries}
+
+
+@app.delete("/collection/systems")
+async def delete_collection_system(name: RequiredText, into: RequiredText) -> dict:
+    """Take a system name out of the collection, moving its entries to a system that already exists.
+
+    A system is only there because entries carry its name, so it goes away by having none left. The entries
+    themselves are never deleted here: they move to the chosen system, which must already be one of its own.
+    """
+
+    if into == name:
+        raise HTTPException(status_code=409, detail="unchanged")
+
+    if into not in {str(system["name"]) for system in get_systems(connection)}:
+        raise HTTPException(status_code=404, detail="target_missing")
+
+    entries: int = rename_system(connection, name, into)
 
     if not entries:
         raise HTTPException(status_code=404, detail="System not found.")

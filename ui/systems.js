@@ -11,16 +11,25 @@ const TEXT = {
         "nav.users": "Utilisateurs",
         "action.logout": "Se déconnecter",
         "action.save": "Enregistrer",
+        "action.delete": "Supprimer",
         "account": "{username} · {role}",
         "role.administrator": "Administrateur",
         "role.collaborator": "Collaborateur",
         "column.system": "Système",
         "column.actions": "Actions",
-        "hint": "Renommer un système renomme toutes ses entrées. Lui donner un nom déjà utilisé réunit les deux. Le nom est ce qui est demandé à PriceCharting : un nom qu'il ne connaît pas laisse ses entrées à une simple recherche.",
+        "remover.heading": "Supprimer « {name} » ?",
+        "remover.explanation": "Ses {count} entrée(s) ne quittent pas la collection : elles passent au système choisi.",
+        "remover.into": "Déplacer vers",
+        "remover.cancel": "Annuler",
+        "remover.delete": "Supprimer",
+        "removed": "« {name} » est supprimé ; {count} entrée(s) sont passées à « {into} ».",
+        "alone": "C'est le seul système : ses entrées n'ont nulle part où aller.",
+        "hint": "Renommer un système renomme toutes ses entrées, et lui donner un nom déjà utilisé réunit les deux. Le supprimer déplace ses entrées vers un autre système, sans jamais les retirer de la collection. Le nom est ce qui est demandé à PriceCharting : un nom qu'il ne connaît pas laisse ses entrées à une simple recherche.",
         "confirm.rename": "Renommer « {current} » en « {name} » ? {count} entrée(s) changent.",
         "confirm.merge": "« {name} » existe déjà. Réunir « {current} » avec lui ? {count} entrée(s) changent.",
         "renamed": "{count} entrée(s) sont maintenant sous « {name} ».",
         "error.unchanged": "Ce nom est déjà celui du système.",
+        "error.target_missing": "Ce système n'existe plus. Rechargez la page.",
         "error.read_only": "Seuls les administrateurs peuvent renommer les systèmes.",
         "error.invalid": "Un nom est requis.",
         "error.missing": "Ce système n'existe plus. Rechargez la page.",
@@ -39,16 +48,25 @@ const TEXT = {
         "nav.users": "Users",
         "action.logout": "Sign out",
         "action.save": "Save",
+        "action.delete": "Delete",
         "account": "{username} · {role}",
         "role.administrator": "Administrator",
         "role.collaborator": "Collaborator",
         "column.system": "System",
         "column.actions": "Actions",
-        "hint": "Renaming a system renames every one of its entries. Giving it a name already in use brings the two together. The name is what PriceCharting is asked about: one it does not know leaves its entries to a plain search.",
+        "remover.heading": "Delete “{name}”?",
+        "remover.explanation": "Its {count} entry/entries do not leave the collection: they move to the chosen system.",
+        "remover.into": "Move to",
+        "remover.cancel": "Cancel",
+        "remover.delete": "Delete",
+        "removed": "“{name}” is deleted; {count} entry/entries moved to “{into}”.",
+        "alone": "This is the only system: its entries have nowhere to go.",
+        "hint": "Renaming a system renames every one of its entries, and giving it a name already in use brings the two together. Deleting one moves its entries to another system, never out of the collection. The name is what PriceCharting is asked about: one it does not know leaves its entries to a plain search.",
         "confirm.rename": "Rename “{current}” to “{name}”? {count} entry/entries change.",
         "confirm.merge": "“{name}” already exists. Bring “{current}” together with it? {count} entry/entries change.",
         "renamed": "{count} entry/entries are now under “{name}”.",
         "error.unchanged": "This is already the system's name.",
+        "error.target_missing": "That system no longer exists. Reload the page.",
         "error.read_only": "Only administrators can rename the systems.",
         "error.invalid": "A name is required.",
         "error.missing": "This system no longer exists. Reload the page.",
@@ -62,6 +80,7 @@ const TEXT = {
 const LANGUAGE_STORAGE_KEY = "pycharting.language";  // Shared with the other pages
 const ICONS = {
     save: ["M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z", "M17 21v-8H7v8", "M7 3v5h8"],
+    delete: ["M3 6h18", "M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2", "M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6", "M10 11v6", "M14 11v6"],
     home: ["M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z", "M9 22V12h6v10"],
     // A screen on its stand: the system an entry is played on
     systems: ["M3 4h18a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z", "M12 16v4", "M8 20h8"],
@@ -75,6 +94,7 @@ let language = "fr";
 let collator;
 let account = null;  // The signed-in administrator: { id, username, role }
 let systems = [];
+let removing = null;  // The system the open dialog is about to delete
 
 function t(key, parameters = {}) {
     return TEXT[language][key].replace(/\{(\w+)\}/g, (_, name) => parameters[name]);
@@ -211,14 +231,15 @@ function nameInput(system) {
     return input;
 }
 
-function saveButton(system, input) {
+function iconButton(action, system, className, onClick, disabled = false) {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "icon-button";
-    button.title = t("action.save");
-    button.setAttribute("aria-label", `${t("action.save")} ${system.name}`);
-    button.append(icon(ICONS.save));
-    button.addEventListener("click", () => renameSystem(system, input));
+    button.className = className;
+    button.title = t(`action.${action}`);
+    button.setAttribute("aria-label", `${t(`action.${action}`)} ${system.name}`);
+    button.append(icon(ICONS[action]));
+    button.disabled = disabled;
+    button.addEventListener("click", onClick);
 
     return button;
 }
@@ -228,10 +249,19 @@ function renderSystems() {
     const body = element("systems");
     body.replaceChildren();
 
+    const alone = systems.length < 2;
+
     for (const system of systems) {
         const input = nameInput(system);
-        const actions = cell(saveButton(system, input));
+        const remove = iconButton("delete", system, "icon-button danger", () => openRemover(system), alone);
+        const actions = cell(iconButton("save", system, "icon-button", () => renameSystem(system, input)), remove);
         actions.className = "actions";
+
+        // A disabled button shows no title of its own, so its cell says why it cannot be pressed
+        if (alone) {
+            actions.title = t("alone");
+        }
+
         const row = document.createElement("tr");
         row.append(cell(input), actions);
         body.append(row);
@@ -277,6 +307,47 @@ async function renameSystem(system, input) {
     }
 }
 
+// Which system the entries move to, among those the collection already has
+function openRemover(system) {
+    removing = system;
+    const count = system.items + system.rows;
+    element("remover-heading").textContent = t("remover.heading", { name: system.name });
+    element("remover-explanation").textContent = t("remover.explanation", { count });
+    element("remover-error").hidden = true;
+    const into = element("remover-into");
+    into.replaceChildren();
+
+    for (const other of systems) {
+        if (other !== system) {
+            into.add(new Option(other.name, other.name));
+        }
+    }
+
+    element("remover").showModal();
+}
+
+async function removeSystem(event) {
+    event.preventDefault();
+    const system = removing;
+    const into = element("remover-into").value;
+
+    try {
+        const result = await request(`/collection/systems?name=${encodeURIComponent(system.name)}&into=${encodeURIComponent(into)}`, { method: "DELETE" });
+        element("remover").close();
+        await loadSystems();
+        showMessage(t("removed", { name: system.name, count: result.entries, into }), true);
+    }
+    catch (error) {
+        if (element("remover").open) {
+            element("remover-error").textContent = error.message;
+            element("remover-error").hidden = false;
+        }
+        else {
+            showMessage(error.message);
+        }
+    }
+}
+
 async function signOut() {
     try {
         await fetch("/auth/logout", { method: "POST" });
@@ -292,6 +363,8 @@ element("nav-systems").append(icon(ICONS.systems));
 element("nav-users").append(icon(ICONS.users));
 element("logout").append(icon(ICONS.logout));
 element("logout").addEventListener("click", signOut);
+element("remover-cancel").addEventListener("click", () => element("remover").close());
+element("remover-form").addEventListener("submit", removeSystem);
 setLanguage(initialLanguage());
 
 (async () => {

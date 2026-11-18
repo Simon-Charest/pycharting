@@ -222,12 +222,12 @@ class TestCollectionApi:
     async def test_region_owner_and_source_can_be_edited_on_every_kind_of_entry(self, connection: Connection) -> None:
         # Act
         await api.update_collection_item(1, api.CollectionItem(group_name="Wii", name="Zelda", region="PAL", owner_id=2, source="my list"))
-        await api.update_collection_row(1, api.SpreadsheetRow(system="3DS", title="Kid Icarus", region="NTSC", owner_id=1, source="other list"))
+        await api.update_collection_row(1, api.SpreadsheetRow(system="3DS", title="Kid Icarus", region="NTSC-U", owner_id=1, source="other list"))
 
         # Assert
         item, row = get_collection_entries(connection)
         assert (item["values"]["region"], item["owner"], item["source"]) == ("PAL", "Owner Two", "my list")
-        assert (row["values"]["region"], row["owner"], row["source"]) == ("NTSC", "Owner One", "other list")
+        assert (row["values"]["region"], row["owner"], row["source"]) == ("NTSC-U", "Owner One", "other list")
 
     @mark.asyncio
     async def test_leaving_owner_and_source_out_keeps_them(self, connection: Connection) -> None:
@@ -245,6 +245,15 @@ class TestCollectionApi:
             await api.update_collection_item(1, api.CollectionItem(group_name="Other", name="Other", owner_id=99))
 
         assert get_collection_entries(connection)[0]["title"] == "Zelda"
+
+    @mark.asyncio
+    async def test_the_japanese_standard_is_its_own(self, connection: Connection) -> None:
+        # Act
+        await api.update_collection_item(1, api.CollectionItem(group_name="Super Nintendo", name="Zelda", region="NTSC-J"))
+
+        # Assert
+        item: dict = get_collection_entries(connection)[0]
+        assert (item["console"], item["values"]["region"]) == ("Super Nintendo", "NTSC-J")
 
     def test_invalid_region_is_rejected(self) -> None:
         # Act and assert
@@ -275,10 +284,31 @@ class TestCollectionApi:
 
         # Assert
         assert [(entry["console"], entry["values"]["region"]) for entry in entries] == [
-            ("Wii", "PAL"), ("Wii", "NTSC"), ("PC", None), ("Nintendo Power", None), ("Super Nintendo", "PAL")
+            ("Wii", "PAL"), ("Wii", "NTSC-U"), ("PC", None), ("Nintendo Power", None), ("Super Nintendo", "PAL")
         ]
         assert [entry["owner"] for entry in entries] == ["A"] * 5
         assert entries[4]["source"] == "a (Feuil2)"
+
+    def test_a_database_that_says_ntsc_gets_the_north_american_standard(self, tmp_path: Path) -> None:
+        # Arrange: entries stored before NTSC-J was told apart carry the plain NTSC
+        database: Connection = open_database(tmp_path.joinpath("ntsc.sqlite"), "secret")
+        ensure_collection_schema(database)
+        database.execute("INSERT INTO owners (id, name) VALUES (1, 'A')")
+        database.execute("INSERT INTO source_files (id, owner_id, path, sha256, content) VALUES (1, 1, 'a', '', x'')")
+        database.executemany(
+            "INSERT INTO collection_items (source_file_id, position, group_name, name, region) VALUES (1, ?, 'Wii', 'Game', ?)",
+            [(0, "NTSC"), (1, "PAL"), (2, None)]
+        )
+        database.execute("INSERT INTO spreadsheet_rows (source_file_id, sheet, row_index, system, title, region) VALUES (1, 'Feuil2', 2, 'NES', 'Row', 'NTSC')")
+        database.commit()
+
+        # Act
+        entries: list = get_collection_entries(database)
+        ensure_collection_schema(database)  # A second run must find nothing left to do.
+        database.close()
+
+        # Assert: only NTSC changes, and the entries without one keep none
+        assert [entry["values"]["region"] for entry in entries] == ["NTSC-U", "PAL", None, "NTSC-U"]
 
     def test_negative_quantity_is_rejected(self) -> None:
         # Act and assert
@@ -558,7 +588,7 @@ class TestPrices:
         monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE if "/game/" in url else search))
 
         # Act
-        actual: dict = prices.fetch_prices(None, "Castlevania II: Simon’s Quest", "NES", "NTSC")
+        actual: dict = prices.fetch_prices(None, "Castlevania II: Simon’s Quest", "NES", "NTSC-U")
 
         # Assert
         assert actual["url"] == "https://p/game/nes/castlevania-ii-simon%27s-quest"
@@ -664,25 +694,35 @@ class TestPrices:
         import src.prices as prices
 
         # Act
-        actual: list = [prices.console_slug("Super Famicom", "NTSC"), prices.console_slug("Sega Mega Drive", None), prices.console_slug("Nintendo Game Boy Color", "PAL"), prices.console_slug("Nintendo Power", None)]
+        actual: list = [prices.console_slug("Super Famicom", "NTSC-U"), prices.console_slug("Sega Mega Drive", None), prices.console_slug("Nintendo Game Boy Color", "PAL"), prices.console_slug("Nintendo Power", None)]
 
         # Assert
         assert actual == ["super-famicom", "pal-sega-mega-drive", "pal-gameboy-color", None]
 
+    def test_the_japanese_standard_has_its_own_consoles(self) -> None:
+        # Arrange
+        import src.prices as prices
+
+        # Act
+        actual: list = [prices.console_slug(console, "NTSC-J") for console in ("NES", "Super Nintendo", "Sega Genesis", "Wii", "Nintendo Power")]
+
+        # Assert: PriceCharting names the Famicom consoles itself, and prefixes the others
+        assert actual == ["famicom", "super-famicom", "jp-sega-mega-drive", "jp-wii", None]
+
     def test_an_owned_part_without_a_price_takes_the_other_standards(self, monkeypatch) -> None:
-        # Arrange: the NTSC page has no Manual price, the PAL one has
+        # Arrange: the NTSC-U page has no Manual price, the PAL one has
         import src.prices as prices
         pal_page: str = PRODUCT_PAGE.replace("<td>Manual Only</td><td>-</td>", "<td>Manual Only</td><td>$4.00</td>").replace("$1,043.50", "$900.00")
         monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, pal_page if "/pal-" in url else PRODUCT_PAGE))
 
         # Act
-        actual: dict = prices.fetch_prices("https://p/game/wii/zelda", "Zelda", "Wii", "NTSC", ("game", "manual"))
+        actual: dict = prices.fetch_prices("https://p/game/wii/zelda", "Zelda", "Wii", "NTSC-U", ("game", "manual"))
 
-        # Assert: only the missing part comes from PAL, and the link stays NTSC
+        # Assert: only the missing part comes from PAL, and the link stays NTSC-U
         assert actual == {"url": "https://p/game/wii/zelda", "game": 1565.25, "manual": 6.0, "box": 18.0, "complete": None}
 
     def test_a_product_missing_in_its_standard_is_taken_in_the_other(self, monkeypatch) -> None:
-        # Arrange: PriceCharting only has the NTSC Metroid
+        # Arrange: PriceCharting only has the NTSC-U Metroid
         import src.prices as prices
         search: str = """<table id="games_table"><tr><td class="title"><a href="https://p/game/nes/metroid">Metroid</a></td></tr></table>"""
         monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, PRODUCT_PAGE if url == "https://p/game/nes/metroid" else search))
@@ -700,7 +740,7 @@ class TestPrices:
         monkeypatch.setattr(prices, "get", lambda url, **_: requested.append(url) or FakeResponse(url, PRODUCT_PAGE))
 
         # Act: Manual has no price, but is not owned
-        prices.fetch_prices("https://p/game/wii/zelda", "Zelda", "Wii", "NTSC", ("game", "box"))
+        prices.fetch_prices("https://p/game/wii/zelda", "Zelda", "Wii", "NTSC-U", ("game", "box"))
 
         # Assert
         assert requested == ["https://p/game/wii/zelda"]
@@ -713,7 +753,7 @@ class TestPrices:
         monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, page))
 
         # Act
-        actual: dict = prices.fetch_prices("https://p/game/nes/zelda", "Zelda", "NES", "NTSC", ("game", "manual", "box"))
+        actual: dict = prices.fetch_prices("https://p/game/nes/zelda", "Zelda", "NES", "NTSC-U", ("game", "manual", "box"))
 
         # Assert: (100 - 8 - 12) USD at 1.5, and the Complete price is brought back too (100 at 1.5)
         assert actual == {"url": "https://p/game/nes/zelda", "game": 120.0, "manual": 12.0, "box": 18.0, "complete": 150.0}
@@ -726,8 +766,8 @@ class TestPrices:
         monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, page))
 
         # Act
-        with_values: dict = prices.fetch_prices("https://p/game/mini-arcade/sf2", "SF2", "Mini Arcade", "NTSC", ("game", "manual", "box"), {"manual": 10, "box": 5})
-        with_x: dict = prices.fetch_prices("https://p/game/mini-arcade/sf2", "SF2", "Mini Arcade", "NTSC", ("game", "manual", "box"), {"manual": "X", "box": 5})
+        with_values: dict = prices.fetch_prices("https://p/game/mini-arcade/sf2", "SF2", "Mini Arcade", "NTSC-U", ("game", "manual", "box"), {"manual": 10, "box": 5})
+        with_x: dict = prices.fetch_prices("https://p/game/mini-arcade/sf2", "SF2", "Mini Arcade", "NTSC-U", ("game", "manual", "box"), {"manual": "X", "box": 5})
 
         # Assert: 150 CAD less 10 and 5; an X takes nothing off
         assert (with_values["game"], with_x["game"]) == (135.0, 145.0)
@@ -740,7 +780,7 @@ class TestPrices:
         monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, page))
 
         # Act
-        actual: dict = prices.fetch_prices("https://p/game/nes/zelda", "Zelda", "NES", "NTSC", ("game", "box"), {"manual": None, "box": "X"})
+        actual: dict = prices.fetch_prices("https://p/game/nes/zelda", "Zelda", "NES", "NTSC-U", ("game", "box"), {"manual": None, "box": "X"})
 
         # Assert
         assert actual["game"] is None
@@ -753,7 +793,7 @@ class TestPrices:
         monkeypatch.setattr(prices, "get", lambda url, **_: FakeResponse(url, page))
 
         # Act
-        actual: dict = prices.fetch_prices("https://p/game/nes/zelda", "Zelda", "NES", "NTSC", ("game", "box"))
+        actual: dict = prices.fetch_prices("https://p/game/nes/zelda", "Zelda", "NES", "NTSC-U", ("game", "box"))
 
         # Assert
         assert actual["game"] is None
@@ -763,10 +803,20 @@ class TestPrices:
         import src.prices as prices
 
         # Act
-        actual: list = [prices.other_standard("Super Famicom", "NTSC"), prices.other_standard("NES", "PAL"), prices.other_standard("NES", None), prices.other_standard("Nintendo Power", None)]
+        actual: list = [prices.other_standard("Super Famicom", "NTSC-U"), prices.other_standard("NES", "PAL"), prices.other_standard("NES", None), prices.other_standard("Nintendo Power", None)]
 
         # Assert
-        assert actual == [None, "NTSC", "PAL", None]
+        assert actual == [None, "NTSC-U", "PAL", None]
+
+    def test_the_japanese_standard_falls_back_on_the_north_american_one(self) -> None:
+        # Arrange
+        import src.prices as prices
+
+        # Act
+        actual: list = [prices.other_standard("Wii", "NTSC-J"), prices.search_query("Zelda", "Wii", "NTSC-J"), prices.search_query("SF2", "Mini Arcade", "NTSC-J")]
+
+        # Assert: a system PriceCharting has no console for is searched for by name, the standard said out loud
+        assert actual == ["NTSC-U", "Zelda jp wii", "SF2 JP Mini Arcade"]
 
     def test_search_without_that_title_finds_nothing(self, monkeypatch) -> None:
         # Arrange
@@ -1129,3 +1179,48 @@ class TestSystems:
         assert [entry["console"] for entry in get_collection_entries(connection)] == ["Nintendo Wii", "3DS"]
         with raises(ValidationError):
             api.SystemRename(current="Wii", name="   ")
+
+    @mark.asyncio
+    async def test_deleting_a_system_moves_its_entries_to_another(self, connection: Connection) -> None:
+        # Arrange
+        connection.execute("INSERT INTO spreadsheet_rows (id, source_file_id, sheet, row_index, system, title) VALUES (2, 2, 'Feuil1', 3, 'Wii', 'Wii Sports')")
+        connection.commit()
+
+        # Act
+        actual: dict = await api.delete_collection_system(name="Wii", into="3DS")
+
+        # Assert: the system is gone, and not one of its entries
+        assert actual == {"message": "OK", "entries": 2}
+        assert [system["name"] for system in await api.collection_systems()] == ["3DS"]
+        assert [(entry["console"], entry["title"]) for entry in get_collection_entries(connection)] == [
+            ("3DS", "Zelda"),
+            ("3DS", "Kid Icarus"),
+            ("3DS", "Wii Sports")
+        ]
+
+    @mark.asyncio
+    async def test_entries_only_move_to_a_system_the_collection_already_has(self, connection: Connection) -> None:
+        # Act and assert
+        with raises(HTTPException) as refused:
+            await api.delete_collection_system(name="Wii", into="Nintendo Wii")
+
+        assert (refused.value.status_code, refused.value.detail) == (404, "target_missing")
+        assert [entry["console"] for entry in get_collection_entries(connection)] == ["Wii", "3DS"]
+
+    @mark.asyncio
+    async def test_a_system_cannot_be_deleted_into_itself(self, connection: Connection) -> None:
+        # Act and assert
+        with raises(HTTPException) as refused:
+            await api.delete_collection_system(name="Wii", into="Wii")
+
+        assert (refused.value.status_code, refused.value.detail) == (409, "unchanged")
+        assert [entry["console"] for entry in get_collection_entries(connection)] == ["Wii", "3DS"]
+
+    @mark.asyncio
+    async def test_deleting_a_system_no_entry_carries_is_not_found(self, connection: Connection) -> None:
+        # Act and assert
+        with raises(HTTPException) as refused:
+            await api.delete_collection_system(name="Amiga", into="Wii")
+
+        assert refused.value.status_code == 404
+        assert [entry["console"] for entry in get_collection_entries(connection)] == ["Wii", "3DS"]

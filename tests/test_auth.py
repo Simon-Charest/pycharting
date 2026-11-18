@@ -286,6 +286,19 @@ class TestUsers:
         assert response.status_code == 200
         assert [system["name"] for system in client.get("/collection/systems").json()] == ["Nintendo Wii"]
 
+    def test_an_administrator_deletes_a_system_by_moving_its_entries(self, client: TestClient) -> None:
+        # Arrange
+        sign_in(client, ADMIN)
+        client.post("/collection/items", json={"owner_id": 1, "group_name": "3DS", "name": "Kid Icarus"})
+
+        # Act
+        response = client.delete("/collection/systems?name=Wii&into=3DS")
+
+        # Assert
+        assert response.status_code == 200
+        assert [system["name"] for system in client.get("/collection/systems").json()] == ["3DS"]
+        assert sorted(entry["title"] for entry in client.get("/collection/entries").json()) == ["Kid Icarus", "Zelda"]
+
     def test_a_collaborator_cannot_see_the_systems(self, client: TestClient) -> None:
         # Arrange
         sign_in(client, VIEWER)
@@ -294,11 +307,13 @@ class TestUsers:
         assert (client.get("/systems").status_code, client.get("/systems").headers["location"]) == (303, "/")
         assert client.get("/collection/systems").status_code == 403
         assert client.put("/collection/systems", json={"current": "Wii", "name": "Nintendo Wii"}).status_code == 403
+        assert client.delete("/collection/systems?name=Wii&into=3DS").status_code == 403
 
     def test_without_session_the_systems_are_refused(self, client: TestClient) -> None:
         # Act and assert
         assert client.get("/collection/systems").status_code == 401
         assert client.put("/collection/systems", json={"current": "Wii", "name": "Nintendo Wii"}).status_code == 401
+        assert client.delete("/collection/systems?name=Wii&into=3DS").status_code == 401
         assert client.get("/systems").headers["location"] == "/login"
 
     def test_without_session_the_accounts_are_refused(self, client: TestClient) -> None:

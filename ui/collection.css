@@ -596,13 +596,13 @@ button.primary:disabled:hover {
     padding: 4px 8px;
 }
 
-/* The name being edited gets the room; its button takes what it needs */
+/* The name being edited gets the room; its two buttons take what they need */
 .systems th:nth-child(1) {
-    width: 85%;
+    width: 74%;
 }
 
 .systems th:nth-child(2) {
-    width: 15%;
+    width: 26%;
 }
 
 /* What the page explains about renaming, under the table rather than over it */

@@ -96,6 +96,7 @@ python . set-role NAME collaborator
 Each entry is stored under a system name, which is also what PriceCharting is asked about. The same system often ends up under several spellings (`Gameboy`, `Game Boy`), which the collection shows under one full name (`Nintendo Game Boy`), so the spellings are easy to miss. An administrator tidies them from the Systems page, reached from the screen button in the header: every name the collection uses is listed, in a box that renames it.
 - Renaming a system renames every one of its entries, and the page says how many change before it does;
 - Giving a system a name the collection already uses brings the two together;
+- Deleting a system asks which of the others its entries move to: a system is only there because entries carry its name, so it goes away by having none left, and no entry ever leaves the collection. The last system cannot be deleted, its entries having nowhere to go;
 - A name PriceCharting does not know leaves its entries to a plain search for their prices, so prefer one of the names it knows (see `CONSOLE_SLUGS` in `src/prices.py`).
 
 ## Deployment

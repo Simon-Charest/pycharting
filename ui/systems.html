@@ -5,8 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>PyCharting</title>
         <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-        <link rel="stylesheet" href="/static/collection.css?v=42">
-        <script src="/static/systems.js?v=2" defer></script>
+        <link rel="stylesheet" href="/static/collection.css?v=43">
+        <script src="/static/systems.js?v=3" defer></script>
     </head>
     <body>
         <header>
@@ -39,6 +39,25 @@
         </main>
 
         <p id="hint" class="message info" data-i18n="hint"></p>
+
+        <!-- A system goes away by having no entry left: they move to a system the collection already has -->
+        <dialog id="remover">
+            <form id="remover-form" method="dialog">
+                <h2 id="remover-heading"></h2>
+                <p id="remover-explanation"></p>
+                <div class="fields">
+                    <label>
+                        <span data-i18n="remover.into"></span>
+                        <select id="remover-into" required></select>
+                    </label>
+                </div>
+                <p id="remover-error" class="message" role="alert" hidden></p>
+                <div class="dialog-actions">
+                    <button id="remover-cancel" type="button" data-i18n="remover.cancel"></button>
+                    <button class="primary" type="submit" data-i18n="remover.delete"></button>
+                </div>
+            </form>
+        </dialog>
 
         <footer class="site-footer">
             <span data-i18n="footer.poweredBy"></span>

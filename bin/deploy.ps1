@@ -70,8 +70,12 @@ try {
     $backup = "data/backups/database.$stamp.sqlite"
     $database = if ($settings.DATABASE_FILE) { $settings.DATABASE_FILE } else { "data/database.sqlite" }
 
-    ssh $target "cd $dir && .venv/bin/python . backup $remoteCopy"
+    # The export is bounded: a copy left over from an earlier run is removed first, the server's process is stopped after
+    # 5 minutes (KILL 10 seconds later if it ignores the stop), and a silent connection is dropped after about 45 seconds.
+    # Otherwise a hung export would keep this script waiting forever, and nothing would be downloaded.
+    ssh -o ServerAliveInterval=15 -o ServerAliveCountMax=3 $target "rm -f $dir/$remoteCopy && cd $dir && timeout -k 10 300 .venv/bin/python . backup $remoteCopy"
 
+    if ($LASTEXITCODE -eq 124 -or $LASTEXITCODE -eq 137) { throw "Copying the production database on $($settings.DEPLOY_HOST) timed out; nothing was downloaded or replaced." }
     if ($LASTEXITCODE -ne 0) { throw "Copying the production database on $($settings.DEPLOY_HOST) failed." }
 
     New-Item -ItemType Directory -Force (Split-Path $backup) | Out-Null
@@ -79,7 +83,7 @@ try {
 
     if ($LASTEXITCODE -ne 0) { throw "Downloading the production database failed." }
 
-    ssh $target "rm -f $dir/$remoteCopy"
+    ssh -o ServerAliveInterval=15 -o ServerAliveCountMax=3 $target "rm -f $dir/$remoteCopy"
 
     try {
         Copy-Item $backup $database -Force -ErrorAction Stop

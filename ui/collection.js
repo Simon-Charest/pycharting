@@ -59,6 +59,7 @@ const TRANSLATIONS = {
         "action.edit": "Modifier",
         "action.delete": "Supprimer",
         "action.add": "Ajouter",
+        "action.exportMarketplace": "Exporter vers Marketplace",
         "action.exportCsv": "Exporter vers CSV",
         "action.export": "Exporter vers Excel",
         "action.priceCharting": "PriceCharting",
@@ -159,6 +160,7 @@ const TRANSLATIONS = {
         "action.edit": "Edit",
         "action.delete": "Delete",
         "action.add": "Add",
+        "action.exportMarketplace": "Export to Marketplace",
         "action.exportCsv": "Export to CSV",
         "action.export": "Export to Excel",
         "action.priceCharting": "PriceCharting",
@@ -240,6 +242,8 @@ const ICONS = {
     export: ["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z", "M14 2v6h6", "M8 13h2", "M14 13h2", "M8 17h2", "M14 17h2"],
     // A text file: the same page, with lines of text
     csv: ["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z", "M14 2v6h6", "M8 9h2", "M8 13h8", "M8 17h8"],
+    // A shop front with its awning: the list to post on a marketplace
+    marketplace: ["M3 9l1.5-5h15L21 9", "M3 9a3 3 0 0 0 6 0a3 3 0 0 0 6 0a3 3 0 0 0 6 0", "M5 11v9h14v-9", "M10 20v-5h4v5"],
     reset: ["M18 6 6 18", "M6 6l12 12"],
     home: ["M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z", "M9 22V12h6v10"],
     // A screen on its stand: the system an entry is played on
@@ -1063,6 +1067,33 @@ function exportToCsv() {
     download(new Blob(["﻿" + lines.map(line => line.join(separator)).join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" }), "csv");
 }
 
+// A plain-text list to post on a marketplace: one paragraph per console and region,
+// each title with its value (the Subtotal); the visible rows, in the order shown
+function exportToMarketplace() {
+    if (entries === null) {
+        return;
+    }
+
+    const groups = new Map();
+
+    for (const entry of visibleEntries()) {
+        const region = regionOf(entry);
+        const heading = region ? `${consoleName(entry)} (${region})` : consoleName(entry);
+        const value = subtotalOf(entry);
+        const line = value === null ? `- ${entry.title}` : `- ${entry.title}: ${numberFormat.format(value)}`;
+
+        if (!groups.has(heading)) {
+            groups.set(heading, []);
+        }
+
+        groups.get(heading).push(line);
+    }
+
+    const text = [...groups].map(([heading, lines]) => [heading, ...lines].join("\r\n")).join("\r\n\r\n");
+
+    download(new Blob(["﻿" + text + "\r\n"], { type: "text/plain;charset=utf-8" }), "txt");
+}
+
 function xmlText(value) {
     return String(value).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
@@ -1796,6 +1827,8 @@ element("filter-reset").addEventListener("click", () => {
     render();
 });
 element("add").append(icon(ICONS.add));
+element("export-marketplace").append(icon(ICONS.marketplace));
+element("export-marketplace").addEventListener("click", exportToMarketplace);
 element("export-csv").append(icon(ICONS.csv));
 element("export-csv").addEventListener("click", exportToCsv);
 element("export").append(icon(ICONS.export));
